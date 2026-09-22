@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "258395767437",
+    "project_id": "quizmark-fa1de",
+    "storage_bucket": "quizmark-fa1de.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:258395767437:android:4ac2297cdeeb9a89d918c4",
+        "android_client_info": {
+          "package_name": "com.example.quizmark"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "258395767437-q7urkt9g057jase5lsu88afebgg7s1km.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.quizmark",
+            "certificate_hash": "ab8e2d5acef604f162d6b84d7eb408fc43b2efb7"
+          }
+        },
+        {
+          "client_id": "258395767437-7gve5f3u9ot1b21s8ivnjamifn5d26f3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC39nxCdRdLmjvCiHbNt2rnbAvoWqGG6FQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "258395767437-7gve5f3u9ot1b21s8ivnjamifn5d26f3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

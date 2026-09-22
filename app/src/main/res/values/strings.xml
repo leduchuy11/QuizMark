@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">QuizMark</string>
+    <string name="subtitle_omr">Hệ thống chấm điểm OMR tự động</string>
+    <string name="login_title">Đăng nhập tài khoản</string>
+    <string name="email_hint">Nhập email</string>
+    <string name="password_hint">Nhập mật khẩu</string>
+    <string name="forgot_password">Quên mật khẩu?</string>
+    <string name="btn_login">Đăng nhập</string>
+    <string name="no_account">Bạn chưa có tài khoản? </string>
+    <string name="register_now">Đăng ký</string>
+    <string name="btn_login_google">Đăng nhập bằng Google</string>
+    <string name="login_failed">Đăng nhập thất bại</string>
+    <string name="empty_fields">Email và mật khẩu không được để trống</string>
+    <string name="register_failed">Đăng ký thất bại</string>
+    <string name="pass_less">Mật khẩu phải có ít nhất 6 ký tự</string>
+</resources>
