@@ -1,4 +1,4 @@
-package com.example.quizmark.ui.home
+package com.example.quizmark.ui.main.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

@@ -13,7 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.quizmark.ui.auth.ForgotPasswordScreen
 import com.example.quizmark.ui.auth.LoginScreen
 import com.example.quizmark.ui.auth.RegisterScreen
-import com.example.quizmark.ui.home.HomeScreen
+import com.example.quizmark.ui.main.MainScreen
 import com.example.quizmark.ui.theme.QuizMarkTheme
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
@@ -35,10 +35,9 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
 
-                    // Kiểm tra xem đã đăng nhập và đã xác thực email chưa
                     val currentUser = auth.currentUser
                     val startDest = if (currentUser != null && currentUser.isEmailVerified) {
-                        "home"
+                        "main"
                     } else {
                         "login"
                     }
@@ -50,7 +49,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToRegister = { navController.navigate("register") },
                                 onNavigateToForgotPassword = { navController.navigate("forgot_password") },
                                 onLoginSuccess = {
-                                    navController.navigate("home") {
+                                    navController.navigate("main") {
                                         popUpTo("login") { inclusive = true }
                                     }
                                 }
@@ -70,8 +69,14 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        composable("home") {
-                            HomeScreen()
+                        composable("main") {
+                            MainScreen(
+                                onNavigateToLogin = {
+                                    navController.navigate("login") {
+                                        popUpTo("main") { inclusive = true }
+                                    }
+                                }
+                            )
                         }
                     }
                 }

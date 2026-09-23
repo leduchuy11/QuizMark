@@ -1,0 +1,153 @@
+package com.example.quizmark.ui.main
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.quizmark.ui.main.account.AccountScreen
+import com.example.quizmark.ui.theme.DarkBlue
+import com.example.quizmark.ui.theme.PrimaryDarkBlue
+
+@Composable
+fun MainScreen(onNavigateToLogin: () -> Unit) {
+    val bottomNavController = rememberNavController()
+
+    Scaffold(
+        bottomBar = { CustomBottomNavigationBar(bottomNavController) }
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+
+            NavHost(
+                navController = bottomNavController,
+                startDestination = BottomNavItem.Home.route
+            ) {
+                composable(BottomNavItem.Home.route) {
+                    Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Trang chủ") }
+                }
+                composable(BottomNavItem.Exam.route) {
+                    Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Đề") }
+                }
+                composable(BottomNavItem.Scan.route) {
+                    Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Quét") }
+                }
+                composable(BottomNavItem.ExamList.route) {
+                    Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Danh sách thi") }
+                }
+                composable(BottomNavItem.Account.route) {
+                    AccountScreen()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CustomBottomNavigationBar(navController: NavHostController) {
+    val items = listOf(
+        BottomNavItem.Home,
+        BottomNavItem.Exam,
+        BottomNavItem.Scan,
+        BottomNavItem.ExamList,
+        BottomNavItem.Account
+    )
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(elevation = 16.dp, spotColor = Color.LightGray)
+            .background(Color.White)
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        items.forEach { item ->
+            val isSelected = currentRoute == item.route
+            val isScanButton = item == BottomNavItem.Scan
+            val hasCircleAndBlueBg = isSelected && isScanButton
+
+            val interactionSource = remember { MutableInteractionSource() }
+            val isPressed by interactionSource.collectIsPressedAsState()
+
+            val targetScale = when {
+                isPressed -> 1.15f
+                isSelected && isScanButton -> 1.25f
+                isSelected && !isScanButton -> 1.4f
+                else -> 1.0f
+            }
+            val scale by animateFloatAsState(targetValue = targetScale, label = "scale")
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null
+                    ) {
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        }
+                        .size(48.dp)
+                        .shadow(
+                            elevation = if (hasCircleAndBlueBg) 8.dp else 0.dp,
+                            shape = CircleShape,
+                            spotColor = PrimaryDarkBlue,
+                            ambientColor = PrimaryDarkBlue
+                        )
+                        .background(
+                            color = if (hasCircleAndBlueBg) DarkBlue else Color.Transparent,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = item.iconResId),
+                        contentDescription = stringResource(id = item.titleResId),
+                        tint = if (hasCircleAndBlueBg) Color.White else if (isSelected) DarkBlue else Color.Gray,
+                        modifier = Modifier.size(if (item == BottomNavItem.ExamList) 34.dp else 25.dp)
+                    )
+                }
+
+                Text(
+                    text = stringResource(id = item.titleResId),
+                    fontSize = 11.sp,
+                    color = if (isSelected) DarkBlue else Color.Gray,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                )
+            }
+        }
+    }
+}

@@ -32,4 +32,10 @@
     <string name="email_not_verified">Vui lòng kiểm tra hộp thư và xác thực email trước khi đăng nhập.</string>
     <string name="email_not_found">Email chưa được đăng ký trong hệ thống.</string>
     <string name="verify_email_sent">Đăng ký thành công! Vui lòng kiểm tra email để xác thực.</string>
+
+    <string name="tab_home">Trang chủ</string>
+    <string name="tab_exam">Đề</string>
+    <string name="tab_scan">Quét</string>
+    <string name="tab_exam_list">D.sách thi</string>
+    <string name="tab_account">Tài khoản</string>
 </resources>
