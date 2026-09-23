@@ -1,6 +1,8 @@
 package com.example.quizmark.ui.main
 
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,22 +21,40 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.quizmark.ui.main.account.AccountScreen
+import com.example.quizmark.ui.main.account.AccountViewModel
 import com.example.quizmark.ui.main.account.ProfileEditScreen
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 
 @Composable
-fun MainScreen(onNavigateToLogin: () -> Unit) {
+fun MainScreen(onNavigateToLogin: () -> Unit,
+               sharedAccountViewModel: AccountViewModel = hiltViewModel()) {
     val bottomNavController = rememberNavController()
 
+    val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val showBottomBar = currentRoute in listOf(
+        BottomNavItem.Home.route,
+        BottomNavItem.Exam.route,
+        BottomNavItem.Scan.route,
+        BottomNavItem.ExamList.route,
+        BottomNavItem.Account.route
+    )
+
     Scaffold(
-        bottomBar = { CustomBottomNavigationBar(bottomNavController) }
+        bottomBar = {
+            if (showBottomBar) {
+                CustomBottomNavigationBar(bottomNavController)
+            }
+        }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
 
@@ -43,27 +63,57 @@ fun MainScreen(onNavigateToLogin: () -> Unit) {
                 startDestination = BottomNavItem.Scan.route
             ) {
                 composable(BottomNavItem.Home.route) {
-                    Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Trang chủ") }
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.White),
+                        Alignment.Center
+                    ) { Text("Màn hình Trang chủ") }
                 }
                 composable(BottomNavItem.Exam.route) {
-                    Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Đề") }
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.White),
+                        Alignment.Center
+                    ) { Text("Màn hình Đề") }
                 }
                 composable(BottomNavItem.Scan.route) {
-                    Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Quét") }
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.White),
+                        Alignment.Center
+                    ) { Text("Màn hình Quét") }
                 }
                 composable(BottomNavItem.ExamList.route) {
-                    Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Danh sách thi") }
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.White),
+                        Alignment.Center
+                    ) { Text("Màn hình Danh sách thi") }
                 }
                 composable(BottomNavItem.Account.route) {
                     AccountScreen(
+                        viewModel = sharedAccountViewModel,
                         onNavigateToLogin = onNavigateToLogin,
                         onNavigateToEditProfile = {
                             bottomNavController.navigate("profile_edit")
                         }
                     )
                 }
-                composable("profile_edit") {
+                composable(
+                    route = "profile_edit",
+                    enterTransition = {
+                        slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+                    }
+                ) {
                     ProfileEditScreen(
+                        viewModel = sharedAccountViewModel,
                         onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }

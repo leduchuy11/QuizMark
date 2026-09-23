@@ -66,4 +66,10 @@
 
     <string name="delete_account_success">Account permanently deleted</string>
 
+    <string name="profile_title">Personal Profile</string>
+    <string name="full_name">Full Name</string>
+    <string name="school">School/University</string>
+    <string name="bio">About me</string>
+    <string name="btn_save_profile">Save Profile</string>
+
 </resources>

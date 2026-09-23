@@ -53,16 +53,16 @@ class AccountViewModel @Inject constructor(
 
     fun saveUserProfile(fullName: String, school: String, bio: String, onSuccess: () -> Unit) {
         val uid = auth.currentUser?.uid ?: return
+
+        val updatedProfile = UserProfile(fullName, school, bio)
+
+        _userProfile.value = updatedProfile
+        onSuccess()
+
         viewModelScope.launch {
-            _isLoading.value = true
             try {
-                val updatedProfile = UserProfile(fullName, school, bio)
-                firestore.collection("users").document(uid).set(updatedProfile).await()
-                _userProfile.value = updatedProfile
-                onSuccess()
+                firestore.collection("users").document(uid).set(updatedProfile)
             } catch (e: Exception) {
-            } finally {
-                _isLoading.value = false
             }
         }
     }

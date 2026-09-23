@@ -63,4 +63,10 @@
     <string name="dialog_cancel">Hủy</string>
 
     <string name="delete_account_success">Đã xóa tài khoản vĩnh viễn</string>
+
+    <string name="profile_title">Hồ sơ cá nhân</string>
+    <string name="full_name">Họ và tên</string>
+    <string name="school">Trường</string>
+    <string name="bio">Giới thiệu bản thân</string>
+    <string name="btn_save_profile">Lưu hồ sơ</string>
 </resources>
