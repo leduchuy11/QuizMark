@@ -13,4 +13,23 @@
     <string name="empty_fields">Email và mật khẩu không được để trống</string>
     <string name="register_failed">Đăng ký thất bại</string>
     <string name="pass_less">Mật khẩu phải có ít nhất 6 ký tự</string>
+
+    <string name="register_title">Đăng ký tài khoản</string>
+    <string name="confirm_password_hint">Nhập lại mật khẩu</string>
+    <string name="btn_register">Đăng ký</string>
+    <string name="register_success">Đăng ký thành công</string>
+    <string name="login_success">Đăng nhập thành công</string>
+    <string name="already_have_account">Đã có tài khoản? </string>
+    <string name="login_now">Đăng nhập ngay</string>
+    <string name="check_confirm_pass">Mật khẩu không khớp!</string>
+
+    <string name="forgot_password_title">Quên mật khẩu</string>
+    <string name="forgot_password_desc">Hãy nhập email mà bạn dùng để đăng ký QuizMark, chúng tôi sẽ gửi thông tin đặt lại mật khẩu cho bạn</string>
+    <string name="btn_continue">Gửi yêu cầu</string>
+    <string name="reset_password_success">Đã gửi email khôi phục thành công!</string>
+    <string name="reset_password_failed">Lỗi: Không thể gửi email khôi phục.</string>
+
+    <string name="email_not_verified">Vui lòng kiểm tra hộp thư và xác thực email trước khi đăng nhập.</string>
+    <string name="email_not_found">Email chưa được đăng ký trong hệ thống.</string>
+    <string name="verify_email_sent">Đăng ký thành công! Vui lòng kiểm tra email để xác thực.</string>
 </resources>

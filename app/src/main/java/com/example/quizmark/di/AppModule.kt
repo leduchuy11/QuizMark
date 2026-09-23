@@ -13,14 +13,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    // Hướng dẫn Hilt cách lấy instance của Firebase
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth {
         return FirebaseAuth.getInstance()
     }
 
-    // Hướng dẫn Hilt: Khi ViewModel cần AuthRepository, hãy tạo AuthRepositoryImpl
     @Provides
     @Singleton
     fun provideAuthRepository(auth: FirebaseAuth): AuthRepository {

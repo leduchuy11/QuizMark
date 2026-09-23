@@ -5,12 +5,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -36,29 +34,20 @@ import com.example.quizmark.R
 import com.example.quizmark.data.AuthState
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 import kotlinx.coroutines.delay
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import kotlinx.coroutines.launch
-
-enum class ToastType { SUCCESS, ERROR, WARNING }
 
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onNavigateToRegister: () -> Unit,
-    onNavigateToForgotPassword: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onRegisterSuccess: () -> Unit
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     var toastMessage by remember { mutableStateOf("") }
     var toastType by remember { mutableStateOf(ToastType.SUCCESS) }
@@ -69,11 +58,11 @@ fun LoginScreen(
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Success -> {
-                toastMessage = context.getString(R.string.login_success)
+                toastMessage = context.getString(R.string.verify_email_sent)
                 toastType = ToastType.SUCCESS
                 showToast = true
-                delay(1000)
-                onLoginSuccess()
+                delay(2000)
+                onRegisterSuccess()
                 viewModel.resetState()
             }
             is AuthState.Error -> {
@@ -125,18 +114,11 @@ fun LoginScreen(
                     .size(100.dp)
                     .clip(RoundedCornerShape(20.dp))
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(id = R.string.subtitle_omr),
-                color = Color.Black.copy(alpha = 0.5f),
-                fontWeight = FontWeight.Medium,
-                fontSize = 14.sp
-            )
 
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
-                text = stringResource(id = R.string.login_title),
+                text = stringResource(id = R.string.register_title),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
@@ -145,7 +127,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Ô nhập Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -159,7 +140,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Ô nhập Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -178,18 +158,36 @@ fun LoginScreen(
                 }
             )
 
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                TextButton(onClick = { onNavigateToForgotPassword() }) {
-                    Text(text = stringResource(id = R.string.forgot_password), color = PrimaryDarkBlue)
-                }
-            }
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                placeholder = { Text(stringResource(id = R.string.confirm_password_hint), color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth().background(Color.White),
+                shape = RoundedCornerShape(8.dp),
+                singleLine = true,
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                colors = textFieldColors,
+                trailingIcon = {
+                    val image = if (confirmPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                        Icon(imageVector = image, contentDescription = "Toggle Confirm Password", tint = Color.Gray)
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { 
-                    if (authState !is AuthState.Loading) {
-                        viewModel.login(email, password) 
+                onClick = {
+                    if (password != confirmPassword) {
+                        toastMessage = context.getString(R.string.check_confirm_pass)
+                        toastType = ToastType.ERROR
+                        showToast = true
+                    } else if (authState !is AuthState.Loading) {
+                        viewModel.register(email, password)
                     }
                 },
                 modifier = Modifier
@@ -198,7 +196,11 @@ fun LoginScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryDarkBlue),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text(text = stringResource(id = R.string.btn_login), fontSize = 16.sp, color = Color.White)
+                if (authState is AuthState.Loading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(text = stringResource(id = R.string.btn_register), fontSize = 16.sp, color = Color.White)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -208,72 +210,12 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = stringResource(id = R.string.no_account), color = Color.Gray)
+                Text(text = stringResource(id = R.string.already_have_account), color = Color.Gray)
                 Text(
-                    text = stringResource(id = R.string.register_now),
+                    text = stringResource(id = R.string.login_now),
                     color = PrimaryDarkBlue,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onNavigateToRegister() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = Color.LightGray)
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedButton(
-                onClick = {
-                    coroutineScope.launch {
-                        try {
-                            val credentialManager = CredentialManager.create(context)
-
-                            val googleIdOption = GetGoogleIdOption.Builder()
-                                .setFilterByAuthorizedAccounts(false)
-                                .setServerClientId(context.getString(R.string.default_web_client_id))
-                                .setAutoSelectEnabled(false)
-                                .build()
-
-                            val request = GetCredentialRequest.Builder()
-                                .addCredentialOption(googleIdOption)
-                                .build()
-
-                            val result = credentialManager.getCredential(context = context, request = request)
-                            val credential = result.credential
-
-                            if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-
-                                viewModel.loginWithGoogle(googleIdTokenCredential.idToken)
-                            }
-                        } catch (e: GetCredentialException) {
-                            toastMessage = "Đã hủy đăng nhập Google"
-                            toastType = ToastType.WARNING
-                            showToast = true
-                        } catch (e: Exception) {
-                            toastMessage = "Lỗi hệ thống khi đăng nhập Google"
-                            toastType = ToastType.ERROR
-                            showToast = true
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, Color.LightGray)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = "Google Icon",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color.Unspecified
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(id = R.string.btn_login_google),
-                    color = Color.Black,
-                    fontWeight = FontWeight.SemiBold
+                    modifier = Modifier.clickable { onNavigateToLogin() }
                 )
             }
         }
@@ -288,51 +230,5 @@ fun LoginScreen(
         ) {
             CustomToastUI(message = toastMessage, type = toastType)
         }
-    }
-}
-
-@Composable
-fun CustomToastUI(message: String, type: ToastType) {
-    val backgroundColor = when (type) {
-        ToastType.SUCCESS -> Color(0xFF3BB54A)
-        ToastType.ERROR -> Color(0xFFF75F53)
-        ToastType.WARNING -> Color(0xFFF5A623)
-    }
-
-    val icon = when (type) {
-        ToastType.SUCCESS -> R.drawable.ic_check
-        ToastType.ERROR -> R.drawable.ic_fail
-        ToastType.WARNING -> R.drawable.ic_warning
-    }
-
-    Row(
-        modifier = Modifier
-            .padding(horizontal = 20.dp)
-            .background(color = backgroundColor, shape = RoundedCornerShape(8.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(22.dp)
-                .background(Color.White, shape = CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                tint = backgroundColor,
-                modifier = Modifier.size(14.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Text(
-            text = message,
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
     }
 }

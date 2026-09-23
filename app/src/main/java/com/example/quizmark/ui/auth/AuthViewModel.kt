@@ -47,6 +47,24 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun resetPassword(email: String) {
+        if (email.isBlank()) {
+            _authState.value = AuthState.Error(R.string.empty_fields)
+            return
+        }
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            _authState.value = repository.resetPassword(email.trim())
+        }
+    }
+
+    fun loginWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            _authState.value = repository.loginWithGoogle(idToken)
+        }
+    }
+
     fun resetState() {
         _authState.value = AuthState.Idle
     }
