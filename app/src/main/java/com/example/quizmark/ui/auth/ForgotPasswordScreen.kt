@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
-import com.example.quizmark.data.AuthState
+import com.example.quizmark.data.repository.AuthState
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 import kotlinx.coroutines.delay
 

@@ -3,8 +3,8 @@ package com.example.quizmark.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.quizmark.R
-import com.example.quizmark.data.AuthRepository
-import com.example.quizmark.data.AuthState
+import com.example.quizmark.data.repository.AuthRepository
+import com.example.quizmark.data.repository.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

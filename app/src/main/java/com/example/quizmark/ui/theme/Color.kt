@@ -14,3 +14,11 @@ val PrimaryDarkBlue = Color(0xFF1565C0)
 
 
 val DarkBlue = Color(0xFF0F4B8C)
+
+val ColorText = Color(0xFF333333)
+
+val ColorText2 = Color(0xFF666666)
+
+val ColorText3 = Color(0xFF999999)
+
+val BackgroundScreen = Color(0xFFF4F6F9)

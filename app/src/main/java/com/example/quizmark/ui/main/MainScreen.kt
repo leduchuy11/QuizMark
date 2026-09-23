@@ -25,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.quizmark.ui.main.account.AccountScreen
+import com.example.quizmark.ui.main.account.ProfileEditScreen
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 
@@ -39,7 +40,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit) {
 
             NavHost(
                 navController = bottomNavController,
-                startDestination = BottomNavItem.Home.route
+                startDestination = BottomNavItem.Scan.route
             ) {
                 composable(BottomNavItem.Home.route) {
                     Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Trang chủ") }
@@ -54,7 +55,17 @@ fun MainScreen(onNavigateToLogin: () -> Unit) {
                     Box(Modifier.fillMaxSize().background(Color.White), Alignment.Center) { Text("Màn hình Danh sách thi") }
                 }
                 composable(BottomNavItem.Account.route) {
-                    AccountScreen()
+                    AccountScreen(
+                        onNavigateToLogin = onNavigateToLogin,
+                        onNavigateToEditProfile = {
+                            bottomNavController.navigate("profile_edit")
+                        }
+                    )
+                }
+                composable("profile_edit") {
+                    ProfileEditScreen(
+                        onNavigateBack = { bottomNavController.popBackStack() }
+                    )
                 }
             }
         }
@@ -94,7 +105,7 @@ fun CustomBottomNavigationBar(navController: NavHostController) {
             val targetScale = when {
                 isPressed -> 1.15f
                 isSelected && isScanButton -> 1.25f
-                isSelected && !isScanButton -> 1.4f
+                isSelected && !isScanButton -> 1.35f
                 else -> 1.0f
             }
             val scale by animateFloatAsState(targetValue = targetScale, label = "scale")

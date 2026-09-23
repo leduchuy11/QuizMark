@@ -19,6 +19,7 @@
     <string name="btn_register">Đăng ký</string>
     <string name="register_success">Đăng ký thành công</string>
     <string name="login_success">Đăng nhập thành công</string>
+    <string name="logout_success">Đăng xuất thành công</string>
     <string name="already_have_account">Đã có tài khoản? </string>
     <string name="login_now">Đăng nhập ngay</string>
     <string name="check_confirm_pass">Mật khẩu không khớp!</string>
@@ -38,4 +39,28 @@
     <string name="tab_scan">Quét</string>
     <string name="tab_exam_list">D.sách thi</string>
     <string name="tab_account">Tài khoản</string>
+
+    <!-- Màn hình Tài khoản -->
+    <string name="account_edit_hint">Nhấn để chỉnh sửa hồ sơ</string>
+    <string name="section_personalization">Cá nhân hoá</string>
+    <string name="setting_language">Ngôn ngữ</string>
+    <string name="section_sync">Đồng bộ hoá</string>
+    <string name="setting_sync_app">Đồng bộ ứng dụng</string>
+    <string name="section_about">Về ứng dụng</string>
+    <string name="setting_version">Phiên bản</string>
+    <string name="setting_privacy">Chính sách bảo mật</string>
+    <string name="setting_contact">Liên hệ &amp; Hỗ trợ</string>
+    <string name="btn_logout">Đăng xuất</string>
+    <string name="btn_delete_account">Xóa tài khoản</string>
+    <string name="lang_vi">Tiếng Việt</string>
+    <string name="lang_en">English</string>
+    <string name="choose_language">Chọn ngôn ngữ</string>
+    <string name="dialog_logout_title">Đăng xuất</string>
+    <string name="dialog_logout_desc">Bạn có chắc chắn muốn đăng xuất không?</string>
+    <string name="dialog_delete_title">Xóa tài khoản</string>
+    <string name="dialog_delete_desc">Bạn có chắc chắn muốn xóa tài khoản không? Hành động này không thể hoàn tác.</string>
+    <string name="dialog_confirm">Đồng ý</string>
+    <string name="dialog_cancel">Hủy</string>
+
+    <string name="delete_account_success">Đã xóa tài khoản vĩnh viễn</string>
 </resources>

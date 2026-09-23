@@ -1,5 +1,6 @@
-package com.example.quizmark.data
+package com.example.quizmark.data.repository
 
+import androidx.annotation.StringRes
 import com.example.quizmark.R
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
@@ -13,7 +14,7 @@ sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
     object Success : AuthState()
-    data class Error(@param:androidx.annotation.StringRes val message: Int) : AuthState()
+    data class Error(@param:StringRes val message: Int) : AuthState()
 }
 
 interface AuthRepository {
