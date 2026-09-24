@@ -72,4 +72,30 @@
     <string name="bio">About me</string>
     <string name="btn_save_profile">Save Profile</string>
 
+    <!-- Exam Screen -->
+    <string name="btn_create_new">Create New</string>
+    <string name="stat_total_exams">TOTAL EXAMS</string>
+    <string name="stat_total_lists">TOTAL EXAM LISTS</string>
+    <string name="template_badge_new">NEW</string>
+    <string name="template_subtitle_1">Pre-printed answer sheet templates</string>
+    <string name="template_title">Download Multiple-Choice Answer Sheet Templates</string>
+    <string name="template_subtitle_2">Preview • 5 sheet types • Download PDF/PNG</string>
+    <string name="recent_exams_title">Recent Exams</string>
+    <string name="btn_see_all">See All></string>
+
+    <string name="template_list_title">Answer Sheet Templates</string>
+
+    <!-- Answer Sheet Template Detail Screen -->
+    <string name="btn_back_text">Back</string>
+    <string name="section_parameters">Parameters</string>
+    <string name="param_question_count">Number of Questions</string>
+    <string name="param_paper_size">Paper Size</string>
+    <string name="param_orientation">Orientation</string>
+    <string name="param_type">Type</string>
+    <string name="param_exam_code">Exam Code</string>
+    <string name="param_student_code">Student ID</string>
+    <string name="param_dimensions">Dimensions</string>
+    <string name="btn_download_template">Download Template</string>
+    <string name="share_chooser_title">Share Sheet Via</string>
+
 </resources>

@@ -30,6 +30,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.quizmark.ui.main.account.AccountScreen
 import com.example.quizmark.ui.main.account.AccountViewModel
 import com.example.quizmark.ui.main.account.ProfileEditScreen
+import com.example.quizmark.ui.main.exam.ExamScreen
+import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
+import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 
@@ -71,12 +74,9 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     ) { Text("Màn hình Trang chủ") }
                 }
                 composable(BottomNavItem.Exam.route) {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(Color.White),
-                        Alignment.Center
-                    ) { Text("Màn hình Đề") }
+                    ExamScreen(
+                        onNavigateToTemplates = { bottomNavController.navigate("template_list") }
+                    )
                 }
                 composable(BottomNavItem.Scan.route) {
                     Box(
@@ -114,6 +114,32 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 ) {
                     ProfileEditScreen(
                         viewModel = sharedAccountViewModel,
+                        onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = "template_list",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    TemplateListScreen(
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToDownload = { templateId ->
+                            bottomNavController.navigate("template_detail/$templateId")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "template_detail/{templateId}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 1
+
+                    TemplateDetailScreen(
+                        templateId = templateId,
                         onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }

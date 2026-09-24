@@ -69,4 +69,30 @@
     <string name="school">Trường</string>
     <string name="bio">Giới thiệu bản thân</string>
     <string name="btn_save_profile">Lưu hồ sơ</string>
+
+    <!-- Màn hình Đề (Exam) -->
+    <string name="btn_create_new">Tạo mới</string>
+    <string name="stat_total_exams">TỔNG ĐỀ THI</string>
+    <string name="stat_total_lists">TỔNG D.SÁCH THI</string>
+    <string name="template_badge_new">MỚI</string>
+    <string name="template_subtitle_1">Mẫu phiếu in sẵn</string>
+    <string name="template_title">Tải mẫu phiếu trắc nghiệm</string>
+    <string name="template_subtitle_2">Preview • 5 loại phiếu • Tải PDF/PNG</string>
+    <string name="recent_exams_title">Đề gần đây</string>
+    <string name="btn_see_all">Xem tất cả></string>
+
+    <string name="template_list_title">Mẫu phiếu</string>
+
+    <!-- Màn hình Chi tiết mẫu phiếu -->
+    <string name="btn_back_text">Quay lại</string>
+    <string name="section_parameters">Thông số</string>
+    <string name="param_question_count">Số câu</string>
+    <string name="param_paper_size">Khổ giấy</string>
+    <string name="param_orientation">Hướng</string>
+    <string name="param_type">Loại</string>
+    <string name="param_exam_code">Mã đề</string>
+    <string name="param_student_code">Mã học sinh</string>
+    <string name="param_dimensions">Kích thước</string>
+    <string name="btn_download_template">Tải mẫu phiếu</string>
+    <string name="share_chooser_title">Chia sẻ phiếu qua</string>
 </resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Cho phép chia sẻ các file nằm trong thư mục cache của app -->
+    <cache-path name="shared_pdfs" path="." />
+</paths>
