@@ -3,6 +3,7 @@ package com.example.quizmark.data.model
 // 1. Mô hình tổng thể cho một Đề thi THPT
 data class ThptExamModel(
     val id: String = "",
+    val userId: String = "",
     val name: String = "",
     val templateId: Int = 1,
     val config: ThptExamConfig = ThptExamConfig(),

@@ -114,6 +114,7 @@
     <string name="error_exam_code_length_3">This answer sheet type requires the exam code to be exactly 3 digits!</string>
     <string name="exam_code_prefix">Exam Code %1$d</string>
     <string name="input_exam_code_hint">Enter code...</string>
+    <string name="error_duplicate_exam_codes">Exam codes cannot be duplicated!</string>
 
     <!-- Basic Exam Setup Screen -->
     <string name="setup_exam_title">Exam Setup</string>

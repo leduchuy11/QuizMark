@@ -24,20 +24,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.data.model.ExamCodeModel
+import com.example.quizmark.data.model.ExamModel
+import com.example.quizmark.ui.main.exam.ExamViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 import kotlinx.coroutines.delay
+import java.util.UUID
 
 @Composable
 fun SetupAiExamScreen(
@@ -46,17 +49,38 @@ fun SetupAiExamScreen(
     examCodes: List<String>,
     customQuestionCount: Int,
     onNavigateBack: () -> Unit,
-    onNavigateToExamHome: () -> Unit
+    onNavigateToExamHome: () -> Unit,
+    viewModel: ExamViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     var answers by remember { mutableStateOf(mapOf<String, ExamCodeModel>()) }
+
+    // Lắng nghe state từ ViewModel
+    val isLoading by viewModel.isLoading.collectAsState()
+    val saveResult by viewModel.saveResult.collectAsState()
+
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.SUCCESS) }
     var navigateAfterToast by remember { mutableStateOf(false) }
 
+    // Xử lý kết quả trả về khi lưu
+    LaunchedEffect(saveResult) {
+        saveResult?.let { result ->
+            if (result.isSuccess) {
+                toastMessage = context.getString(R.string.toast_create_success)
+                toastType = ToastType.SUCCESS
+                navigateAfterToast = true
+            } else {
+                toastMessage = "Lỗi: ${result.exceptionOrNull()?.message}"
+                toastType = ToastType.ERROR
+            }
+            viewModel.resetSaveResult()
+        }
+    }
+
     LaunchedEffect(toastMessage) {
         if (toastMessage != null) {
-            delay(1500)
+            delay(1000)
             toastMessage = null
             if (navigateAfterToast) {
                 onNavigateToExamHome()
@@ -118,6 +142,8 @@ fun SetupAiExamScreen(
 
                     Button(
                         onClick = {
+                            if (isLoading) return@Button
+
                             var isAllAnswered = true
                             for (code in examCodes) {
                                 val codeState = answers[code] ?: ExamCodeModel(code = code)
@@ -133,11 +159,15 @@ fun SetupAiExamScreen(
                                 return@Button
                             }
 
-                            // TODO: Lưu Firebase
+                            val newExam = ExamModel(
+                                id = UUID.randomUUID().toString(),
+                                name = examName,
+                                templateId = templateId,
+                                questionCount = customQuestionCount,
+                                codes = answers.values.toList()
+                            )
 
-                            toastMessage = context.getString(R.string.toast_create_success)
-                            toastType = ToastType.SUCCESS
-                            navigateAfterToast = true
+                            viewModel.saveBasicExam(newExam)
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -145,12 +175,16 @@ fun SetupAiExamScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text(
-                            text = stringResource(id = R.string.btn_save),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text(
+                                text = stringResource(id = R.string.btn_save),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }

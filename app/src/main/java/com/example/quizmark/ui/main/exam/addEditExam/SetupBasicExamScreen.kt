@@ -32,8 +32,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.data.model.ExamCodeModel
+import com.example.quizmark.ui.main.exam.ExamViewModel
 import com.example.quizmark.ui.main.exam.templateDownload.getTemplateDetailById
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
@@ -47,9 +49,14 @@ fun SetupBasicExamScreen(
     examName: String,
     examCodes: List<String>,
     onNavigateBack: () -> Unit,
-    onNavigateToExamHome: () -> Unit
+    onNavigateToExamHome: () -> Unit,
+    viewModel: ExamViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+
+    val isLoading by viewModel.isLoading.collectAsState()
+    val saveResult by viewModel.saveResult.collectAsState()
+
     val template = getTemplateDetailById(templateId)
     val questionCount = template.questionCount.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 20
 
@@ -60,9 +67,23 @@ fun SetupBasicExamScreen(
     var toastType by remember { mutableStateOf(ToastType.SUCCESS) }
     var navigateAfterToast by remember { mutableStateOf(false) }
 
+    LaunchedEffect(saveResult) {
+        saveResult?.let { result ->
+            if (result.isSuccess) {
+                toastMessage = context.getString(R.string.toast_create_success)
+                toastType = ToastType.SUCCESS
+                navigateAfterToast = true
+            } else {
+                toastMessage = "Lỗi: ${result.exceptionOrNull()?.message}"
+                toastType = ToastType.ERROR
+            }
+            viewModel.resetSaveResult()
+        }
+    }
+
     LaunchedEffect(toastMessage) {
         if (toastMessage != null) {
-            delay(1500)
+            delay(1000)
             toastMessage = null
             if (navigateAfterToast) {
                 onNavigateToExamHome()
@@ -124,9 +145,11 @@ fun SetupBasicExamScreen(
 
                     Button(
                         onClick = {
+                            // 1. Chặn bấm liên tục khi đang lưu
+                            if (isLoading) return@Button
+
                             var isAllAnswered = true
                             for (code in examCodes) {
-                                // Lấy Model ra để check, nếu null tức là chưa nhập gì
                                 val codeState = answers[code] ?: ExamCodeModel(code = code)
                                 if (codeState.answers.size < questionCount) {
                                     isAllAnswered = false
@@ -140,11 +163,17 @@ fun SetupBasicExamScreen(
                                 return@Button
                             }
 
-                            // TODO: Ở bài tới chúng ta sẽ đẩy thẳng biến answers này lên Firebase!
+                            // 2. Tạo đối tượng ExamModel chuẩn bị đẩy lên Firebase
+                            val newExam = com.example.quizmark.data.model.ExamModel(
+                                id = java.util.UUID.randomUUID().toString(), // Tạo ID ngẫu nhiên, duy nhất
+                                name = examName,
+                                templateId = templateId,
+                                questionCount = questionCount,
+                                codes = answers.values.toList() // Chuyển map answers thành danh sách mã đề
+                            )
 
-                            toastMessage = context.getString(R.string.toast_create_success)
-                            toastType = ToastType.SUCCESS
-                            navigateAfterToast = true
+                            // 3. Đẩy sang ViewModel để lưu nền
+                            viewModel.saveBasicExam(newExam)
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -152,12 +181,21 @@ fun SetupBasicExamScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text(
-                            text = stringResource(id = R.string.btn_save),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        // 4. Hiển thị vòng xoay loading hoặc chữ "Lưu" tùy theo trạng thái
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(id = R.string.btn_save),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }

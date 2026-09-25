@@ -132,6 +132,12 @@ fun CreateExamScreen(
                                 return@Button
                             }
 
+                            if (examCodes.toSet().size != examCodes.size) {
+                                toastMessage = context.getString(R.string.error_duplicate_exam_codes)
+                                toastType = ToastType.WARNING
+                                return@Button
+                            }
+
                             // Validate riêng cho loại phiếu "Khác" (ID = 6)
                             if (selectedTemplate!!.id == 6) {
                                 val qCount = customQuestionCountStr.toIntOrNull() ?: 0

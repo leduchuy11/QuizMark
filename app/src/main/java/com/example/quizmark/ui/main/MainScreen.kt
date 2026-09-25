@@ -209,26 +209,32 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         examCodes = examCodes,
                         onNavigateBack = { bottomNavController.popBackStack() },
                         onNavigateToNext = { p1Q, p1S, p2Q, p3Q, p3S ->
-                            bottomNavController.navigate("input_thpt_answers/$p1Q/$p2Q/$p3Q/$examCodesStr")
+                            bottomNavController.navigate("input_thpt_answers/$templateId/$examName/$p1Q/$p1S/$p2Q/$p3Q/$p3S/$examCodesStr")
                         }
                     )
                 }
 
                 composable(
-                    route = "input_thpt_answers/{p1Q}/{p2Q}/{p3Q}/{examCodesStr}",
-                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
-                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                    route = "input_thpt_answers/{templateId}/{examName}/{p1Q}/{p1S}/{p2Q}/{p3Q}/{p3S}/{examCodesStr}"
                 ) { backStackEntry ->
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 1
+                    val examName = backStackEntry.arguments?.getString("examName") ?: ""
                     val p1Q = backStackEntry.arguments?.getString("p1Q")?.toIntOrNull() ?: 0
+                    val p1S = backStackEntry.arguments?.getString("p1S")?.toFloatOrNull() ?: 0f
                     val p2Q = backStackEntry.arguments?.getString("p2Q")?.toIntOrNull() ?: 0
                     val p3Q = backStackEntry.arguments?.getString("p3Q")?.toIntOrNull() ?: 0
+                    val p3S = backStackEntry.arguments?.getString("p3S")?.toFloatOrNull() ?: 0f
                     val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
                     val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
 
                     InputThptAnswersScreen(
+                        templateId = templateId,
+                        examName = examName,
                         p1Q = p1Q,
+                        p1S = p1S,
                         p2Q = p2Q,
                         p3Q = p3Q,
+                        p3S = p3S,
                         examCodes = examCodes,
                         onNavigateBack = { bottomNavController.popBackStack() },
                         onNavigateToExamHome = {

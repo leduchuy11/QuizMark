@@ -25,40 +25,68 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.data.model.ThptExamCodeModel
+import com.example.quizmark.data.model.ThptExamConfig
+import com.example.quizmark.data.model.ThptExamModel
+import com.example.quizmark.ui.main.exam.ExamViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 import kotlinx.coroutines.delay
+import java.util.UUID
 
 @Composable
 fun InputThptAnswersScreen(
+    templateId: Int,
+    examName: String,
     p1Q: Int,
+    p1S: Float,
     p2Q: Int,
     p3Q: Int,
+    p3S: Float,
     examCodes: List<String>,
     onNavigateBack: () -> Unit,
-    onNavigateToExamHome: () -> Unit
+    onNavigateToExamHome: () -> Unit,
+    viewModel: ExamViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-
     var answers by remember { mutableStateOf(mapOf<String, ThptExamCodeModel>()) }
+
+    val isLoading by viewModel.isLoading.collectAsState()
+    val saveResult by viewModel.saveResult.collectAsState()
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.ERROR) }
     var navigateAfterToast by remember { mutableStateOf(false) }
 
+    // Xử lý kết quả trả về từ ViewModel
+    LaunchedEffect(saveResult) {
+        saveResult?.let { result ->
+            if (result.isSuccess) {
+                toastMessage = context.getString(R.string.toast_create_success)
+                toastType = ToastType.SUCCESS
+                navigateAfterToast = true
+            } else {
+                toastMessage = "Lỗi: ${result.exceptionOrNull()?.message}"
+                toastType = ToastType.ERROR
+            }
+            viewModel.resetSaveResult()
+        }
+    }
+
     LaunchedEffect(toastMessage) {
         if (toastMessage != null) {
-            delay(1500)
+            delay(1000)
             toastMessage = null
             if (navigateAfterToast) {
                 onNavigateToExamHome()
@@ -97,12 +125,14 @@ fun InputThptAnswersScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
                         .shadow(elevation = 8.dp, spotColor = Color.LightGray, ambientColor = Color.Transparent)
+                        .background(Color.White)
                         .padding(horizontal = 20.dp, vertical = 16.dp)
                 ) {
                     Button(
                         onClick = {
+                            if (isLoading) return@Button
+
                             var isAllValid = true
                             for (code in examCodes) {
                                 val codeState = answers[code] ?: ThptExamCodeModel(code = code)
@@ -120,21 +150,36 @@ fun InputThptAnswersScreen(
                                 return@Button
                             }
 
-                            // TODO: Lưu vào Database
-                            toastMessage = context.getString(R.string.toast_create_success)
-                            toastType = ToastType.SUCCESS
-                            navigateAfterToast = true
+                            val config = ThptExamConfig(
+                                p1Questions = p1Q, p1Score = p1S,
+                                p2Questions = p2Q,
+                                p3Questions = p3Q, p3Score = p3S
+                            )
+
+                            val newExam = ThptExamModel(
+                                id = UUID.randomUUID().toString(),
+                                name = examName,
+                                templateId = templateId,
+                                config = config,
+                                codes = answers.values.toList()
+                            )
+
+                            viewModel.saveThptExam(newExam)
                         },
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text(
-                            text = stringResource(id = R.string.btn_save),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text(
+                                text = stringResource(id = R.string.btn_save),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -471,3 +516,4 @@ fun Part3QuestionRow(qNum: Int, text: String, onTextChange: (String) -> Unit) {
         }
     }
 }
+
