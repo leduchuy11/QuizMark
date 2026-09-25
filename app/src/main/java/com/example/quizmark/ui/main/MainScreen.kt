@@ -31,6 +31,10 @@ import com.example.quizmark.ui.main.account.AccountScreen
 import com.example.quizmark.ui.main.account.AccountViewModel
 import com.example.quizmark.ui.main.account.ProfileEditScreen
 import com.example.quizmark.ui.main.exam.ExamScreen
+import com.example.quizmark.ui.main.exam.addEditExam.CreateExamScreen
+import com.example.quizmark.ui.main.exam.addEditExam.InputThptAnswersScreen
+import com.example.quizmark.ui.main.exam.addEditExam.SetupBasicExamScreen
+import com.example.quizmark.ui.main.exam.addEditExam.SetupThptExamScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
 import com.example.quizmark.ui.theme.DarkBlue
@@ -75,7 +79,8 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 }
                 composable(BottomNavItem.Exam.route) {
                     ExamScreen(
-                        onNavigateToTemplates = { bottomNavController.navigate("template_list") }
+                        onNavigateToTemplates = { bottomNavController.navigate("template_list") },
+                        onNavigateToCreateExam = { bottomNavController.navigate("create_exam") }
                     )
                 }
                 composable(BottomNavItem.Scan.route) {
@@ -141,6 +146,92 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     TemplateDetailScreen(
                         templateId = templateId,
                         onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = "create_exam",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    CreateExamScreen(
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToSetup = { templateId, examName, examCodes ->
+                            val codesString = examCodes.joinToString(",")
+
+                            if (templateId == 1) {
+                                bottomNavController.navigate("setup_thpt_exam/$templateId/$examName/$codesString")
+                            } else {
+                                // Các phiếu cơ bản (20, 40, 50, 120) thì vào đây
+                                bottomNavController.navigate("setup_basic_exam/$templateId/$examName/$codesString")
+                            }
+                        }
+                    )
+                }
+
+                composable(
+                    route = "setup_basic_exam/{templateId}/{examName}/{examCodesStr}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 2
+                    val examName = backStackEntry.arguments?.getString("examName") ?: ""
+                    val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
+
+                    val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
+
+                    SetupBasicExamScreen(
+                        templateId = templateId,
+                        examName = examName,
+                        examCodes = examCodes,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToExamHome = {
+                            bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)
+                        }
+                    )
+                }
+
+                composable(
+                    route = "setup_thpt_exam/{templateId}/{examName}/{examCodesStr}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 1
+                    val examName = backStackEntry.arguments?.getString("examName") ?: ""
+                    val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
+                    val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
+
+                    SetupThptExamScreen(
+                        templateId = templateId,
+                        examName = examName,
+                        examCodes = examCodes,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToNext = { p1Q, p1S, p2Q, p3Q, p3S ->
+                            bottomNavController.navigate("input_thpt_answers/$p1Q/$p2Q/$p3Q/$examCodesStr")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "input_thpt_answers/{p1Q}/{p2Q}/{p3Q}/{examCodesStr}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val p1Q = backStackEntry.arguments?.getString("p1Q")?.toIntOrNull() ?: 0
+                    val p2Q = backStackEntry.arguments?.getString("p2Q")?.toIntOrNull() ?: 0
+                    val p3Q = backStackEntry.arguments?.getString("p3Q")?.toIntOrNull() ?: 0
+                    val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
+                    val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
+
+                    InputThptAnswersScreen(
+                        p1Q = p1Q,
+                        p2Q = p2Q,
+                        p3Q = p3Q,
+                        examCodes = examCodes,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToExamHome = {
+                            bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)
+                        }
                     )
                 }
             }

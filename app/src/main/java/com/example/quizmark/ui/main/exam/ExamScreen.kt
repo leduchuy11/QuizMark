@@ -27,7 +27,8 @@ import com.example.quizmark.ui.theme.PrimaryDarkBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExamScreen(onNavigateToTemplates: () -> Unit) {
+fun ExamScreen(onNavigateToTemplates: () -> Unit,
+               onNavigateToCreateExam: () -> Unit) {
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -62,7 +63,7 @@ fun ExamScreen(onNavigateToTemplates: () -> Unit) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: Mở popup tạo đề */ },
+                onClick = { onNavigateToCreateExam() },
                 containerColor = DarkBlue,
                 contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
@@ -88,7 +89,7 @@ fun ExamScreen(onNavigateToTemplates: () -> Unit) {
             ) {
                 // 2. Nút Tạo mới
                 Button(
-                    onClick = { /* TODO: Xử lý tạo mới */ },
+                    onClick = { onNavigateToCreateExam() },
                     modifier = Modifier
                         .align(Alignment.End)
                         .height(34.dp),

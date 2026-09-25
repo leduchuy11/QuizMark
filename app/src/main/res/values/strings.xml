@@ -95,4 +95,73 @@
     <string name="param_dimensions">Kích thước</string>
     <string name="btn_download_template">Tải mẫu phiếu</string>
     <string name="share_chooser_title">Chia sẻ phiếu qua</string>
+
+    <!-- Màn hình Tạo đề mới -->
+    <string name="create_exam_title">Tạo đề mới</string>
+    <string name="input_exam_name_label">Tên đề</string>
+    <string name="input_exam_name_hint">VD: Ktra giữa kì môn Toán</string>
+    <string name="input_template_label">Loại phiếu</string>
+    <string name="input_template_hint">Chọn loại phiếu...</string>
+    <string name="input_exam_count_label">Số mã đề (Tối đa 24)</string>
+    <string name="btn_create_quiz">Tạo Quiz</string>
+    <string name="sheet_select_template_title">Chọn loại phiếu</string>
+    <string name="sheet_select_template_subtitle">Bấm để chọn mẫu phiếu cho quiz</string>
+    <string name="error_fill_all_fields">Vui lòng điền tên đề và chọn loại phiếu!</string>
+    <string name="error_fill_all_codes">Vui lòng điền đầy đủ tất cả các mã đề!</string>
+    <string name="error_exam_code_length_4">Mẫu phiếu THPT 2025 yêu cầu mã đề phải có đúng 4 số!</string>
+    <string name="error_exam_code_length_3">Loại phiếu này yêu cầu mã đề phải có đúng 3 số!</string>
+    <string name="exam_code_prefix">Mã đề %1$d</string>
+    <string name="input_exam_code_hint">Nhập mã...</string>
+
+    <!-- Màn hình Thiết lập bài thi (Cơ bản) -->
+    <string name="setup_exam_title">Thiết lập bài thi</string>
+    <string name="exam_code_header">Mã đề: %1$s</string>
+    <string name="btn_cancel">Hủy</string>
+    <string name="btn_save">Lưu</string>
+    <string name="toast_create_success">Tạo đề thành công!</string>
+    <string name="error_missing_answers">Vui lòng chọn đầy đủ đáp án cho tất cả các mã đề!</string>
+
+    <!-- Màn hình Thiết lập bài thi THPT -->
+    <string name="setup_thpt_part1_tag">PHẦN I</string>
+    <string name="setup_thpt_part1_title">Phần I</string>
+    <string name="setup_thpt_part1_desc">Trắc nghiệm nhiều lựa chọn: chọn 1 đáp án đúng trong 4 (A/B/C/D).</string>
+
+    <string name="setup_thpt_part2_tag">PHẦN II</string>
+    <string name="setup_thpt_part2_title">Phần II</string>
+    <string name="setup_thpt_part2_desc">Câu hỏi Đúng/Sai: mỗi câu 4 ý a/b/c/d, chọn Đúng hoặc Sai.</string>
+
+    <string name="setup_thpt_part3_tag">PHẦN III</string>
+    <string name="setup_thpt_part3_title">Phần III</string>
+    <string name="setup_thpt_part3_desc">Câu trả lời ngắn: điền giá trị số (tối đa 4 ký tự).</string>
+
+    <string name="label_question_count">Số câu</string>
+    <string name="label_section_score">Điểm phần</string>
+    <string name="label_auto_score">Điểm tối đa (tự tính)</string>
+    <string name="label_score_per_correct_item">Điểm mỗi câu theo số ý đúng</string>
+    <string name="label_correct_1">Đúng 1 ý</string>
+    <string name="label_correct_2">Đúng 2 ý</string>
+    <string name="label_correct_3">Đúng 3 ý</string>
+    <string name="label_correct_4">Đúng 4 ý</string>
+
+    <string name="label_total_questions">Tổng số câu</string>
+    <string name="label_total_score">Tổng điểm</string>
+    <string name="btn_continue_input">Tiếp tục nhập đáp án \u2192</string>
+
+    <string name="error_part1_max_q">Phần I tối đa 40 câu!</string>
+    <string name="error_part2_max_q">Phần II tối đa 8 câu!</string>
+    <string name="error_part3_max_q">Phần III tối đa 6 câu!</string>
+    <string name="error_section_max_score">Điểm phần không được vượt quá 10!</string>
+    <string name="error_total_score_invalid">Tổng điểm phải bằng chính xác 10!</string>
+    <string name="unit_point">%1$s điểm</string>
+
+    <!-- Màn hình Nhập đáp án THPT -->
+    <string name="input_thpt_answers_title">Đáp án Phiếu thi THPT</string>
+    <string name="header_part1">Phần 1</string>
+    <string name="header_part2">Phần 2</string>
+    <string name="header_part3">Phần 3</string>
+    <string name="lbl_question_prefix">Câu %1$d</string>
+    <string name="lbl_true_option">Đ</string>
+    <string name="lbl_false_option">S</string>
+    <string name="placeholder_part3">VD: 1024 \u2022 1,05 \u2022 -3,8</string>
+    <string name="error_missing_thpt_answers">Vui lòng hoàn thành tất cả đáp án cho các mã đề!</string>
 </resources>

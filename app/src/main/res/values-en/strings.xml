@@ -98,4 +98,77 @@
     <string name="btn_download_template">Download Template</string>
     <string name="share_chooser_title">Share Sheet Via</string>
 
+    <!-- Create New Exam Screen -->
+    <string name="create_exam_title">Create New Exam</string>
+    <string name="input_exam_name_label">Exam Name</string>
+    <string name="input_exam_name_hint">E.g.: Midterm Math Test</string>
+    <string name="input_template_label">Answer Sheet Type</string>
+    <string name="input_template_hint">Select answer sheet type...</string>
+    <string name="input_exam_count_label">Number of Exam Codes (Max 24)</string>
+    <string name="btn_create_quiz">Create Quiz</string>
+    <string name="sheet_select_template_title">Select Answer Sheet Type</string>
+    <string name="sheet_select_template_subtitle">Tap to select an answer sheet template for the quiz</string>
+    <string name="error_fill_all_fields">Please enter the exam name and select an answer sheet type!</string>
+    <string name="error_fill_all_codes">Please enter all exam codes!</string>
+    <string name="error_exam_code_length_4">The 2025 THPT answer sheet requires the exam code to be exactly 4 digits!</string>
+    <string name="error_exam_code_length_3">This answer sheet type requires the exam code to be exactly 3 digits!</string>
+    <string name="exam_code_prefix">Exam Code %1$d</string>
+    <string name="input_exam_code_hint">Enter code...</string>
+
+    <!-- Basic Exam Setup Screen -->
+    <string name="setup_exam_title">Exam Setup</string>
+    <string name="exam_code_header">Exam Code: %1$s</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_save">Save</string>
+    <string name="toast_create_success">Exam created successfully!</string>
+    <string name="error_missing_answers">Please select an answer for all questions in all exam codes!</string>
+
+    <!-- THPT Exam Setup Screen -->
+    <string name="setup_thpt_part1_tag">PART I</string>
+    <string name="setup_thpt_part1_title">Part I</string>
+    <string name="setup_thpt_part1_desc">Multiple-choice questions: select 1 correct answer from 4 options (A/B/C/D).</string>
+
+    <string name="setup_thpt_part2_tag">PART II</string>
+    <string name="setup_thpt_part2_title">Part II</string>
+    <string name="setup_thpt_part2_desc">True/False questions: each question has 4 statements (a/b/c/d); select True or False.</string>
+
+    <string name="setup_thpt_part3_tag">PART III</string>
+    <string name="setup_thpt_part3_title">Part III</string>
+    <string name="setup_thpt_part3_desc">Short-answer questions: enter a numerical value (up to 4 characters).</string>
+
+    <string name="label_question_count">Number of questions</string>
+    <string name="label_section_score">Section score</string>
+    <string name="label_auto_score">Maximum score (auto-calculated)</string>
+    <string name="label_score_per_correct_item">Score per question based on correct statements</string>
+    <string name="label_correct_1">1 correct statement</string>
+    <string name="label_correct_2">2 correct statements</string>
+    <string name="label_correct_3">3 correct statements</string>
+    <string name="label_correct_4">4 correct statements</string>
+
+    <string name="label_total_questions">Total questions</string>
+    <string name="label_total_score">Total score</string>
+    <string name="btn_continue_input">Continue to answer key \u2192</string>
+
+    <string name="error_part1_max_q">Part I allows a maximum of 40 questions!</string>
+    <string name="error_part2_max_q">Part II allows a maximum of 8 questions!</string>
+    <string name="error_part3_max_q">Part III allows a maximum of 6 questions!</string>
+    <string name="error_section_max_score">Section score cannot exceed 10!</string>
+    <string name="error_total_score_invalid">Total score must be exactly 10!</string>
+    <string name="unit_point">%1$s points</string>
+
+    ```xml
+    <!-- THPT Answer Input Screen -->
+    <string name="input_thpt_answers_title">THPT Answer Key</string>
+    <string name="header_part1">Part 1</string>
+    <string name="header_part2">Part 2</string>
+    <string name="header_part3">Part 3</string>
+    <string name="lbl_question_prefix">Question %1$d</string>
+    <string name="lbl_true_option">T</string>
+    <string name="lbl_false_option">F</string>
+    <string name="placeholder_part3">E.g. 1024 \u2022 1.05 \u2022 -3.8</string>
+    <string name="error_missing_thpt_answers">Please complete all answers for all exam codes!</string>
+    ```
+
+
+
 </resources>
