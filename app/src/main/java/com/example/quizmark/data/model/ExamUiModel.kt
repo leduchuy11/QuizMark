@@ -4,7 +4,9 @@ package com.example.quizmark.data.model
 data class ExamUiModel(
     val id: String,
     val name: String,
+    val templateId: Int,
     val questionCount: Int,
     val isThpt: Boolean,
+    val codes: List<String>,
     val createdAt: Long
 )

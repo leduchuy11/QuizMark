@@ -1,4 +1,4 @@
-package com.example.quizmark.ui.main.exam.addEditExam
+package com.example.quizmark.ui.main.exam.addExam
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

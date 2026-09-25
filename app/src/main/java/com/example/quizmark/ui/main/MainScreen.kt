@@ -1,5 +1,7 @@
 package com.example.quizmark.ui.main
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -16,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,12 +34,13 @@ import com.example.quizmark.ui.main.account.AccountScreen
 import com.example.quizmark.ui.main.account.AccountViewModel
 import com.example.quizmark.ui.main.account.ProfileEditScreen
 import com.example.quizmark.ui.main.exam.ExamScreen
-import com.example.quizmark.ui.main.exam.addEditExam.CreateExamScreen
-import com.example.quizmark.ui.main.exam.addEditExam.InputThptAnswersScreen
-import com.example.quizmark.ui.main.exam.addEditExam.SetupAiExamScreen
-import com.example.quizmark.ui.main.exam.addEditExam.SetupBasicExamScreen
-import com.example.quizmark.ui.main.exam.addEditExam.SetupThptExamScreen
+import com.example.quizmark.ui.main.exam.addExam.CreateExamScreen
+import com.example.quizmark.ui.main.exam.addExam.InputThptAnswersScreen
+import com.example.quizmark.ui.main.exam.addExam.SetupAiExamScreen
+import com.example.quizmark.ui.main.exam.addExam.SetupBasicExamScreen
+import com.example.quizmark.ui.main.exam.addExam.SetupThptExamScreen
 import com.example.quizmark.ui.main.exam.allExam.AllExamsScreen
+import com.example.quizmark.ui.main.exam.editExam.EditExamScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
 import com.example.quizmark.ui.theme.DarkBlue
@@ -66,12 +70,14 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
+            val activity = LocalContext.current as? Activity
 
             NavHost(
                 navController = bottomNavController,
                 startDestination = BottomNavItem.Scan.route
             ) {
                 composable(BottomNavItem.Home.route) {
+                    BackHandler { activity?.finish() }
                     Box(
                         Modifier
                             .fillMaxSize()
@@ -80,13 +86,20 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     ) { Text("Màn hình Trang chủ") }
                 }
                 composable(BottomNavItem.Exam.route) {
+                    BackHandler { activity?.finish() }
                     ExamScreen(
                         onNavigateToTemplates = { bottomNavController.navigate("template_list") },
                         onNavigateToCreateExam = { bottomNavController.navigate("create_exam") },
-                        onNavigateToAllExams = { bottomNavController.navigate("all_exams") }
+                        onNavigateToAllExams = { bottomNavController.navigate("all_exams") },
+                        onNavigateToEditExam = { exam ->
+                            val codesStr = exam.codes.joinToString(",")
+                            val customQ = if (exam.templateId == 6) exam.questionCount else 0
+                            bottomNavController.navigate("edit_exam/${exam.id}/${exam.name}/${exam.templateId}/$codesStr/$customQ")
+                        }
                     )
                 }
                 composable(BottomNavItem.Scan.route) {
+                    BackHandler { activity?.finish() }
                     Box(
                         Modifier
                             .fillMaxSize()
@@ -95,6 +108,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     ) { Text("Màn hình Quét") }
                 }
                 composable(BottomNavItem.ExamList.route) {
+                    BackHandler { activity?.finish() }
                     Box(
                         Modifier
                             .fillMaxSize()
@@ -103,6 +117,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     ) { Text("Màn hình Danh sách thi") }
                 }
                 composable(BottomNavItem.Account.route) {
+                    BackHandler { activity?.finish() }
                     AccountScreen(
                         viewModel = sharedAccountViewModel,
                         onNavigateToLogin = onNavigateToLogin,
@@ -274,7 +289,41 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) }
                 ) {
                     AllExamsScreen(
-                        onNavigateBack = { bottomNavController.popBackStack() }
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToEditExam = { exam ->
+                            val codesStr = exam.codes.joinToString(",")
+                            val customQ = if (exam.templateId == 6) exam.questionCount else 0
+                            bottomNavController.navigate("edit_exam/${exam.id}/${exam.name}/${exam.templateId}/$codesStr/$customQ")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "edit_exam/{examId}/{examName}/{templateId}/{examCodesStr}/{customQ}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val examId = backStackEntry.arguments?.getString("examId") ?: ""
+                    val examName = backStackEntry.arguments?.getString("examName") ?: ""
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 1
+                    val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
+                    val customQ = backStackEntry.arguments?.getString("customQ")?.toIntOrNull() ?: 0
+                    val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
+
+                    EditExamScreen(
+                        examId = examId,
+                        initialExamName = examName,
+                        templateId = templateId,
+                        initialExamCodes = examCodes,
+                        initialCustomQuestionCount = customQ,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToEditAnswers = { tempId, name, codes, qCount ->
+                            // TODO: Điều hướng sang màn hình sửa đáp án chi tiết tương ứng (Basic/AI/THPT)
+                        },
+                        onExamDeleted = {
+                            // Sẽ gọi ViewModel xoá ở đây sau
+                            bottomNavController.popBackStack()
+                        }
                     )
                 }
             }

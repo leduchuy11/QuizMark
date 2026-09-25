@@ -35,13 +35,29 @@ class ExamViewModel @Inject constructor(
 
         // Map Basic
         val mappedBasic = basicList.map { exam ->
-            ExamUiModel(exam.id, exam.name, exam.questionCount, false, exam.createdAt)
+            ExamUiModel(
+                id = exam.id,
+                name = exam.name,
+                templateId = exam.templateId,
+                questionCount = exam.questionCount,
+                isThpt = false,
+                codes = exam.codes.map { it.code },
+                createdAt = exam.createdAt
+            )
         }
 
-        // Map THPT
+        // Map THPT (Cộng tổng số câu 3 phần)
         val mappedThpt = thptList.map { thpt ->
             val totalQ = thpt.config.p1Questions + thpt.config.p2Questions + thpt.config.p3Questions
-            ExamUiModel(thpt.id, thpt.name, totalQ, true, thpt.createdAt)
+            ExamUiModel(
+                id = thpt.id,
+                name = thpt.name,
+                templateId = thpt.templateId,
+                questionCount = totalQ,
+                isThpt = true,
+                codes = thpt.codes.map { it.code },
+                createdAt = thpt.createdAt
+            )
         }
 
         // Trộn lại và xếp mới nhất lên trên
@@ -66,6 +82,15 @@ class ExamViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             val result = repository.saveThptExam(exam)
+            _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
+    fun deleteExam(examId: String, isThpt: Boolean) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.deleteExam(examId, isThpt)
             _saveResult.value = result
             _isLoading.value = false
         }

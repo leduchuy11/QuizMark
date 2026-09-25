@@ -92,4 +92,23 @@ class ExamRepository @Inject constructor(
 
         awaitClose { listener.remove() }
     }
+
+    // 5. Xoá đề thi (Hỗ trợ Offline)
+    suspend fun deleteExam(examId: String, isThpt: Boolean): Result<Unit> {
+        return try {
+            val currentUserUid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+
+            val collectionName = if (isThpt) "thpt_exams" else "exams"
+
+            db.collection("users")
+                .document(currentUserUid)
+                .collection(collectionName)
+                .document(examId)
+                .delete()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
+import com.example.quizmark.data.model.ExamUiModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
@@ -34,6 +35,7 @@ fun ExamScreen(
     onNavigateToTemplates: () -> Unit,
     onNavigateToCreateExam: () -> Unit,
     onNavigateToAllExams: () -> Unit,
+    onNavigateToEditExam: (ExamUiModel) -> Unit,
     viewModel: ExamViewModel = hiltViewModel()
 ) {
     val scrollState = rememberScrollState()
@@ -242,7 +244,8 @@ fun ExamScreen(
                         RecentExamItem(
                             examName = exam.name,
                             questionCount = exam.questionCount,
-                            onClick = { /* TODO: Điều hướng sang trang sửa đề */ }
+                            isThpt = exam.isThpt,
+                            onClick = { onNavigateToEditExam(exam) }
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -305,6 +308,7 @@ fun StatCard(
 fun RecentExamItem(
     examName: String,
     questionCount: Int,
+    isThpt: Boolean,
     onClick: () -> Unit
 ) {
     Row(
@@ -319,7 +323,10 @@ fun RecentExamItem(
         Box(
             modifier = Modifier
                 .size(42.dp)
-                .background(Color(0xFFEFF6FF), RoundedCornerShape(12.dp)),
+                .background(
+                    color = if (isThpt) Color(0xFFFFF7ED) else Color(0xFFEFF6FF),
+                    shape = RoundedCornerShape(12.dp)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -350,8 +357,7 @@ fun RecentExamItem(
             painter = painterResource(id = R.drawable.ic_edit),
             contentDescription = "Edit",
             tint = Color.Gray,
-            modifier = Modifier
-                .size(18.dp)
+            modifier = Modifier.size(18.dp)
         )
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
+import com.example.quizmark.data.model.ExamUiModel
 import com.example.quizmark.ui.main.exam.ExamViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
@@ -37,6 +38,7 @@ import com.example.quizmark.ui.theme.PrimaryDarkBlue
 @Composable
 fun AllExamsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToEditExam: (ExamUiModel) -> Unit,
     viewModel: ExamViewModel = hiltViewModel()
 ) {
     // Lấy danh sách từ ViewModel (đã tự động sắp xếp mới nhất lên đầu)
@@ -175,7 +177,7 @@ fun AllExamsScreen(
                             examName = exam.name,
                             questionCount = exam.questionCount,
                             isThpt = exam.isThpt,
-                            onClick = { /* TODO: Mở chi tiết đề */ }
+                            onClick = { onNavigateToEditExam(exam) }
                         )
                     }
                 }
