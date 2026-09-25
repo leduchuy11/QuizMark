@@ -170,4 +170,5 @@
     <string name="error_invalid_question_count">Vui lòng nhập số câu hợp lệ (1-100)!</string>
 
     <string name="ai_exam_card_title">Phiếu chấm AI</string>
+    <string name="empty_exam_list">Chưa có đề thi nào</string>
 </resources>

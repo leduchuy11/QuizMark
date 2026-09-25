@@ -172,6 +172,7 @@
     <string name="error_invalid_question_count">Please enter a valid number of questions (1–100)!</string>
 
     <string name="ai_exam_card_title">AI Grading Sheet</string>
+    <string name="empty_exam_list">No exams available</string>
 
 
 

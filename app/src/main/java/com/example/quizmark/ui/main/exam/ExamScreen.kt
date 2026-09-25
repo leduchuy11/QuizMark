@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
@@ -27,9 +30,16 @@ import com.example.quizmark.ui.theme.PrimaryDarkBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExamScreen(onNavigateToTemplates: () -> Unit,
-               onNavigateToCreateExam: () -> Unit) {
+fun ExamScreen(
+    onNavigateToTemplates: () -> Unit,
+    onNavigateToCreateExam: () -> Unit,
+    viewModel: ExamViewModel = hiltViewModel()
+) {
     val scrollState = rememberScrollState()
+
+    // Lắng nghe dữ liệu từ Firebase
+    val examList by viewModel.examList.collectAsState()
+    val totalExams = examList.size
 
     Scaffold(
         containerColor = BackgroundScreen,
@@ -122,7 +132,7 @@ fun ExamScreen(onNavigateToTemplates: () -> Unit,
                     StatCard(
                         modifier = Modifier.weight(1f),
                         title = stringResource(id = R.string.stat_total_exams),
-                        value = "1",
+                        value = totalExams.toString(),
                         valueColor = PrimaryDarkBlue,
                         iconRes = R.drawable.ic_chart
                     )
@@ -222,13 +232,19 @@ fun ExamScreen(onNavigateToTemplates: () -> Unit,
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Danh sách đề
-                val recentExams = listOf("Đề toán 1", "Đề lý 2", "Đề tiếng anh giữa kì")
-                recentExams.take(5).forEach { examName ->
-                    RecentExamItem(
-                        examName = examName,
-                        onClick = { /* TODO: Điều hướng sang trang sửa đề */ }
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                if (examList.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                        Text(text = stringResource(R.string.empty_exam_list), color = Color.Gray, fontSize = 14.sp)
+                    }
+                } else {
+                    examList.take(5).forEach { exam ->
+                        RecentExamItem(
+                            examName = exam.name,
+                            questionCount = exam.questionCount,
+                            onClick = { /* TODO: Điều hướng sang trang sửa đề */ }
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(80.dp))
@@ -287,6 +303,7 @@ fun StatCard(
 @Composable
 fun RecentExamItem(
     examName: String,
+    questionCount: Int,
     onClick: () -> Unit
 ) {
     Row(
@@ -295,12 +312,12 @@ fun RecentExamItem(
             .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color(0x1A000000))
             .background(Color.White, RoundedCornerShape(16.dp))
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(42.dp)
                 .background(Color(0xFFEFF6FF), RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center
         ) {
@@ -322,19 +339,18 @@ fun RecentExamItem(
                 color = ColorText
             )
             Text(
-                text = "15 câu",
+                text = "$questionCount câu",
                 fontSize = 13.sp,
                 color = Color.Gray
             )
         }
 
-        // Chỉ giữ lại nút Edit
         Icon(
             painter = painterResource(id = R.drawable.ic_edit),
             contentDescription = "Edit",
             tint = Color.Gray,
             modifier = Modifier
-                .size(20.dp)
+                .size(18.dp)
         )
     }
 }
