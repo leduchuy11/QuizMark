@@ -183,4 +183,9 @@
     <string name="dialog_delete_exam_title">Xác nhận xoá đề</string>
     <string name="dialog_delete_exam_text">Bạn có chắc chắn muốn xoá đề thi này không? Dữ liệu đáp án và bài làm liên quan sẽ bị mất và không thể khôi phục.</string>
 
+    <string name="toast_update_answers_success">Cập nhật đáp án thành công!</string>
+    <string name="error_prefix">Lỗi: %1$s</string>
+    <string name="edit_answers_title">Sửa đáp án</string>
+    <string name="btn_update">Cập nhật</string>
+    <string name="cd_exam_image">Ảnh phiếu thi</string>
 </resources>

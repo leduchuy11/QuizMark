@@ -9,6 +9,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import com.google.firebase.firestore.Source
 
 class ExamRepository @Inject constructor(
     private val db: FirebaseFirestore,
@@ -109,6 +110,22 @@ class ExamRepository @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    // 6. Lấy chi tiết một đề Basic
+    suspend fun getBasicExamById(examId: String): ExamModel? {
+        return try {
+            val uid = auth.currentUser?.uid ?: return null
+            val snapshot = db.collection("users")
+                .document(uid)
+                .collection("exams")
+                .document(examId)
+                .get(Source.CACHE)
+                .await()
+            snapshot.toObject(ExamModel::class.java)
+        } catch (e: Exception) {
+            null
         }
     }
 }

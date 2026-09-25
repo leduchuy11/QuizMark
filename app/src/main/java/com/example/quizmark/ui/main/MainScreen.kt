@@ -40,6 +40,8 @@ import com.example.quizmark.ui.main.exam.addExam.SetupAiExamScreen
 import com.example.quizmark.ui.main.exam.addExam.SetupBasicExamScreen
 import com.example.quizmark.ui.main.exam.addExam.SetupThptExamScreen
 import com.example.quizmark.ui.main.exam.allExam.AllExamsScreen
+import com.example.quizmark.ui.main.exam.editExam.EditAiAnswersScreen
+import com.example.quizmark.ui.main.exam.editExam.EditBasicAnswersScreen
 import com.example.quizmark.ui.main.exam.editExam.EditExamScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
@@ -318,11 +320,66 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         initialCustomQuestionCount = customQ,
                         onNavigateBack = { bottomNavController.popBackStack() },
                         onNavigateToEditAnswers = { tempId, name, codes, qCount ->
-                            // TODO: Điều hướng sang màn hình sửa đáp án chi tiết tương ứng (Basic/AI/THPT)
+                            val codesStr = codes.joinToString(",")
+                            // Phân luồng điều hướng tùy theo loại phiếu
+                            if (tempId == 1) {
+                                // TODO: Sang màn sửa THPT
+                            } else if (tempId == 6) {
+                                bottomNavController.navigate("edit_ai_answers/$examId/$name/$tempId/$codesStr/$qCount")
+                            } else {
+                                bottomNavController.navigate("edit_basic_answers/$examId/$tempId/$name/$codesStr")
+                            }
                         },
                         onExamDeleted = {
-                            // Sẽ gọi ViewModel xoá ở đây sau
                             bottomNavController.popBackStack()
+                        }
+                    )
+                }
+
+                composable(
+                    route = "edit_basic_answers/{examId}/{templateId}/{examName}/{examCodesStr}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val examId = backStackEntry.arguments?.getString("examId") ?: ""
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 2
+                    val examName = backStackEntry.arguments?.getString("examName") ?: ""
+                    val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
+                    val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
+
+                    EditBasicAnswersScreen(
+                        examId = examId,
+                        templateId = templateId,
+                        examName = examName,
+                        examCodes = examCodes,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToExamHome = {
+                            bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)
+                        }
+                    )
+                }
+
+                composable(
+                    route = "edit_ai_answers/{examId}/{examName}/{templateId}/{examCodesStr}/{customQ}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val examId = backStackEntry.arguments?.getString("examId") ?: ""
+                    val examName = backStackEntry.arguments?.getString("examName") ?: ""
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 6
+                    val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
+                    val customQ = backStackEntry.arguments?.getString("customQ")?.toIntOrNull() ?: 0
+                    val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
+
+                    EditAiAnswersScreen(
+                        examId = examId,
+                        templateId = templateId,
+                        examName = examName,
+                        examCodes = examCodes,
+                        customQuestionCount = customQ,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToExamHome = {
+                            bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)
                         }
                     )
                 }

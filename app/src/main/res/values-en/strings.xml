@@ -185,6 +185,11 @@
     <string name="dialog_delete_exam_title">Confirm Delete Exam</string>
     <string name="dialog_delete_exam_text">Are you sure you want to delete this exam? The related answer key and submissions will be lost and cannot be recovered.</string>
 
+    <string name="toast_update_answers_success">Answers updated successfully!</string>
+    <string name="error_prefix">Error: %1$s</string>
+    <string name="edit_answers_title">Edit Answers</string>
+    <string name="btn_update">Update</string>
+    <string name="cd_exam_image">Exam sheet image</string>
 
 
 
