@@ -156,7 +156,6 @@
     <string name="error_total_score_invalid">Total score must be exactly 10!</string>
     <string name="unit_point">%1$s points</string>
 
-    ```xml
     <!-- THPT Answer Input Screen -->
     <string name="input_thpt_answers_title">THPT Answer Key</string>
     <string name="header_part1">Part 1</string>
@@ -167,7 +166,12 @@
     <string name="lbl_false_option">F</string>
     <string name="placeholder_part3">E.g. 1024 \u2022 1.05 \u2022 -3.8</string>
     <string name="error_missing_thpt_answers">Please complete all answers for all exam codes!</string>
-    ```
+
+    <string name="input_custom_question_count_label">Number of questions (Max. 100)</string>
+    <string name="error_invalid_question_count">Please enter a valid number of questions (1–100)!</string>
+
+    <string name="ai_exam_card_title">AI Grading Sheet</string>
+
 
 
 

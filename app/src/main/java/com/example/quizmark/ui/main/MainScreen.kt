@@ -33,6 +33,7 @@ import com.example.quizmark.ui.main.account.ProfileEditScreen
 import com.example.quizmark.ui.main.exam.ExamScreen
 import com.example.quizmark.ui.main.exam.addEditExam.CreateExamScreen
 import com.example.quizmark.ui.main.exam.addEditExam.InputThptAnswersScreen
+import com.example.quizmark.ui.main.exam.addEditExam.SetupAiExamScreen
 import com.example.quizmark.ui.main.exam.addEditExam.SetupBasicExamScreen
 import com.example.quizmark.ui.main.exam.addEditExam.SetupThptExamScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
@@ -156,13 +157,14 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 ) {
                     CreateExamScreen(
                         onNavigateBack = { bottomNavController.popBackStack() },
-                        onNavigateToSetup = { templateId, examName, examCodes ->
+                        onNavigateToSetup = { templateId, examName, examCodes, customQuestionCount ->
                             val codesString = examCodes.joinToString(",")
 
                             if (templateId == 1) {
                                 bottomNavController.navigate("setup_thpt_exam/$templateId/$examName/$codesString")
+                            } else if (templateId == 6) {
+                                bottomNavController.navigate("setup_ai_exam/$templateId/$examName/$codesString/$customQuestionCount")
                             } else {
-                                // Các phiếu cơ bản (20, 40, 50, 120) thì vào đây
                                 bottomNavController.navigate("setup_basic_exam/$templateId/$examName/$codesString")
                             }
                         }
@@ -228,6 +230,29 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         p2Q = p2Q,
                         p3Q = p3Q,
                         examCodes = examCodes,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToExamHome = {
+                            bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)
+                        }
+                    )
+                }
+
+                composable(
+                    route = "setup_ai_exam/{templateId}/{examName}/{examCodesStr}/{customQuestionCount}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 6
+                    val examName = backStackEntry.arguments?.getString("examName") ?: ""
+                    val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
+                    val customQuestionCount = backStackEntry.arguments?.getString("customQuestionCount")?.toIntOrNull() ?: 0
+                    val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
+
+                    SetupAiExamScreen(
+                        templateId = templateId,
+                        examName = examName,
+                        examCodes = examCodes,
+                        customQuestionCount = customQuestionCount,
                         onNavigateBack = { bottomNavController.popBackStack() },
                         onNavigateToExamHome = {
                             bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)

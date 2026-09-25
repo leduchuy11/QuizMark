@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,17 +23,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.quizmark.R
 import com.example.quizmark.data.model.ExamCodeModel
-import com.example.quizmark.ui.main.exam.templateDownload.getTemplateDetailById
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
@@ -42,20 +40,16 @@ import com.example.quizmark.ui.theme.PrimaryDarkBlue
 import kotlinx.coroutines.delay
 
 @Composable
-fun SetupBasicExamScreen(
+fun SetupAiExamScreen(
     templateId: Int,
     examName: String,
     examCodes: List<String>,
+    customQuestionCount: Int,
     onNavigateBack: () -> Unit,
     onNavigateToExamHome: () -> Unit
 ) {
     val context = LocalContext.current
-    val template = getTemplateDetailById(templateId)
-    val questionCount = template.questionCount.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 20
-
-    // Sử dụng trực tiếp ExamCodeModel từ data.model
     var answers by remember { mutableStateOf(mapOf<String, ExamCodeModel>()) }
-
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.SUCCESS) }
     var navigateAfterToast by remember { mutableStateOf(false) }
@@ -126,9 +120,8 @@ fun SetupBasicExamScreen(
                         onClick = {
                             var isAllAnswered = true
                             for (code in examCodes) {
-                                // Lấy Model ra để check, nếu null tức là chưa nhập gì
                                 val codeState = answers[code] ?: ExamCodeModel(code = code)
-                                if (codeState.answers.size < questionCount) {
+                                if (codeState.answers.size < customQuestionCount) {
                                     isAllAnswered = false
                                     break
                                 }
@@ -140,7 +133,7 @@ fun SetupBasicExamScreen(
                                 return@Button
                             }
 
-                            // TODO: Ở bài tới chúng ta sẽ đẩy thẳng biến answers này lên Firebase!
+                            // TODO: Lưu Firebase
 
                             toastMessage = context.getString(R.string.toast_create_success)
                             toastType = ToastType.SUCCESS
@@ -170,30 +163,24 @@ fun SetupBasicExamScreen(
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 item {
-                    Box(
+                    Text(
+                        text = stringResource(id = R.string.ai_exam_card_title),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color(0x1A000000))
-                            .background(Color.White, RoundedCornerShape(16.dp))
-                            .padding(20.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = template.imageRes),
-                            contentDescription = "Ảnh phiếu thi",
-                            modifier = Modifier.fillMaxWidth(),
-                            contentScale = ContentScale.FillWidth
-                        )
-                    }
+                            .padding(top = 8.dp, bottom = 16.dp),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryDarkBlue,
+                        textAlign = TextAlign.Center
+                    )
                 }
 
                 items(examCodes) { code ->
-                    // Đọc trạng thái từ Map, nếu chưa có tạo một Model rỗng cho mã đề này
                     val currentState = answers[code] ?: ExamCodeModel(code = code)
 
-                    ExamCodeSetupCard(
+                    AiExamCodeSetupCard(
                         examCode = code,
-                        questionCount = questionCount,
+                        questionCount = customQuestionCount,
                         currentState = currentState,
                         onUpdateState = { newState ->
                             val updatedAnswers = answers.toMutableMap()
@@ -221,11 +208,12 @@ fun SetupBasicExamScreen(
     }
 }
 
+// CÁC HÀM CON PRIVATE
 @Composable
-fun ExamCodeSetupCard(
+private fun AiExamCodeSetupCard(
     examCode: String,
     questionCount: Int,
-    currentState: ExamCodeModel, // Truyền hẳn Data Model
+    currentState: ExamCodeModel,
     onUpdateState: (ExamCodeModel) -> Unit
 ) {
     Column(
@@ -258,16 +246,13 @@ fun ExamCodeSetupCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             for (i in 1..questionCount) {
-                // Ép kiểu câu hỏi thành String để map với Model của Firestore
                 val qKey = i.toString()
-
-                QuestionRow(
+                AiQuestionRow(
                     questionNumber = i,
-                    selectedOption = currentState.answers[qKey], // Lấy từ Model
+                    selectedOption = currentState.answers[qKey],
                     onOptionSelected = { option ->
                         val newAnswers = currentState.answers.toMutableMap()
                         newAnswers[qKey] = option
-                        // Cập nhật lại state của Model mẹ
                         onUpdateState(currentState.copy(answers = newAnswers))
                     }
                 )
@@ -277,7 +262,7 @@ fun ExamCodeSetupCard(
 }
 
 @Composable
-fun QuestionRow(
+private fun AiQuestionRow(
     questionNumber: Int,
     selectedOption: String?,
     onOptionSelected: (String) -> Unit

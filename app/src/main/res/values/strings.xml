@@ -164,4 +164,9 @@
     <string name="lbl_false_option">S</string>
     <string name="placeholder_part3">VD: 1024 \u2022 1,05 \u2022 -3,8</string>
     <string name="error_missing_thpt_answers">Vui lòng hoàn thành tất cả đáp án cho các mã đề!</string>
+
+    <string name="input_custom_question_count_label">Số câu (Tối đa 100)</string>
+    <string name="error_invalid_question_count">Vui lòng nhập số câu hợp lệ (1-100)!</string>
+
+    <string name="ai_exam_card_title">Phiếu chấm AI</string>
 </resources>

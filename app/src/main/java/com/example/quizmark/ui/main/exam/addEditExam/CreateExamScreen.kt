@@ -1,6 +1,5 @@
 package com.example.quizmark.ui.main.exam.addEditExam
 
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -51,7 +51,7 @@ enum class ToastType { SUCCESS, ERROR, WARNING }
 @Composable
 fun CreateExamScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToSetup: (templateId: Int, examName: String, examCodes: List<String>) -> Unit
+    onNavigateToSetup: (templateId: Int, examName: String, examCodes: List<String>, customQuestionCount: Int) -> Unit
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -61,6 +61,8 @@ fun CreateExamScreen(
     var selectedTemplate by remember { mutableStateOf<OmrTemplate?>(null) }
     var examCodeCountStr by remember { mutableStateOf("") }
     var examCodes by remember { mutableStateOf(listOf<String>()) }
+
+    var customQuestionCountStr by remember { mutableStateOf("") }
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.ERROR) }
@@ -130,6 +132,16 @@ fun CreateExamScreen(
                                 return@Button
                             }
 
+                            // Validate riêng cho loại phiếu "Khác" (ID = 6)
+                            if (selectedTemplate!!.id == 6) {
+                                val qCount = customQuestionCountStr.toIntOrNull() ?: 0
+                                if (qCount <= 0 || qCount > 100) {
+                                    toastMessage = context.getString(R.string.error_invalid_question_count)
+                                    toastType = ToastType.ERROR
+                                    return@Button
+                                }
+                            }
+
                             val requiredLength = if (selectedTemplate!!.id == 1) 4 else 3
                             val hasInvalidLength = examCodes.any { it.trim().length != requiredLength }
 
@@ -143,7 +155,8 @@ fun CreateExamScreen(
                                 return@Button
                             }
 
-                            onNavigateToSetup(selectedTemplate!!.id, examName, examCodes)
+                            val customQ = if (selectedTemplate!!.id == 6) customQuestionCountStr.toIntOrNull() ?: 0 else 0
+                            onNavigateToSetup(selectedTemplate!!.id, examName, examCodes, customQ)
                         },
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
@@ -217,6 +230,67 @@ fun CreateExamScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // --- GIAO DIỆN NHẬP SỐ CÂU (CHỈ HIỆN KHI CHỌN PHIẾU KHÁC ID = 6) ---
+                AnimatedVisibility(
+                    visible = selectedTemplate?.id == 6,
+                    enter = slideInVertically(initialOffsetY = { -20 }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { -20 }) + fadeOut()
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = stringResource(id = R.string.input_custom_question_count_label), fontWeight = FontWeight.Bold, color = ColorText)
+
+                            // Biến state để theo dõi focus đổi màu viền
+                            var isFocused by remember { mutableStateOf(false) }
+
+                            Box(
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .height(40.dp)
+                                    .border(
+                                        width = if (isFocused) 2.dp else 1.dp,
+                                        color = if (isFocused) PrimaryDarkBlue else Color.LightGray,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .background(Color.White, RoundedCornerShape(12.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                BasicTextField(
+                                    value = customQuestionCountStr,
+                                    onValueChange = { newValue ->
+                                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                            customQuestionCountStr = newValue
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .onFocusChanged { focusState ->
+                                            isFocused = focusState.isFocused
+                                            if (!focusState.isFocused) {
+                                                val count = customQuestionCountStr.toIntOrNull() ?: 0
+                                                if (count > 100) customQuestionCountStr = "100"
+                                            }
+                                        },
+                                    textStyle = LocalTextStyle.current.copy(
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ColorText,
+                                        fontSize = 16.sp
+                                    ),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+
+                // --- GIAO DIỆN NHẬP SỐ MÃ ĐỀ ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -224,34 +298,46 @@ fun CreateExamScreen(
                 ) {
                     Text(text = stringResource(id = R.string.input_exam_count_label), fontWeight = FontWeight.Bold, color = ColorText)
 
-                    OutlinedTextField(
-                        value = examCodeCountStr,
-                        onValueChange = { newValue ->
-                            if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
-                                examCodeCountStr = newValue
-                            }
-                        },
+                    var isFocused by remember { mutableStateOf(false) }
+
+                    Box(
                         modifier = Modifier
-                            .width(60.dp)
-                            .onFocusChanged { focusState ->
-                                if (!focusState.isFocused) {
-                                    val count = examCodeCountStr.toIntOrNull() ?: 0
-                                    if (count > 24) {
-                                        examCodeCountStr = "24"
-                                    }
+                            .width(80.dp)
+                            .height(40.dp)
+                            .border(
+                                width = if (isFocused) 2.dp else 1.dp,
+                                color = if (isFocused) PrimaryDarkBlue else Color.LightGray,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .background(Color.White, RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        BasicTextField(
+                            value = examCodeCountStr,
+                            onValueChange = { newValue ->
+                                if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                    examCodeCountStr = newValue
                                 }
                             },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, color = ColorText),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PrimaryDarkBlue,
-                            unfocusedBorderColor = Color.LightGray,
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
-                        ),
-                        singleLine = true
-                    )
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onFocusChanged { focusState ->
+                                    isFocused = focusState.isFocused
+                                    if (!focusState.isFocused) {
+                                        val count = examCodeCountStr.toIntOrNull() ?: 0
+                                        if (count > 24) examCodeCountStr = "24"
+                                    }
+                                },
+                            textStyle = LocalTextStyle.current.copy(
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.Bold,
+                                color = ColorText,
+                                fontSize = 16.sp
+                            ),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -477,6 +563,7 @@ fun getTemplateListForSelection(): List<OmrTemplate> {
         OmrTemplate(2, "Phiếu 20 câu (bản chuẩn)", "20 câu", "A-D", "A4", R.drawable.form_20),
         OmrTemplate(3, "Phiếu 40 câu (bản chuẩn)", "40 câu", "A-D", "A4", R.drawable.form_40),
         OmrTemplate(4, "Phiếu 50 câu (bản chuẩn)", "50 câu", "A-D", "A4", R.drawable.form_50),
-        OmrTemplate(5, "Phiếu 120 câu (bản chuẩn)", "120 câu", "A-D", "A4", R.drawable.form_120)
+        OmrTemplate(5, "Phiếu 120 câu (bản chuẩn)", "120 câu", "A-D", "A4", R.drawable.form_120),
+        OmrTemplate(6, "Phiếu khác (Chấm bằng AI)", "Tùy chọn số câu", "A-D", "A4", R.drawable.ic_paper)
     )
 }

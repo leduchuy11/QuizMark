@@ -50,7 +50,6 @@ fun InputThptAnswersScreen(
 ) {
     val context = LocalContext.current
 
-    // State tổng: Sử dụng trực tiếp ThptExamCodeModel từ thư mục data.model
     var answers by remember { mutableStateOf(mapOf<String, ThptExamCodeModel>()) }
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
@@ -216,7 +215,7 @@ fun ThptExamCodeCard(
             if (p1Q > 0) {
                 ThptSectionBlock(title = stringResource(R.string.header_part1)) {
                     for (i in 1..p1Q) {
-                        val qKey = i.toString() // Chuyển sang String để khớp model
+                        val qKey = i.toString()
                         Part1QuestionRow(
                             qNum = i,
                             selectedOption = currentState.part1[qKey],
