@@ -36,6 +36,7 @@ import com.example.quizmark.ui.main.exam.addEditExam.InputThptAnswersScreen
 import com.example.quizmark.ui.main.exam.addEditExam.SetupAiExamScreen
 import com.example.quizmark.ui.main.exam.addEditExam.SetupBasicExamScreen
 import com.example.quizmark.ui.main.exam.addEditExam.SetupThptExamScreen
+import com.example.quizmark.ui.main.exam.allExam.AllExamsScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
 import com.example.quizmark.ui.theme.DarkBlue
@@ -81,7 +82,8 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 composable(BottomNavItem.Exam.route) {
                     ExamScreen(
                         onNavigateToTemplates = { bottomNavController.navigate("template_list") },
-                        onNavigateToCreateExam = { bottomNavController.navigate("create_exam") }
+                        onNavigateToCreateExam = { bottomNavController.navigate("create_exam") },
+                        onNavigateToAllExams = { bottomNavController.navigate("all_exams") }
                     )
                 }
                 composable(BottomNavItem.Scan.route) {
@@ -263,6 +265,16 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         onNavigateToExamHome = {
                             bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)
                         }
+                    )
+                }
+
+                composable(
+                    route = "all_exams",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right) }
+                ) {
+                    AllExamsScreen(
+                        onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }
             }

@@ -171,4 +171,8 @@
 
     <string name="ai_exam_card_title">Phiếu chấm AI</string>
     <string name="empty_exam_list">Chưa có đề thi nào</string>
+
+    <string name="all_exams_title">Tất cả đề thi</string>
+    <string name="search_exam_hint">Tìm kiếm đề thi...</string>
+    <string name="empty_search_result">Không tìm thấy đề thi nào.</string>
 </resources>

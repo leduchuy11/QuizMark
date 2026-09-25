@@ -33,6 +33,7 @@ import com.example.quizmark.ui.theme.PrimaryDarkBlue
 fun ExamScreen(
     onNavigateToTemplates: () -> Unit,
     onNavigateToCreateExam: () -> Unit,
+    onNavigateToAllExams: () -> Unit,
     viewModel: ExamViewModel = hiltViewModel()
 ) {
     val scrollState = rememberScrollState()
@@ -225,7 +226,7 @@ fun ExamScreen(
                         text = stringResource(id = R.string.btn_see_all),
                         fontSize = 13.sp,
                         color = PrimaryDarkBlue,
-                        modifier = Modifier.clickable { /* TODO: Xem tất cả */ }
+                        modifier = Modifier.clickable { onNavigateToAllExams() }
                     )
                 }
 
