@@ -113,35 +113,45 @@ class ExamRepository @Inject constructor(
         }
     }
 
-    // 6. Lấy chi tiết một đề Basic
+    // 6. Lấy chi tiết một đề Basic (Ưu tiên Cache, dự phòng Server)
     suspend fun getBasicExamById(examId: String): ExamModel? {
+        val uid = auth.currentUser?.uid ?: return null
+        val docRef = db.collection("users")
+            .document(uid)
+            .collection("exams")
+            .document(examId)
+
         return try {
-            val uid = auth.currentUser?.uid ?: return null
-            val snapshot = db.collection("users")
-                .document(uid)
-                .collection("exams")
-                .document(examId)
-                .get(Source.CACHE)
-                .await()
+            val snapshot = docRef.get(Source.CACHE).await()
             snapshot.toObject(ExamModel::class.java)
         } catch (e: Exception) {
-            null
+            try {
+                val snapshot = docRef.get(Source.SERVER).await()
+                snapshot.toObject(ExamModel::class.java)
+            } catch (ex: Exception) {
+                null
+            }
         }
     }
 
-    // 7. Lấy chi tiết một đề THPT (Hỗ trợ Offline)
+    // 7. Lấy chi tiết một đề THPT (Ưu tiên Cache, dự phòng Server)
     suspend fun getThptExamById(examId: String): ThptExamModel? {
+        val uid = auth.currentUser?.uid ?: return null
+        val docRef = db.collection("users")
+            .document(uid)
+            .collection("thpt_exams")
+            .document(examId)
+
         return try {
-            val uid = auth.currentUser?.uid ?: return null
-            val snapshot = db.collection("users")
-                .document(uid)
-                .collection("thpt_exams")
-                .document(examId)
-                .get(com.google.firebase.firestore.Source.CACHE)
-                .await()
+            val snapshot = docRef.get(Source.CACHE).await()
             snapshot.toObject(ThptExamModel::class.java)
         } catch (e: Exception) {
-            null
+            try {
+                val snapshot = docRef.get(Source.SERVER).await()
+                snapshot.toObject(ThptExamModel::class.java)
+            } catch (ex: Exception) {
+                null
+            }
         }
     }
 }
