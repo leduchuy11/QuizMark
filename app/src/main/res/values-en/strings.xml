@@ -191,6 +191,9 @@
     <string name="btn_update">Update</string>
     <string name="cd_exam_image">Exam sheet image</string>
 
+    <string name="edit_thpt_structure_title">Edit Exam Structure</string>
+    <string name="btn_continue_edit_answers">Continue Editing Answers</string>
+
 
 
 

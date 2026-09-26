@@ -188,4 +188,7 @@
     <string name="edit_answers_title">Sửa đáp án</string>
     <string name="btn_update">Cập nhật</string>
     <string name="cd_exam_image">Ảnh phiếu thi</string>
+
+    <string name="edit_thpt_structure_title">Sửa cấu trúc đề</string>
+    <string name="btn_continue_edit_answers">Tiếp tục sửa đáp án</string>
 </resources>

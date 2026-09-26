@@ -128,4 +128,20 @@ class ExamRepository @Inject constructor(
             null
         }
     }
+
+    // 7. Lấy chi tiết một đề THPT (Hỗ trợ Offline)
+    suspend fun getThptExamById(examId: String): ThptExamModel? {
+        return try {
+            val uid = auth.currentUser?.uid ?: return null
+            val snapshot = db.collection("users")
+                .document(uid)
+                .collection("thpt_exams")
+                .document(examId)
+                .get(com.google.firebase.firestore.Source.CACHE)
+                .await()
+            snapshot.toObject(ThptExamModel::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

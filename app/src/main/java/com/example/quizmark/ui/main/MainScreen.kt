@@ -43,6 +43,8 @@ import com.example.quizmark.ui.main.exam.allExam.AllExamsScreen
 import com.example.quizmark.ui.main.exam.editExam.EditAiAnswersScreen
 import com.example.quizmark.ui.main.exam.editExam.EditBasicAnswersScreen
 import com.example.quizmark.ui.main.exam.editExam.EditExamScreen
+import com.example.quizmark.ui.main.exam.editExam.EditThptAnswersScreen
+import com.example.quizmark.ui.main.exam.editExam.EditThptExamScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
 import com.example.quizmark.ui.theme.DarkBlue
@@ -323,7 +325,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                             val codesStr = codes.joinToString(",")
                             // Phân luồng điều hướng tùy theo loại phiếu
                             if (tempId == 1) {
-                                // TODO: Sang màn sửa THPT
+                                bottomNavController.navigate("edit_thpt_exam/$examId/$name/$tempId/$codesStr")
                             } else if (tempId == 6) {
                                 bottomNavController.navigate("edit_ai_answers/$examId/$name/$tempId/$codesStr/$qCount")
                             } else {
@@ -377,6 +379,60 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         examName = examName,
                         examCodes = examCodes,
                         customQuestionCount = customQ,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToExamHome = {
+                            bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)
+                        }
+                    )
+                }
+
+                composable(
+                    route = "edit_thpt_exam/{examId}/{examName}/{templateId}/{examCodesStr}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val examId = backStackEntry.arguments?.getString("examId") ?: ""
+                    val examName = backStackEntry.arguments?.getString("examName") ?: ""
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 1
+                    val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
+                    val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
+
+                    EditThptExamScreen(
+                        examId = examId,
+                        templateId = templateId,
+                        examName = examName,
+                        examCodes = examCodes,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToNext = { p1Q, p1S, p2Q, p3Q, p3S ->
+                            bottomNavController.navigate("edit_thpt_answers/$examId/$examName/$templateId/$p1Q/$p1S/$p2Q/$p3Q/$p3S/$examCodesStr")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "edit_thpt_answers/{examId}/{examName}/{templateId}/{p1Q}/{p1S}/{p2Q}/{p3Q}/{p3S}/{examCodesStr}"
+                ) { backStackEntry ->
+                    val examId = backStackEntry.arguments?.getString("examId") ?: ""
+                    val examName = backStackEntry.arguments?.getString("examName") ?: ""
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 1
+                    val p1Q = backStackEntry.arguments?.getString("p1Q")?.toIntOrNull() ?: 0
+                    val p1S = backStackEntry.arguments?.getString("p1S")?.toFloatOrNull() ?: 0f
+                    val p2Q = backStackEntry.arguments?.getString("p2Q")?.toIntOrNull() ?: 0
+                    val p3Q = backStackEntry.arguments?.getString("p3Q")?.toIntOrNull() ?: 0
+                    val p3S = backStackEntry.arguments?.getString("p3S")?.toFloatOrNull() ?: 0f
+                    val examCodesStr = backStackEntry.arguments?.getString("examCodesStr") ?: ""
+                    val examCodes = examCodesStr.split(",").filter { it.isNotBlank() }
+
+                    EditThptAnswersScreen(
+                        examId = examId,
+                        templateId = templateId,
+                        examName = examName,
+                        p1Q = p1Q,
+                        p1S = p1S,
+                        p2Q = p2Q,
+                        p3Q = p3Q,
+                        p3S = p3S,
+                        examCodes = examCodes,
                         onNavigateBack = { bottomNavController.popBackStack() },
                         onNavigateToExamHome = {
                             bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)

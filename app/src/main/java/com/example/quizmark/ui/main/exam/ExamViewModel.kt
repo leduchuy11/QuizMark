@@ -30,6 +30,9 @@ class ExamViewModel @Inject constructor(
     private val _editingBasicExam = MutableStateFlow<ExamModel?>(null)
     val editingBasicExam: StateFlow<ExamModel?> = _editingBasicExam.asStateFlow()
 
+    private val _editingThptExam = MutableStateFlow<ThptExamModel?>(null)
+    val editingThptExam: StateFlow<ThptExamModel?> = _editingThptExam.asStateFlow()
+
     // 2. Gộp 2 bảng dữ liệu, map về chung 1 Model và sắp xếp thời gian
     val examList: StateFlow<List<ExamUiModel>> = combine(
         repository.getAllBasicExamsFlow(),
@@ -109,6 +112,16 @@ class ExamViewModel @Inject constructor(
 
     fun resetEditingExam() {
         _editingBasicExam.value = null
+    }
+
+    fun loadThptExam(examId: String) {
+        viewModelScope.launch {
+            _editingThptExam.value = repository.getThptExamById(examId)
+        }
+    }
+
+    fun resetEditingThptExam() {
+        _editingThptExam.value = null
     }
 
     fun resetSaveResult() {
