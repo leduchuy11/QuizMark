@@ -191,4 +191,25 @@
 
     <string name="edit_thpt_structure_title">Sửa cấu trúc đề</string>
     <string name="btn_continue_edit_answers">Tiếp tục sửa đáp án</string>
+
+    <!-- Màn hình Danh sách thi -->
+    <string name="tab_roster">Danh sách thi</string>
+    <string name="tab_students">Sinh viên</string>
+    <string name="search_roster_hint">Tìm kiếm...</string>
+    <string name="total_roster_count">Tổng %1$d d.sách thi</string>
+    <string name="empty_roster_list">Hiện chưa có danh sách thi nào</string>
+    <string name="student_count_suffix">%1$d sinh viên</string>
+    <string name="cd_add_roster">Thêm danh sách thi</string>
+    <string name="cd_add_student">Thêm sinh viên</string>
+
+    <!-- Màn hình Thêm danh sách thi -->
+    <string name="add_roster_title">Thêm danh sách</string>
+    <string name="label_roster_name">Tên d.sách</string>
+    <string name="label_grade">Khối</string>
+    <string name="label_subject">Môn học</string>
+    <string name="label_school_year">Năm học</string>
+    <string name="btn_add">Thêm</string>
+
+    <string name="error_fill_all_blanks">Vui lòng điền đầy đủ thông tin vào ô trống</string>
+    <string name="toast_create_list_succes">Tạo danh sách thi thành công</string>
 </resources>

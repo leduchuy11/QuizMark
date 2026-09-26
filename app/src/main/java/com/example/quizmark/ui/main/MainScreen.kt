@@ -47,6 +47,9 @@ import com.example.quizmark.ui.main.exam.editExam.EditThptAnswersScreen
 import com.example.quizmark.ui.main.exam.editExam.EditThptExamScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
+import com.example.quizmark.ui.main.examList.AddRosterScreen
+import com.example.quizmark.ui.main.examList.ExamListScreen
+
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 
@@ -113,12 +116,10 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 }
                 composable(BottomNavItem.ExamList.route) {
                     BackHandler { activity?.finish() }
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(Color.White),
-                        Alignment.Center
-                    ) { Text("Màn hình Danh sách thi") }
+                    ExamListScreen(
+                        onNavigateToAddRoster = { bottomNavController.navigate("add_roster") },
+                        onNavigateToAddStudent = { /* TODO: Chuyển sang màn thêm sinh viên */ }
+                    )
                 }
                 composable(BottomNavItem.Account.route) {
                     BackHandler { activity?.finish() }
@@ -437,6 +438,16 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         onNavigateToExamHome = {
                             bottomNavController.popBackStack(BottomNavItem.Exam.route, inclusive = false)
                         }
+                    )
+                }
+
+                composable(
+                    route = "add_roster",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, androidx.compose.animation.core.tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, androidx.compose.animation.core.tween(300)) }
+                ) {
+                    AddRosterScreen(
+                        onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }
             }

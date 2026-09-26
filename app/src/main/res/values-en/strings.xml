@@ -194,7 +194,25 @@
     <string name="edit_thpt_structure_title">Edit Exam Structure</string>
     <string name="btn_continue_edit_answers">Continue Editing Answers</string>
 
+    <!-- Exam Roster Screen -->
+    <string name="tab_roster">Exam Rosters</string>
+    <string name="tab_students">Students</string>
+    <string name="search_roster_hint">Search...</string>
+    <string name="total_roster_count">Total %1$d exam rosters</string>
+    <string name="empty_roster_list">No exam rosters yet</string>
+    <string name="student_count_suffix">%1$d students</string>
+    <string name="cd_add_roster">Add exam roster</string>
+    <string name="cd_add_student">Add student</string>
 
+    <!-- Add Exam Roster Screen -->
+    <string name="add_roster_title">Add Roster</string>
+    <string name="label_roster_name">Roster Name</string>
+    <string name="label_grade">Grade</string>
+    <string name="label_subject">Subject</string>
+    <string name="label_school_year">School Year</string>
+    <string name="btn_add">Add</string>
 
+    <string name="error_fill_all_blanks">Please fill in all required fields</string>
+    <string name="toast_create_list_succes">Exam roster created successfully</string>
 
 </resources>
