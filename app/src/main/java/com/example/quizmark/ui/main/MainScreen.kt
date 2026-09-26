@@ -26,10 +26,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.quizmark.ui.main.account.AccountScreen
 import com.example.quizmark.ui.main.account.AccountViewModel
 import com.example.quizmark.ui.main.account.ProfileEditScreen
@@ -47,8 +49,10 @@ import com.example.quizmark.ui.main.exam.editExam.EditThptAnswersScreen
 import com.example.quizmark.ui.main.exam.editExam.EditThptExamScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
-import com.example.quizmark.ui.main.examList.AddRosterScreen
+import com.example.quizmark.ui.main.examList.roster.AddRosterScreen
 import com.example.quizmark.ui.main.examList.ExamListScreen
+import com.example.quizmark.ui.main.examList.roster.EditRosterScreen
+import com.example.quizmark.ui.main.examList.roster.RosterDetailScreen
 
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
@@ -118,7 +122,10 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     BackHandler { activity?.finish() }
                     ExamListScreen(
                         onNavigateToAddRoster = { bottomNavController.navigate("add_roster") },
-                        onNavigateToAddStudent = { /* TODO: Chuyển sang màn thêm sinh viên */ }
+                        onNavigateToAddStudent = { /* TODO */ },
+                        onNavigateToRosterDetail = { rosterId ->
+                            bottomNavController.navigate("roster_detail/$rosterId")
+                        }
                     )
                 }
                 composable(BottomNavItem.Account.route) {
@@ -447,6 +454,39 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, androidx.compose.animation.core.tween(300)) }
                 ) {
                     AddRosterScreen(
+                        onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = "roster_detail/{rosterId}",
+                    arguments = listOf(navArgument("rosterId") { type = NavType.StringType }),
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val rosterId = backStackEntry.arguments?.getString("rosterId") ?: ""
+                    RosterDetailScreen(
+                        rosterId = rosterId,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToAddStudent = { id ->
+                            // TODO: Chuyển sang màn thêm học sinh
+                        },
+                        onNavigateToEditRoster = { id ->
+                            bottomNavController.navigate("edit_roster/$id")
+                        }
+                    )
+                }
+
+                // Màn hình Sửa danh sách thi
+                composable(
+                    route = "edit_roster/{rosterId}",
+                    arguments = listOf(navArgument("rosterId") { type = NavType.StringType }),
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val rosterId = backStackEntry.arguments?.getString("rosterId") ?: ""
+                    EditRosterScreen(
+                        rosterId = rosterId,
                         onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }

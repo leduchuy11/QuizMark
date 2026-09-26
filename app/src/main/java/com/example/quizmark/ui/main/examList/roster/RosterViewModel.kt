@@ -1,4 +1,4 @@
-package com.example.quizmark.ui.main.examList
+package com.example.quizmark.ui.main.examList.roster
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,11 +27,27 @@ class RosterViewModel @Inject constructor(
     val rosterList: StateFlow<List<RosterModel>> = repository.getAllRostersFlow()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    private val _currentRoster = MutableStateFlow<RosterModel?>(null)
+    val currentRoster: StateFlow<RosterModel?> = _currentRoster.asStateFlow()
+
     fun saveRoster(roster: RosterModel) {
         viewModelScope.launch {
             _isLoading.value = true
             val result = repository.saveRoster(roster)
             _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
+    fun deleteRoster(rosterId: String) {
+        repository.deleteRoster(rosterId)
+    }
+
+    fun loadRoster(rosterId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val roster = repository.getRosterById(rosterId)
+            _currentRoster.value = roster
             _isLoading.value = false
         }
     }

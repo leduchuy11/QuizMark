@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">QuizMark</string>
     <string name="subtitle_omr">Hệ thống chấm điểm OMR tự động</string>
     <string name="login_title">Đăng nhập tài khoản</string>
@@ -194,13 +194,13 @@
 
     <!-- Màn hình Danh sách thi -->
     <string name="tab_roster">Danh sách thi</string>
-    <string name="tab_students">Sinh viên</string>
+    <string name="tab_students">Học sinh</string>
     <string name="search_roster_hint">Tìm kiếm...</string>
     <string name="total_roster_count">Tổng %1$d d.sách thi</string>
     <string name="empty_roster_list">Hiện chưa có danh sách thi nào</string>
-    <string name="student_count_suffix">%1$d sinh viên</string>
+    <string name="student_count_suffix">%1$d học sinh</string>
     <string name="cd_add_roster">Thêm danh sách thi</string>
-    <string name="cd_add_student">Thêm sinh viên</string>
+    <string name="cd_add_student">Thêm học sinh</string>
 
     <!-- Màn hình Thêm danh sách thi -->
     <string name="add_roster_title">Thêm danh sách</string>
@@ -212,4 +212,23 @@
 
     <string name="error_fill_all_blanks">Vui lòng điền đầy đủ thông tin vào ô trống</string>
     <string name="toast_create_list_succes">Tạo danh sách thi thành công</string>
+
+    <!-- Màn hình Chi tiết lớp (Roster Detail) -->
+    <string name="detail_roster_title">Chi tiết lớp</string>
+    <string name="section_student_list">D.sách học sinh (%1$d)</string>
+    <string name="section_actions">Hành động</string>
+    <string name="action_add_student">Thêm học sinh</string>
+    <string name="action_edit_roster">Sửa thông tin d.sách</string>
+    <string name="action_delete_roster">Xoá lớp</string>
+    <string name="sbd_prefix">SBD: %1$s</string>
+    <string name="grade_subject_year_format">Khối %1$s - Môn %2$s - Năm %3$s</string>
+    <string name="empty_student_list">Hiện chưa có học sinh nào</string>
+    <string name="action_delete_student">Xóa học sinh</string>
+    <string name="dialog_delete_student_text">Bạn có chắc chắn muốn xóa học sinh này khỏi lớp không?</string>
+    <string name="btn_delete">Xóa</string>
+    <string name="action_edit_student">"Sửa "</string>
+    <string name="dialog_delete_roster_text">Bạn có chắc chắn muốn xóa lớp này? Mọi dữ liệu liên quan sẽ bị xóa vĩnh viễn.</string>
+    <string name="edit_roster_title">Sửa thông tin danh sách</string>
+    <string name="btn_save_changes">Lưu thay đổi</string>
+    <string name="toast_update_list_success">Cập nhật thành công</string>
 </resources>

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.data.model.RosterModel
+import com.example.quizmark.ui.main.examList.roster.RosterViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.ColorText3
@@ -41,6 +42,7 @@ import com.example.quizmark.ui.theme.PrimaryDarkBlue
 fun ExamListScreen(
     onNavigateToAddRoster: () -> Unit,
     onNavigateToAddStudent: () -> Unit,
+    onNavigateToRosterDetail: (String) -> Unit,
     viewModel: RosterViewModel = hiltViewModel()
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
@@ -108,7 +110,10 @@ fun ExamListScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             if (selectedTabIndex == 0) {
-                RosterTabContent(rosterList = rosterList)
+                RosterTabContent(
+                    rosterList = rosterList,
+                    onRosterClick = onNavigateToRosterDetail
+                )
             } else {
                 StudentTabContent()
             }
@@ -172,7 +177,7 @@ private fun CustomPillTabRow(selectedTabIndex: Int, onTabSelected: (Int) -> Unit
 
 // ---------------- TAB 1: DANH SÁCH THI ---------------- //
 @Composable
-fun RosterTabContent(rosterList: List<RosterModel>) {
+fun RosterTabContent(rosterList: List<RosterModel>, onRosterClick: (String) -> Unit) {
     var searchQuery by remember { mutableStateOf("") }
     var isSearchFocused by remember { mutableStateOf(false) }
 
@@ -271,7 +276,7 @@ fun RosterTabContent(rosterList: List<RosterModel>) {
                 }
             } else {
                 items(filteredRosters) { roster ->
-                    RosterItemCard(roster = roster, onClick = { /* TODO: Chuyển màn chi tiết */ })
+                    RosterItemCard(roster = roster, onClick = { onRosterClick(roster.id) })
                 }
             }
         }
@@ -317,7 +322,7 @@ fun RosterItemCard(roster: RosterModel, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = stringResource(id = R.string.student_count_suffix, roster.students.size), // Đếm trực tiếp từ size mảng
+                text = stringResource(id = R.string.student_count_suffix, roster.students.size),
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
                 color = Color.Gray

@@ -76,4 +76,21 @@ class RosterRepository @Inject constructor(
             }
         }
     }
+
+    // Xóa danh sách thi (Hỗ trợ Offline)
+    fun deleteRoster(rosterId: String): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+
+            db.collection("users")
+                .document(uid)
+                .collection("rosters")
+                .document(rosterId)
+                .delete()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

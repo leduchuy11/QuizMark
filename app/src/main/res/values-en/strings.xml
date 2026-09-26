@@ -215,4 +215,22 @@
     <string name="error_fill_all_blanks">Please fill in all required fields</string>
     <string name="toast_create_list_succes">Exam roster created successfully</string>
 
+    <!-- Roster Detail Screen -->
+    <string name="detail_roster_title">Roster Details</string>
+    <string name="section_student_list">Student List (%1$d)</string>
+    <string name="section_actions">Actions</string>
+    <string name="action_add_student">Add Student</string>
+    <string name="action_edit_roster">Edit Roster Information</string>
+    <string name="action_delete_roster">Delete Roster</string>
+    <string name="sbd_prefix">Student ID: %1$s</string>
+    <string name="grade_subject_year_format">Grade %1$s - Subject %2$s - School Year %3$s</string>
+    <string name="empty_student_list">No students yet</string>
+    <string name="action_delete_student">Delete Student</string>
+    <string name="dialog_delete_student_text">Are you sure you want to remove this student from the roster?</string>
+    <string name="btn_delete">Delete</string>
+    <string name="action_edit_student">"Edit "</string>
+    <string name="dialog_delete_roster_text">Are you sure you want to delete this roster? All related data will be permanently deleted.</string>
+    <string name="edit_roster_title">Edit Roster Information</string>
+    <string name="btn_save_changes">Save Changes</string>
+    <string name="toast_update_list_success">Updated successfully</string>
 </resources>
