@@ -66,7 +66,6 @@ fun EditThptAnswersScreen(
     var toastType by remember { mutableStateOf(ToastType.ERROR) }
     var navigateAfterToast by remember { mutableStateOf(false) }
 
-    // Dùng chung state load đề THPT từ màn Sửa cấu trúc nên không cần gọi loadThptExam lại.
 
     LaunchedEffect(examId) {
         viewModel.loadThptExam(examId)
@@ -93,7 +92,7 @@ fun EditThptAnswersScreen(
                 }
             }
             answers = newAnswers
-            viewModel.resetEditingThptExam() // Xóa cache sau khi dùng
+            viewModel.resetEditingThptExam()
         }
     }
 
@@ -168,7 +167,6 @@ fun EditThptAnswersScreen(
 
                             val config = ThptExamConfig(p1Questions = p1Q, p1Score = p1S, p2Questions = p2Q, p3Questions = p3Q, p3Score = p3S)
 
-                            // Dùng lại ID để ghi đè (Cập nhật)
                             val updatedExam = ThptExamModel(
                                 id = examId,
                                 name = examName,
