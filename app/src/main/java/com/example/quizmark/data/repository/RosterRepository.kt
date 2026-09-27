@@ -142,4 +142,65 @@ class RosterRepository @Inject constructor(
 
         awaitClose { listener.remove() }
     }
+
+    // Hàm Cập nhật học sinh (Offline-First)
+    fun updateStudent(updatedStudent: StudentModel, initialRoster: RosterModel?, newRoster: RosterModel?): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+
+            dbRef.collection("students").document(updatedStudent.id).set(updatedStudent)
+
+            // 1. Xử lý logic Danh sách học sinh
+            if (initialRoster?.id == newRoster?.id) {
+                // TRƯỜNG HỢP A: Không đổi lớp (Từ lớp A -> Lớp A, hoặc Không có -> Không có)
+                if (newRoster != null) {
+                    val updatedList = newRoster.students.map {
+                        if (it.id == updatedStudent.id) updatedStudent else it
+                    }
+                    val updatedRoster = newRoster.copy(students = updatedList)
+                    dbRef.collection("rosters").document(newRoster.id).set(updatedRoster)
+                }
+            } else {
+                // TRƯỜNG HỢP B: Có sự thay đổi lớp
+                // B1: Xóa học sinh khỏi lớp CŨ (nếu trước đó có lớp)
+                if (initialRoster != null) {
+                    val updatedOldList = initialRoster.students.filter { it.id != updatedStudent.id }
+                    val updatedOldRoster = initialRoster.copy(students = updatedOldList)
+                    dbRef.collection("rosters").document(initialRoster.id).set(updatedOldRoster)
+                }
+                // B2: Thêm học sinh vào lớp MỚI (nếu lớp mới không phải là "Không có")
+                if (newRoster != null) {
+                    val updatedNewList = newRoster.students.toMutableList()
+                    updatedNewList.add(updatedStudent)
+                    val updatedNewRoster = newRoster.copy(students = updatedNewList)
+                    dbRef.collection("rosters").document(newRoster.id).set(updatedNewRoster)
+                }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Hàm Xóa học sinh (Offline-First)
+    fun deleteStudent(studentId: String, initialRoster: RosterModel?): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+
+            // 1. Xóa khỏi bảng tổng
+            dbRef.collection("students").document(studentId).delete()
+
+            // 2. Xóa khỏi lớp (Nếu có)
+            if (initialRoster != null) {
+                val updatedList = initialRoster.students.filter { it.id != studentId }
+                val updatedRoster = initialRoster.copy(students = updatedList)
+                dbRef.collection("rosters").document(initialRoster.id).set(updatedRoster)
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

@@ -247,4 +247,12 @@
     <string name="option_none">Không có</string>
     <string name="option_male">Nam</string>
     <string name="option_female">Nữ</string>
+
+    <!-- Màn Sửa/Xóa học sinh -->
+    <string name="edit_student_title">Sửa thông tin</string>
+    <string name="action_delete">Xóa</string>
+    <string name="dialog_delete_student_title">Xóa học sinh</string>
+    <string name="dig_delete_student_text">Bạn có chắc chắn muốn xóa học sinh này không? Dữ liệu sẽ không thể khôi phục.</string>
+    <string name="toast_update_student_success">Cập nhật thành công</string>
+    <string name="toast_delete_student_success">Đã xóa học sinh</string>
 </resources>

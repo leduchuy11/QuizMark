@@ -33,6 +33,7 @@ import com.example.quizmark.ui.main.exam.ExamViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
+import com.example.quizmark.util.unAccent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +55,10 @@ fun AllExamsScreen(
         if (searchQuery.isBlank()) {
             allExams
         } else {
-            allExams.filter { it.name.contains(searchQuery.trim(), ignoreCase = true) }
+            val queryText = searchQuery.trim().unAccent().lowercase()
+            allExams.filter {
+                it.name.unAccent().lowercase().contains(queryText)
+            }
         }
     }
 

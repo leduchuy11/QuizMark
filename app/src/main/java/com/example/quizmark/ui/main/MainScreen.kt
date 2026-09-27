@@ -54,6 +54,7 @@ import com.example.quizmark.ui.main.examList.ExamListScreen
 import com.example.quizmark.ui.main.examList.roster.EditRosterScreen
 import com.example.quizmark.ui.main.examList.roster.RosterDetailScreen
 import com.example.quizmark.ui.main.examList.student.AddStudentScreen
+import com.example.quizmark.ui.main.examList.student.EditStudentScreen
 
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
@@ -126,7 +127,8 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         onNavigateToAddStudent = { bottomNavController.navigate("add_student") },
                         onNavigateToRosterDetail = { rosterId ->
                             bottomNavController.navigate("roster_detail/$rosterId")
-                        }
+                        },
+                        onNavigateToEditStudent = { studentId -> bottomNavController.navigate("edit_student/$studentId") }
                     )
                 }
                 composable(BottomNavItem.Account.route) {
@@ -498,6 +500,19 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
                 ) {
                     AddStudentScreen(
+                        onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = "edit_student/{studentId}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val studentId = backStackEntry.arguments?.getString("studentId") ?: ""
+
+                    EditStudentScreen(
+                        studentId = studentId,
                         onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }

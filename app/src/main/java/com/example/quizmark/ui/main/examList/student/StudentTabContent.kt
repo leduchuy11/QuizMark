@@ -38,6 +38,7 @@ import com.example.quizmark.util.unAccent
 fun StudentTabContent(
     rosterList: List<RosterModel>,
     allStudentsList: List<StudentModel>,
+    onNavigateToEditStudent: (String) -> Unit,
     onNavigateToImportFile: () -> Unit
 ) {
     val filterAllText = stringResource(id = R.string.filter_all)
@@ -243,7 +244,9 @@ fun StudentTabContent(
                 }
             } else {
                 items(displayedStudents, key = { it.id }) { student ->
-                    StudentGlobalItemCard(student = student, onClick = { /* TODO */ })
+                    StudentGlobalItemCard(student = student, onClick = {
+                        onNavigateToEditStudent(student.id)
+                    })
                 }
             }
         }

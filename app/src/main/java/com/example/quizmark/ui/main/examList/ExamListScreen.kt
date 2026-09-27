@@ -38,12 +38,14 @@ import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.ColorText3
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
+import com.example.quizmark.util.unAccent
 
 @Composable
 fun ExamListScreen(
     onNavigateToAddRoster: () -> Unit,
     onNavigateToAddStudent: () -> Unit,
     onNavigateToRosterDetail: (String) -> Unit,
+    onNavigateToEditStudent: (String) -> Unit,
     viewModel: RosterViewModel = hiltViewModel()
 ) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
@@ -122,7 +124,8 @@ fun ExamListScreen(
                     allStudentsList = allStudentsList,
                     onNavigateToImportFile = {
                         // TODO: Gọi chuyển trang nhập file
-                    }
+                    },
+                    onNavigateToEditStudent = onNavigateToEditStudent
                 )
             }
         }
@@ -190,8 +193,15 @@ fun RosterTabContent(rosterList: List<RosterModel>, onRosterClick: (String) -> U
     var isSearchFocused by remember { mutableStateOf(false) }
 
     val filteredRosters = remember(searchQuery, rosterList) {
-        if (searchQuery.isBlank()) rosterList
-        else rosterList.filter { it.name.contains(searchQuery.trim(), ignoreCase = true) }
+        if (searchQuery.isBlank()) {
+            rosterList
+        } else {
+            val queryText = searchQuery.trim().unAccent().lowercase()
+
+            rosterList.filter {
+                it.name.unAccent().lowercase().contains(queryText)
+            }
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {

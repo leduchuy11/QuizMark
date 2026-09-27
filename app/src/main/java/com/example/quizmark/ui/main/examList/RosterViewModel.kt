@@ -65,6 +65,24 @@ class RosterViewModel @Inject constructor(
         }
     }
 
+    fun updateStudent(student: StudentModel, initialRoster: RosterModel?, newRoster: RosterModel?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.updateStudent(student, initialRoster, newRoster)
+            _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
+    fun deleteStudent(studentId: String, initialRoster: RosterModel?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.deleteStudent(studentId, initialRoster)
+            _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
     fun resetSaveResult() {
         _saveResult.value = null
     }
