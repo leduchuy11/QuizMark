@@ -2,9 +2,10 @@ package com.example.quizmark.data.model
 
 data class StudentModel(
     val id: String = "",
-    val studentCode: String = "", // Số báo danh (SBD) dùng để map điểm lúc quét
+    val studentCode: String = "", // Số báo danh (SBD)
     val name: String = "",
-    val dob: String = "" // Ngày sinh (tùy chọn)
+    val dob: String = "",
+    val gender: String = ""
 )
 
 data class RosterModel(

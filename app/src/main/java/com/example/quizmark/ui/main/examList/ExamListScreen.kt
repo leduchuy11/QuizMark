@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.data.model.RosterModel
-import com.example.quizmark.ui.main.examList.roster.RosterViewModel
+import com.example.quizmark.ui.main.examList.student.StudentTabContent
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.ColorText3
@@ -45,7 +46,8 @@ fun ExamListScreen(
     onNavigateToRosterDetail: (String) -> Unit,
     viewModel: RosterViewModel = hiltViewModel()
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
+    val allStudentsList by viewModel.allStudentsList.collectAsState()
 
     // Lắng nghe dữ liệu thật từ Firebase
     val rosterList by viewModel.rosterList.collectAsState()
@@ -115,7 +117,13 @@ fun ExamListScreen(
                     onRosterClick = onNavigateToRosterDetail
                 )
             } else {
-                StudentTabContent()
+                StudentTabContent(
+                    rosterList = rosterList,
+                    allStudentsList = allStudentsList,
+                    onNavigateToImportFile = {
+                        // TODO: Gọi chuyển trang nhập file
+                    }
+                )
             }
         }
     }
@@ -338,13 +346,3 @@ fun RosterItemCard(roster: RosterModel, onClick: () -> Unit) {
     }
 }
 
-// ---------------- TAB 2: SINH VIÊN ---------------- //
-@Composable
-fun StudentTabContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Nội dung Tab Sinh viên sẽ làm sau", color = Color.Gray)
-    }
-}

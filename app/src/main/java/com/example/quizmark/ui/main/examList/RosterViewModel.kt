@@ -1,8 +1,9 @@
-package com.example.quizmark.ui.main.examList.roster
+package com.example.quizmark.ui.main.examList
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.quizmark.data.model.RosterModel
+import com.example.quizmark.data.model.StudentModel
 import com.example.quizmark.data.repository.RosterRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,9 @@ class RosterViewModel @Inject constructor(
     private val _currentRoster = MutableStateFlow<RosterModel?>(null)
     val currentRoster: StateFlow<RosterModel?> = _currentRoster.asStateFlow()
 
+    val allStudentsList: StateFlow<List<StudentModel>> = repository.getAllStudentsFlow()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
     fun saveRoster(roster: RosterModel) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -48,6 +52,15 @@ class RosterViewModel @Inject constructor(
             _isLoading.value = true
             val roster = repository.getRosterById(rosterId)
             _currentRoster.value = roster
+            _isLoading.value = false
+        }
+    }
+
+    fun saveStudent(student: StudentModel, roster: RosterModel?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.saveStudent(student, roster)
+            _saveResult.value = result
             _isLoading.value = false
         }
     }

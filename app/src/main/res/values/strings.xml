@@ -231,4 +231,20 @@
     <string name="edit_roster_title">Sửa thông tin danh sách</string>
     <string name="btn_save_changes">Lưu thay đổi</string>
     <string name="toast_update_list_success">Cập nhật thành công</string>
+
+    <!-- Tab Học sinh -->
+    <string name="filter_all">Tất cả</string>
+    <string name="filter_label">Lọc: %1$s</string>
+    <string name="btn_import_file">Nhập file</string>
+    <string name="search_student_hint">Tìm kiếm học sinh</string>
+
+    <string name="add_student_title">Thêm học sinh</string>
+    <string name="label_student_name">Họ và tên</string>
+    <string name="label_student_code">SBD</string>
+    <string name="label_belong_to_roster">Thuộc danh sách</string>
+    <string name="label_dob">Ngày sinh</string>
+    <string name="label_gender">Giới tính</string>
+    <string name="option_none">Không có</string>
+    <string name="option_male">Nam</string>
+    <string name="option_female">Nữ</string>
 </resources>

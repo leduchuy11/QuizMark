@@ -233,4 +233,20 @@
     <string name="edit_roster_title">Edit Roster Information</string>
     <string name="btn_save_changes">Save Changes</string>
     <string name="toast_update_list_success">Updated successfully</string>
+
+    <!-- Students Tab -->
+    <string name="filter_all">All</string>
+    <string name="filter_label">Filter: %1$s</string>
+    <string name="btn_import_file">Import File</string>
+    <string name="search_student_hint">Search students…</string>
+
+    <string name="add_student_title">Add Student</string>
+    <string name="label_student_name">Full Name</string>
+    <string name="label_student_code">Student ID</string>
+    <string name="label_belong_to_roster">Roster</string>
+    <string name="label_dob">Date of Birth</string>
+    <string name="label_gender">Gender</string>
+    <string name="option_none">None</string>
+    <string name="option_male">Male</string>
+    <string name="option_female">Female</string>
 </resources>

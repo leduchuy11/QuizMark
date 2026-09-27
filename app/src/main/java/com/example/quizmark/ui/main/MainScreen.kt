@@ -53,6 +53,7 @@ import com.example.quizmark.ui.main.examList.roster.AddRosterScreen
 import com.example.quizmark.ui.main.examList.ExamListScreen
 import com.example.quizmark.ui.main.examList.roster.EditRosterScreen
 import com.example.quizmark.ui.main.examList.roster.RosterDetailScreen
+import com.example.quizmark.ui.main.examList.student.AddStudentScreen
 
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
@@ -122,7 +123,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     BackHandler { activity?.finish() }
                     ExamListScreen(
                         onNavigateToAddRoster = { bottomNavController.navigate("add_roster") },
-                        onNavigateToAddStudent = { /* TODO */ },
+                        onNavigateToAddStudent = { bottomNavController.navigate("add_student") },
                         onNavigateToRosterDetail = { rosterId ->
                             bottomNavController.navigate("roster_detail/$rosterId")
                         }
@@ -487,6 +488,16 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     val rosterId = backStackEntry.arguments?.getString("rosterId") ?: ""
                     EditRosterScreen(
                         rosterId = rosterId,
+                        onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = "add_student",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    AddStudentScreen(
                         onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }

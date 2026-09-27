@@ -1,6 +1,7 @@
 package com.example.quizmark.data.repository
 
 import com.example.quizmark.data.model.RosterModel
+import com.example.quizmark.data.model.StudentModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
@@ -92,5 +93,53 @@ class RosterRepository @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    // Hàm lưu học sinh (Hỗ trợ Offline-First)
+    fun saveStudent(student: StudentModel, roster: RosterModel?): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+
+            // 1. Lưu vào Collection "students"
+            dbRef.collection("students").document(student.id).set(student)
+
+            // 2. Nếu có chọn lớp -> Cập nhật luôn học sinh này vào danh sách của lớp đó
+            if (roster != null) {
+                val updatedStudents = roster.students.toMutableList()
+
+                updatedStudents.add(student)
+
+                val updatedRoster = roster.copy(students = updatedStudents)
+
+                dbRef.collection("rosters").document(roster.id).set(updatedRoster)
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Lắng nghe toàn bộ Học sinh (Bao gồm cả có lớp và không có lớp)
+    fun getAllStudentsFlow(): Flow<List<StudentModel>> = callbackFlow {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val listener = db.collection("users").document(uid).collection("students")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val students = snapshot?.toObjects(StudentModel::class.java) ?: emptyList()
+                trySend(students)
+            }
+
+        awaitClose { listener.remove() }
     }
 }
