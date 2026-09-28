@@ -290,4 +290,16 @@
 
     <string name="msg_update_success">Cập nhật danh sách thành công!</string>
     <string name="msg_update_error">Lỗi: %1$s</string>
+
+    <!-- Màn hình thêm học sinh vào danh sách thi -->
+    <string name="add_student_to_roster_title">Thêm học sinh</string>
+    <string name="empty_free_students">Không có học sinh nào chưa thuộc danh sách thi.</string>
+    <string name="btn_add_selected_count">Thêm %1$d học sinh</string>
+    <string name="dialog_conflict_sbd_title">Trùng Số báo danh</string>
+    <string name="dialog_conflict_sbd_message">Có %1$d học sinh bạn chọn bị trùng Số báo danh với học sinh đã có trong danh sách thi này.\n\nBạn có muốn thêm và GHI ĐÈ thông tin không?</string>
+    <string name="btn_overwrite">Ghi đè</string>
+    <string name="error_internal_duplicate_sbd">Các học sinh được chọn đang trùng Số báo danh với nhau. Vui lòng kiểm tra lại!</string>
+    <string name="text_search">Tìm kiếm theo tên...</string>
+    <string name="result_search">Không tìm thấy kết quả nào phù hợp</string>
+
 </resources>

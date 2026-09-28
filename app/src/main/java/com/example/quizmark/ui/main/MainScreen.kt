@@ -51,6 +51,7 @@ import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
 import com.example.quizmark.ui.main.examList.roster.AddRosterScreen
 import com.example.quizmark.ui.main.examList.ExamListScreen
+import com.example.quizmark.ui.main.examList.roster.AddStudentToRosterScreen
 import com.example.quizmark.ui.main.examList.roster.EditRosterScreen
 import com.example.quizmark.ui.main.examList.roster.RosterDetailScreen
 import com.example.quizmark.ui.main.examList.student.AddStudentScreen
@@ -475,7 +476,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         rosterId = rosterId,
                         onNavigateBack = { bottomNavController.popBackStack() },
                         onNavigateToAddStudent = { id ->
-                            // TODO: Chuyển sang màn thêm học sinh
+                            bottomNavController.navigate("add_student_to_roster/$id")
                         },
                         onNavigateToEditRoster = { id ->
                             bottomNavController.navigate("edit_roster/$id")
@@ -554,6 +555,20 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         onNavigateToExamList = {
                             bottomNavController.popBackStack(BottomNavItem.ExamList.route, inclusive = false)
                         }
+                    )
+                }
+
+                composable(
+                    route = "add_student_to_roster/{rosterId}",
+                    arguments = listOf(navArgument("rosterId") { type = NavType.StringType }),
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val rosterId = backStackEntry.arguments?.getString("rosterId") ?: return@composable
+
+                    AddStudentToRosterScreen(
+                        rosterId = rosterId,
+                        onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }
             }

@@ -292,4 +292,16 @@
 
     <string name="msg_update_success">List updated successfully!</string>
     <string name="msg_update_error">Error: %1$s</string>
+
+    <!-- Add Students to Exam Roster Screen -->
+    <string name="add_student_to_roster_title">Add Students</string>
+    <string name="empty_free_students">There are no students who are not yet assigned to an exam roster.</string>
+    <string name="btn_add_selected_count">Add %1$d Students</string>
+    <string name="dialog_conflict_sbd_title">Duplicate Student ID</string>
+    <string name="dialog_conflict_sbd_message">%1$d selected students have a duplicate Student ID with students already in this exam roster.\n\nDo you want to add them and OVERWRITE the existing information?</string>
+    <string name="btn_overwrite">Overwrite</string>
+    <string name="error_internal_duplicate_sbd">The selected students have duplicate Student IDs. Please check again!</string>
+    <string name="text_search">Search by name...</string>
+    <string name="result_search">No matching results found</string>
+
 </resources>
