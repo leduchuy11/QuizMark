@@ -283,4 +283,13 @@
     <string name="duplicate_warning_message">Found %1$d students with duplicate Student IDs in the current list.\n\nDo you want to continue adding and OVERWRITE the existing student information with the new information?</string>
     <string name="action_overwrite">Overwrite</string>
     <string name="action_cancel">Cancel</string>
+
+    <!-- Student Information Dialog -->
+    <string name="dialog_student_info_title">Student Information</string>
+    <string name="label_fullname">Full Name:</string>
+    <string name="label_sbd">Student ID:</string>
+    <string name="btn_close">Close</string>
+
+    <string name="msg_update_success">List updated successfully!</string>
+    <string name="msg_update_error">Error: %1$s</string>
 </resources>

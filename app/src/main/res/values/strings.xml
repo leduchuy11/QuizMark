@@ -281,4 +281,13 @@
     <string name="duplicate_warning_message">Phát hiện %1$d học sinh bị trùng Số báo danh với danh sách hiện tại.\n\nBạn có muốn tiếp tục Thêm và GHI ĐÈ thông tin mới lên học sinh cũ không?</string>
     <string name="action_overwrite">Ghi đè</string>
     <string name="action_cancel">Hủy</string>
+
+    <!-- Dialog Thông tin học sinh -->
+    <string name="dialog_student_info_title">Thông tin học sinh</string>
+    <string name="label_fullname">Họ và tên:</string>
+    <string name="label_sbd">Số báo danh:</string>
+    <string name="btn_close">Đóng</string>
+
+    <string name="msg_update_success">Cập nhật danh sách thành công!</string>
+    <string name="msg_update_error">Lỗi: %1$s</string>
 </resources>
