@@ -83,6 +83,22 @@ class RosterViewModel @Inject constructor(
         }
     }
 
+    fun importStudents(importedStudents: List<StudentModel>, rosterId: String?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            val result = repository.importStudents(
+                importedStudents = importedStudents,
+                rosterId = rosterId,
+                currentAllStudents = allStudentsList.value,
+                rosterList = rosterList.value
+            )
+
+            _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
     fun resetSaveResult() {
         _saveResult.value = null
     }

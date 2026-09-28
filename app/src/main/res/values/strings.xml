@@ -255,4 +255,30 @@
     <string name="dig_delete_student_text">Bạn có chắc chắn muốn xóa học sinh này không? Dữ liệu sẽ không thể khôi phục.</string>
     <string name="toast_update_student_success">Cập nhật thành công</string>
     <string name="toast_delete_student_success">Đã xóa học sinh</string>
+
+    <!-- Màn Nhập File -->
+    <string name="import_file_title">Nhập file</string>
+    <string name="choose_file_xlsx">Chọn file .xlsx</string>
+    <string name="drag_drop_hint">hoặc kéo thả vào đây</string>
+    <string name="mandatory_columns">Cột bắt buộc</string>
+    <string name="col_1">Cột 1: SBD</string>
+    <string name="col_2">Cột 2: Họ và tên</string>
+    <string name="col_3">Cột 3: Ngày sinh</string>
+    <string name="col_4">Cột 4: Giới tính</string>
+    <string name="note_format_file">* Lưu ý: Bắt buộc phải định dạng giống file mẫu</string>
+    <string name="download_sample_file">Tải file mẫu</string>
+
+    <!-- Màn Xem Trước File Excel -->
+    <string name="preview_title">Xem trước (%1$d)</string>
+    <string name="add_students_count">Thêm %1$d học sinh</string>
+    <string name="error_details">Chi tiết lỗi: %1$s - %2$s</string>
+    <string name="table_header_sbd">SBD</string>
+    <string name="table_header_name">Họ Tên</string>
+    <string name="table_header_dob">Ngày Sinh</string>
+    <string name="table_header_gender">Nam/Nữ</string>
+
+    <string name="duplicate_warning_title">Cảnh báo trùng lặp</string>
+    <string name="duplicate_warning_message">Phát hiện %1$d học sinh bị trùng Số báo danh với danh sách hiện tại.\n\nBạn có muốn tiếp tục Thêm và GHI ĐÈ thông tin mới lên học sinh cũ không?</string>
+    <string name="action_overwrite">Ghi đè</string>
+    <string name="action_cancel">Hủy</string>
 </resources>

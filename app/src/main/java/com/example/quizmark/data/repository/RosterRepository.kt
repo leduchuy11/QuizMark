@@ -203,4 +203,71 @@ class RosterRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    // Hàm Import hàng loạt học sinh từ file Excel
+    fun importStudents(
+        importedStudents: List<StudentModel>,
+        rosterId: String?,
+        currentAllStudents: List<StudentModel>,
+        rosterList: List<RosterModel>
+    ): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+            val batch = db.batch()
+
+            val rostersToUpdate = mutableMapOf<String, RosterModel>()
+
+            if (rosterId != null) {
+                val targetRoster = rosterList.find { it.id == rosterId }
+                if (targetRoster != null) {
+                    rostersToUpdate[rosterId] = targetRoster
+                }
+            }
+
+            importedStudents.forEach { importedStudent ->
+
+                // KIỂM TRA TRÙNG LẶP (CHỈ CHECK TRONG PHẠM VI DANH SÁCH ĐÍCH)
+                val existingStudentInContext = if (rosterId != null) {
+                    // Nếu import vào 1 danh sách cụ thể: Chỉ tìm học sinh có cùng SBD trong danh sách đó
+                    rostersToUpdate[rosterId]?.students?.find { it.studentCode == importedStudent.studentCode }
+                } else {
+                    // Nếu import vào "Không có" (Không chọn danh sách)
+                    null
+                }
+
+                // Nếu đã có trong danh sách này -> lấy ID cũ để ghi đè. Nếu chưa -> dùng ID mới toanh
+                val finalStudentId = existingStudentInContext?.id ?: importedStudent.id
+                val finalStudent = importedStudent.copy(id = finalStudentId)
+
+                // 1. Ghi/Cập nhật học sinh vào bảng lưu trữ tổng
+                val studentDocRef = dbRef.collection("students").document(finalStudentId)
+                batch.set(studentDocRef, finalStudent)
+
+                // 2. Thêm/Cập nhật học sinh vào danh sách thi (Tuyệt đối không đụng chạm danh sách khác)
+                if (rosterId != null) {
+                    val currentTargetRoster = rostersToUpdate[rosterId]!!
+                    val targetList = currentTargetRoster.students.toMutableList()
+
+                    val existingIndex = targetList.indexOfFirst { it.id == finalStudentId }
+                    if (existingIndex != -1) {
+                        targetList[existingIndex] = finalStudent // Ghi đè thông tin nếu trùng
+                    } else {
+                        targetList.add(finalStudent) // Thêm mới hoàn toàn
+                    }
+                    rostersToUpdate[rosterId] = currentTargetRoster.copy(students = targetList)
+                }
+            }
+
+            rostersToUpdate.values.forEach { roster ->
+                val rosterDocRef = dbRef.collection("rosters").document(roster.id)
+                batch.set(rosterDocRef, roster)
+            }
+
+            batch.commit()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

@@ -46,6 +46,7 @@ fun ExamListScreen(
     onNavigateToAddStudent: () -> Unit,
     onNavigateToRosterDetail: (String) -> Unit,
     onNavigateToEditStudent: (String) -> Unit,
+    onNavigateToImportStudent: () -> Unit,
     viewModel: RosterViewModel = hiltViewModel()
 ) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
@@ -122,9 +123,7 @@ fun ExamListScreen(
                 StudentTabContent(
                     rosterList = rosterList,
                     allStudentsList = allStudentsList,
-                    onNavigateToImportFile = {
-                        // TODO: Gọi chuyển trang nhập file
-                    },
+                    onNavigateToImportFile = onNavigateToImportStudent,
                     onNavigateToEditStudent = onNavigateToEditStudent
                 )
             }

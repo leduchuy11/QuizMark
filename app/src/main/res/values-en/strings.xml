@@ -257,4 +257,30 @@
     <string name="dig_delete_student_text">Are you sure you want to delete this student? This data cannot be recovered.</string>
     <string name="toast_update_student_success">Updated successfully</string>
     <string name="toast_delete_student_success">Student deleted</string>
+
+    <!-- Import File Screen -->
+    <string name="import_file_title">Import File</string>
+    <string name="choose_file_xlsx">Choose .xlsx file</string>
+    <string name="drag_drop_hint">or drag and drop here</string>
+    <string name="mandatory_columns">Required Columns</string>
+    <string name="col_1">Column 1: Student ID</string>
+    <string name="col_2">Column 2: Full Name</string>
+    <string name="col_3">Column 3: Date of Birth</string>
+    <string name="col_4">Column 4: Gender</string>
+    <string name="note_format_file">* Note: The file format must match the sample file</string>
+    <string name="download_sample_file">Download Sample File</string>
+
+    <!-- Excel File Preview Screen -->
+    <string name="preview_title">Preview (%1$d)</string>
+    <string name="add_students_count">Add %1$d students</string>
+    <string name="error_details">Error details: %1$s - %2$s</string>
+    <string name="table_header_sbd">Student ID</string>
+    <string name="table_header_name">Full Name</string>
+    <string name="table_header_dob">Date of Birth</string>
+    <string name="table_header_gender">Gender</string>
+
+    <string name="duplicate_warning_title">Duplicate Warning</string>
+    <string name="duplicate_warning_message">Found %1$d students with duplicate Student IDs in the current list.\n\nDo you want to continue adding and OVERWRITE the existing student information with the new information?</string>
+    <string name="action_overwrite">Overwrite</string>
+    <string name="action_cancel">Cancel</string>
 </resources>

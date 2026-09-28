@@ -55,6 +55,8 @@ import com.example.quizmark.ui.main.examList.roster.EditRosterScreen
 import com.example.quizmark.ui.main.examList.roster.RosterDetailScreen
 import com.example.quizmark.ui.main.examList.student.AddStudentScreen
 import com.example.quizmark.ui.main.examList.student.EditStudentScreen
+import com.example.quizmark.ui.main.examList.student.ImportStudentScreen
+import com.example.quizmark.ui.main.examList.student.PreviewImportScreen
 
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
@@ -128,7 +130,8 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         onNavigateToRosterDetail = { rosterId ->
                             bottomNavController.navigate("roster_detail/$rosterId")
                         },
-                        onNavigateToEditStudent = { studentId -> bottomNavController.navigate("edit_student/$studentId") }
+                        onNavigateToEditStudent = { studentId -> bottomNavController.navigate("edit_student/$studentId") },
+                        onNavigateToImportStudent = { bottomNavController.navigate("import_student") }
                     )
                 }
                 composable(BottomNavItem.Account.route) {
@@ -514,6 +517,43 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     EditStudentScreen(
                         studentId = studentId,
                         onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                // Khai báo màn hình Nhập File
+                composable(
+                    route = "import_student",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    ImportStudentScreen(
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onFileSelected = { uri, rosterId ->
+                            val encodedUri = java.net.URLEncoder.encode(uri.toString(), "UTF-8")
+                            val rId = rosterId ?: "none"
+                            bottomNavController.navigate("preview_import/$encodedUri/$rId")
+                        }
+                    )
+                }
+
+                // Khai báo màn hình Xem Trước File Excel
+                composable(
+                    route = "preview_import/{encodedUri}/{rosterId}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val encodedUri = backStackEntry.arguments?.getString("encodedUri") ?: ""
+                    val fileUri = android.net.Uri.parse(java.net.URLDecoder.decode(encodedUri, "UTF-8"))
+                    val rawRosterId = backStackEntry.arguments?.getString("rosterId")
+                    val rosterId = if (rawRosterId == "none") null else rawRosterId
+
+                    PreviewImportScreen(
+                        fileUri = fileUri,
+                        rosterId = rosterId,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToExamList = {
+                            bottomNavController.popBackStack(BottomNavItem.ExamList.route, inclusive = false)
+                        }
                     )
                 }
             }
