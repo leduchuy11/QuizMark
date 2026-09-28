@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.data.model.StudentModel
-import com.example.quizmark.ui.main.examList.RosterViewModel
+import com.example.quizmark.ui.main.examList.ExamListViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
@@ -41,7 +41,7 @@ fun PreviewImportScreen(
     rosterId: String?,
     onNavigateBack: () -> Unit,
     onNavigateToExamList: () -> Unit,
-    viewModel: RosterViewModel = hiltViewModel()
+    viewModel: ExamListViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val rosterList by viewModel.rosterList.collectAsState()

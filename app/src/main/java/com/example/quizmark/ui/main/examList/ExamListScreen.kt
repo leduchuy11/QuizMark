@@ -47,7 +47,7 @@ fun ExamListScreen(
     onNavigateToRosterDetail: (String) -> Unit,
     onNavigateToEditStudent: (String) -> Unit,
     onNavigateToImportStudent: () -> Unit,
-    viewModel: RosterViewModel = hiltViewModel()
+    viewModel: ExamListViewModel = hiltViewModel()
 ) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
     val allStudentsList by viewModel.allStudentsList.collectAsState()

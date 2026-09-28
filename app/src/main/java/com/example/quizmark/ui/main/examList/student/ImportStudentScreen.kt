@@ -3,7 +3,6 @@ package com.example.quizmark.ui.main.examList.student
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,10 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
-import com.example.quizmark.ui.main.examList.RosterViewModel
+import com.example.quizmark.ui.main.examList.ExamListViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
@@ -51,7 +47,7 @@ import kotlinx.coroutines.launch
 fun ImportStudentScreen(
     onNavigateBack: () -> Unit,
     onFileSelected: (Uri, String?) -> Unit,
-    viewModel: RosterViewModel = hiltViewModel()
+    viewModel: ExamListViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val rosterList by viewModel.rosterList.collectAsState()

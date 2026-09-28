@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class RosterRepository @Inject constructor(
+class ExamListRepository @Inject constructor(
     private val db: FirebaseFirestore,
     private val auth: FirebaseAuth
 ) {

@@ -30,7 +30,7 @@ import com.example.quizmark.data.model.RosterModel
 import com.example.quizmark.data.model.StudentModel
 import com.example.quizmark.ui.main.exam.addExam.CustomToastUI
 import com.example.quizmark.ui.main.exam.addExam.ToastType
-import com.example.quizmark.ui.main.examList.RosterViewModel
+import com.example.quizmark.ui.main.examList.ExamListViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
@@ -40,7 +40,7 @@ import kotlinx.coroutines.delay
 fun EditRosterScreen(
     rosterId: String,
     onNavigateBack: () -> Unit,
-    viewModel: RosterViewModel = hiltViewModel()
+    viewModel: ExamListViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
 
