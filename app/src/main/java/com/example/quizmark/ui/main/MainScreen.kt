@@ -58,6 +58,7 @@ import com.example.quizmark.ui.main.examList.student.AddStudentScreen
 import com.example.quizmark.ui.main.examList.student.EditStudentScreen
 import com.example.quizmark.ui.main.examList.student.ImportStudentScreen
 import com.example.quizmark.ui.main.examList.student.PreviewImportScreen
+import com.example.quizmark.ui.main.scan.ScanScreen
 
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
@@ -116,12 +117,14 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 }
                 composable(BottomNavItem.Scan.route) {
                     BackHandler { activity?.finish() }
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(Color.White),
-                        Alignment.Center
-                    ) { Text("Màn hình Quét") }
+                    ScanScreen(
+                        onNavigateToCamera = { examId, rosterId ->
+                            // TODO: Chuyển sang màn hình Camera quét trực tiếp
+                        },
+                        onNavigateToGallery = { examId, rosterId ->
+                            // TODO: Mở picker chọn ảnh từ thư viện
+                        }
+                    )
                 }
                 composable(BottomNavItem.ExamList.route) {
                     BackHandler { activity?.finish() }

@@ -302,4 +302,21 @@
     <string name="text_search">Tìm kiếm theo tên...</string>
     <string name="result_search">Không tìm thấy kết quả nào phù hợp</string>
 
+    <!-- Scan Screen -->
+    <string name="scan_title">Chấm thi</string>
+    <string name="scan_header_title">Chọn phiếu thi trước \nkhi scan</string>
+    <string name="scan_header_subtitle">Vui lòng chọn đề thi và danh sách (nếu có) để đảm bảo kết quả chính xác.</string>
+
+    <string name="scan_roster_label">Tùy chọn nâng cao</string>
+    <string name="scan_roster_label_2">   Vui lòng chọn danh sách thi bạn muốn chọn</string>
+    <string name="scan_roster_no_selection">Không chọn</string>
+
+    <string name="scan_exam_label">Chọn Đề thi / Phiếu</string>
+    <string name="scan_exam_subtitle">Chọn đề/phiếu thi bạn muốn chấm để hệ thống dùng đúng đáp án.</string>
+    <string name="scan_exam_placeholder">Hãy chọn đề thi...</string>
+
+    <string name="btn_open_camera">Mở camera scan</string>
+    <string name="btn_open_gallery">Chọn từ thư viện</string>
+
+    <string name="error_exam_not_selected">Vui lòng chọn Đề thi trước khi quét!</string>
 </resources>

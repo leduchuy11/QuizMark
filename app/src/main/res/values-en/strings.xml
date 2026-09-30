@@ -304,4 +304,21 @@
     <string name="text_search">Search by name...</string>
     <string name="result_search">No matching results found</string>
 
+    <!-- Scan Screen -->
+    <string name="scan_title">Grading</string>
+    <string name="scan_header_title">Select an exam sheet \nbefore scanning</string>
+    <string name="scan_header_subtitle">Please select an exam and roster (if applicable) to ensure accurate results.</string>
+
+    <string name="scan_roster_label">Advanced Options</string>
+    <string name="scan_roster_no_selection">No roster selected</string>
+
+    <string name="scan_exam_label">Select Exam / Answer Sheet</string>
+    <string name="scan_roster_label_2">Please select the exam roster you want to choose</string>
+    <string name="scan_exam_subtitle">Select the exam/answer sheet you want to grade so the system can use the correct answer key.</string>
+    <string name="scan_exam_placeholder">Please select an exam...</string>
+
+    <string name="btn_open_camera">Open Scan Camera</string>
+    <string name="btn_open_gallery">Choose from Gallery</string>
+
+    <string name="error_exam_not_selected">Please select an exam before scanning!</string>
 </resources>
