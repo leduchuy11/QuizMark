@@ -321,4 +321,14 @@
     <string name="btn_open_gallery">Choose from Gallery</string>
 
     <string name="error_exam_not_selected">Please select an exam before scanning!</string>
+
+    <!-- Auto Scan Camera Screen -->
+    <string name="camera_scan_title">Scan Answer Sheet</string>
+    <string name="camera_instruction_main">Place the answer sheet within the scan frame</string>
+    <string name="camera_instruction_sub">Continuous automatic scanning</string>
+    <string name="error_camera_permission">Please grant Camera permission in Settings to continue.</string>
+
+    <string name="camera_manual_instruction">Place it within the frame for recognition</string>
+    <string name="btn_capture_desc">Take a photo</string>
+    <string name="camera_aruco_instruction">Fit all 4 ArUco markers of the answer sheet within the frame</string>
 </resources>

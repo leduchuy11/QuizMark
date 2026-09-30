@@ -58,6 +58,8 @@ import com.example.quizmark.ui.main.examList.student.AddStudentScreen
 import com.example.quizmark.ui.main.examList.student.EditStudentScreen
 import com.example.quizmark.ui.main.examList.student.ImportStudentScreen
 import com.example.quizmark.ui.main.examList.student.PreviewImportScreen
+import com.example.quizmark.ui.main.scan.AutoScanCameraScreen
+import com.example.quizmark.ui.main.scan.ManualCaptureCameraScreen
 import com.example.quizmark.ui.main.scan.ScanScreen
 
 import com.example.quizmark.ui.theme.DarkBlue
@@ -118,11 +120,22 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 composable(BottomNavItem.Scan.route) {
                     BackHandler { activity?.finish() }
                     ScanScreen(
-                        onNavigateToCamera = { examId, rosterId ->
-                            // TODO: Chuyển sang màn hình Camera quét trực tiếp
+                        // Nhận thêm templateId ở đây
+                        onNavigateToCamera = { examId, rosterId, templateId ->
+                            val safeRosterId = rosterId ?: "none"
+
+                            // KIỂM TRA ĐIỀU KIỆN RẼ NHÁNH
+                            if (templateId == 6) {
+                                // Nếu là Phiếu AI -> Mở màn hình Chụp thủ công
+                                bottomNavController.navigate("manual_capture_camera/$examId/$safeRosterId")
+                            } else {
+                                // Nếu là 5 Phiếu chuẩn -> Mở màn hình Quét tự động
+                                bottomNavController.navigate("auto_scan_camera/$examId/$safeRosterId")
+                            }
                         },
                         onNavigateToGallery = { examId, rosterId ->
-                            // TODO: Mở picker chọn ảnh từ thư viện
+                            val safeRosterId = rosterId ?: "none"
+                            // TODO: Xử lý mở thư viện ảnh
                         }
                     )
                 }
@@ -570,6 +583,39 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     val rosterId = backStackEntry.arguments?.getString("rosterId") ?: return@composable
 
                     AddStudentToRosterScreen(
+                        rosterId = rosterId,
+                        onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = "auto_scan_camera/{examId}/{rosterId}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(300)) }
+                ) { backStackEntry ->
+                    val examId = backStackEntry.arguments?.getString("examId") ?: ""
+                    val rawRosterId = backStackEntry.arguments?.getString("rosterId")
+                    val rosterId = if (rawRosterId == "none") null else rawRosterId
+
+                    AutoScanCameraScreen(
+                        examId = examId,
+                        rosterId = rosterId,
+                        onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                // Màn chụp thủ công (AI)
+                composable(
+                    route = "manual_capture_camera/{examId}/{rosterId}",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(300)) }
+                ) { backStackEntry ->
+                    val examId = backStackEntry.arguments?.getString("examId") ?: ""
+                    val rawRosterId = backStackEntry.arguments?.getString("rosterId")
+                    val rosterId = if (rawRosterId == "none") null else rawRosterId
+
+                    ManualCaptureCameraScreen(
+                        examId = examId,
                         rosterId = rosterId,
                         onNavigateBack = { bottomNavController.popBackStack() }
                     )

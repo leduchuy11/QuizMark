@@ -319,4 +319,14 @@
     <string name="btn_open_gallery">Chọn từ thư viện</string>
 
     <string name="error_exam_not_selected">Vui lòng chọn Đề thi trước khi quét!</string>
+
+    <!-- Auto Scan Camera Screen -->
+    <string name="camera_scan_title">Quét phiếu</string>
+    <string name="camera_instruction_main">Đặt phiếu vào khung quét</string>
+    <string name="camera_instruction_sub">Quét tự động liên tục</string>
+    <string name="error_camera_permission">Vui lòng cấp quyền Camera trong Cài đặt để tiếp tục.</string>
+
+    <string name="camera_manual_instruction">Đưa vào khung để chụp</string>
+    <string name="btn_capture_desc">Chụp ảnh</string>
+    <string name="camera_aruco_instruction">Đưa đủ 4 marker ArUco của phiếu vào khung</string>
 </resources>

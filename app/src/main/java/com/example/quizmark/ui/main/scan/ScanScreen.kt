@@ -48,7 +48,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun ScanScreen(
     viewModel: ScanViewModel = hiltViewModel(),
-    onNavigateToCamera: (String, String?) -> Unit,
+    onNavigateToCamera: (String, String?, Int) -> Unit,
     onNavigateToGallery: (String, String?) -> Unit
 ) {
     val context = LocalContext.current
@@ -287,8 +287,8 @@ fun ScanScreen(
                             toastMessage = context.getString(R.string.error_exam_not_selected)
                             toastType = ToastType.ERROR
                         } else {
-                            // Truyền thêm templateId hoặc cờ isThpt nếu sau này Core chấm điểm cần biết dạng phiếu
-                            onNavigateToCamera(selectedExam!!.id, selectedRoster?.id)
+                            // Truyền thêm templateId của đề thi đang chọn
+                            onNavigateToCamera(selectedExam!!.id, selectedRoster?.id, selectedExam!!.templateId)
                         }
                     },
                     modifier = Modifier
