@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -33,11 +34,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.quizmark.R
 import com.example.quizmark.ui.theme.DarkBlue
+import com.example.quizmark.util.scanner.saveBitmapToGallery
+import com.example.quizmark.util.scanner.ScannerCore
 
 @Composable
 fun AutoScanCameraScreen(
     examId: String,
     rosterId: String?,
+    templateId: Int,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -63,7 +67,7 @@ fun AutoScanCameraScreen(
     }
 
     if (hasCameraPermission) {
-        CameraPreviewContent(onNavigateBack = onNavigateBack)
+        CameraPreviewContent(templateId = templateId, onNavigateBack = onNavigateBack)
     } else {
         // UI khi chưa có quyền
         Box(
@@ -112,17 +116,23 @@ fun AutoScanCameraScreen(
 }
 
 @Composable
-fun CameraPreviewContent(onNavigateBack: () -> Unit) {
+fun CameraPreviewContent(templateId: Int,onNavigateBack: () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Biến để điều khiển bật/tắt đèn pin
+    // Khởi tạo bộ quét và luồng chạy ngầm để không làm lag giao diện (UI)
+    val scannerCore = remember { ScannerCore() }
+    val analyzerExecutor = remember { java.util.concurrent.Executors.newSingleThreadExecutor() }
+
+    // Cờ trạng thái để tránh việc quét liên tục 1 tờ giấy nhiều lần
+    var isScanning by remember { mutableStateOf(true) }
+
     var cameraControl by remember { mutableStateOf<CameraControl?>(null) }
     var isFlashOn by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
-        // 1. LỚP ĐÁY: CAMERA PREVIEW
+        // 1. LỚP ĐÁY: CAMERA PREVIEW & ANALYSIS
         AndroidView(
             factory = { ctx ->
                 val previewView = PreviewView(ctx)
@@ -130,21 +140,113 @@ fun CameraPreviewContent(onNavigateBack: () -> Unit) {
 
                 cameraProviderFuture.addListener({
                     val cameraProvider = cameraProviderFuture.get()
+
+                    // Cấu hình luồng xem trước (Preview)
                     val preview = Preview.Builder().build().also {
                         it.setSurfaceProvider(previewView.surfaceProvider)
                     }
 
-                    // Setup ImageAnalysis ở đây trong tương lai để quét bài thi (OpenCV)
-                    // val imageAnalyzer = ImageAnalysis.Builder()...
+                    // Cấu hình luồng phân tích hình ảnh (ImageAnalysis)
+                    val imageAnalyzer = ImageAnalysis.Builder()
+                        .setTargetResolution(android.util.Size(720, 1280))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build()
+                        .also { analysis ->
+                            analysis.setAnalyzer(analyzerExecutor) { imageProxy ->
+                                if (isScanning) {
+                                    // 1. Lấy góc xoay và Bitmap gốc
+                                    val rotation = imageProxy.imageInfo.rotationDegrees
+                                    val rawBitmap = imageProxy.toBitmap()
+
+                                    // 2. Xoay ảnh cho đúng chiều đứng (Portrait)
+                                    val rotatedBitmap = if (rotation != 0) {
+                                        val matrix = android.graphics.Matrix()
+                                        matrix.postRotate(rotation.toFloat())
+                                        android.graphics.Bitmap.createBitmap(
+                                            rawBitmap, 0, 0, rawBitmap.width, rawBitmap.height, matrix, true
+                                        )
+                                    } else {
+                                        rawBitmap
+                                    }
+
+                                    // 3. Đưa ảnh đã xoay chuẩn vào ScannerCore xử lý
+                                    val resultBitmap = scannerCore.processFrame(rotatedBitmap)
+
+                                    if (resultBitmap != null) {
+                                        isScanning = false
+
+                                        // 1. GỌI BỘ NÃO ĐỌC ĐÁP ÁN TRƯỚC
+                                        val processor = when (templateId) {
+                                            1 -> com.example.quizmark.util.scanner.ExamThptProcessor()
+                                            2 -> com.example.quizmark.util.scanner.Exam20Processor()
+                                            3 -> com.example.quizmark.util.scanner.Exam40Processor()
+                                            4 -> com.example.quizmark.util.scanner.Exam50Processor()
+                                            5 -> com.example.quizmark.util.scanner.Exam120Processor()
+                                            else -> com.example.quizmark.util.scanner.Exam20Processor() // Default nếu lỗi
+                                        }
+                                        val scanResult = processor.process(resultBitmap)
+
+                                        // 2. LƯU ẢNH "ĐÃ CÓ VÒNG TRÒN MÀU" VÀO THƯ VIỆN
+                                        scanResult.processedBitmap?.let { annotatedBitmap ->
+                                            saveBitmapToGallery(context, annotatedBitmap)
+                                        }
+
+                                        // 3. In toàn bộ kết quả ra Logcat
+                                        android.util.Log.d("OMR_RESULT", "========== KẾT QUẢ QUÉT ==========")
+                                        android.util.Log.d("OMR_RESULT", "Số Báo Danh: ${scanResult.sbd}")
+                                        android.util.Log.d("OMR_RESULT", "Mã Đề: ${scanResult.examCode}")
+
+                                        if (templateId == 1) {
+                                            // LOG DÀNH RIÊNG CHO PHIẾU THPT 2025
+                                            android.util.Log.d("OMR_RESULT", "--- PHẦN I (Trắc nghiệm 4 lựa chọn) ---")
+                                            scanResult.answers.filter { it.questionNumber in 1..40 }.forEach {
+                                                android.util.Log.d("OMR_RESULT", "Câu ${it.questionNumber}: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp" else "Trống"}")
+                                            }
+
+                                            android.util.Log.d("OMR_RESULT", "--- PHẦN II (Đúng/Sai) ---")
+                                            scanResult.answers.filter { it.questionNumber in 41..72 }.forEach {
+                                                val offset = it.questionNumber - 41 // 0 đến 31
+                                                val cau = (offset / 4) + 1 // Câu 1 đến 8
+                                                val y = when (offset % 4) { 0 -> "a"; 1 -> "b"; 2 -> "c"; else -> "d" }
+                                                android.util.Log.d("OMR_RESULT", "Câu $cau ý $y: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp" else "Trống"}")
+                                            }
+
+                                            android.util.Log.d("OMR_RESULT", "--- PHẦN III (Điền số) ---")
+                                            scanResult.answers.filter { it.questionNumber in 73..78 }.forEach {
+                                                val cau = it.questionNumber - 72
+                                                android.util.Log.d("OMR_RESULT", "Câu $cau: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp/Sai quy tắc" else "Trống"}")
+                                            }
+                                        } else {
+                                            // LOG DÀNH CHO CÁC PHIẾU CŨ (20, 40, 50, 120 CÂU)
+                                            val answersStr = scanResult.answers.joinToString(separator = "\n") {
+                                                "Câu ${it.questionNumber}: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp/Bỏ trống" else "Bỏ trống"}"
+                                            }
+                                            android.util.Log.d("OMR_RESULT", "Đáp án chi tiết:\n$answersStr")
+                                        }
+                                        android.util.Log.d("OMR_RESULT", "==================================")
+                                        // Phát tiếng Bíp
+                                        try {
+                                            val toneGen = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                                            toneGen.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 150)
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                        }
+                                    }
+                                }
+                                imageProxy.close()
+                            }
+                        }
 
                     val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
                     try {
                         cameraProvider.unbindAll()
+                        // Ràng buộc cả preview và imageAnalyzer vào vòng đời Camera
                         val camera = cameraProvider.bindToLifecycle(
                             lifecycleOwner,
                             cameraSelector,
-                            preview
+                            preview,
+                            imageAnalyzer
                         )
                         cameraControl = camera.cameraControl
                     } catch (exc: Exception) {
@@ -157,7 +259,6 @@ fun CameraPreviewContent(onNavigateBack: () -> Unit) {
             modifier = Modifier.fillMaxSize()
         )
 
-        // Lắng nghe sự kiện bật/tắt đèn Flash
         LaunchedEffect(isFlashOn) {
             cameraControl?.enableTorch(isFlashOn)
         }
@@ -192,6 +293,7 @@ fun CameraPreviewContent(onNavigateBack: () -> Unit) {
             }
         }
 
+        // LỜI NHẮC ARUCO LƠ LỬNG
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -243,7 +345,6 @@ fun CameraPreviewContent(onNavigateBack: () -> Unit) {
                 }
             }
 
-            // Nút Đóng bên phải
             Button(
                 onClick = onNavigateBack,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White),

@@ -130,7 +130,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                                 bottomNavController.navigate("manual_capture_camera/$examId/$safeRosterId")
                             } else {
                                 // Nếu là 5 Phiếu chuẩn -> Mở màn hình Quét tự động
-                                bottomNavController.navigate("auto_scan_camera/$examId/$safeRosterId")
+                                bottomNavController.navigate("auto_scan_camera/$examId/$safeRosterId/$templateId")
                             }
                         },
                         onNavigateToGallery = { examId, rosterId ->
@@ -589,17 +589,20 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 }
 
                 composable(
-                    route = "auto_scan_camera/{examId}/{rosterId}",
+                    route = "auto_scan_camera/{examId}/{rosterId}/{templateId}",
                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(300)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(300)) }
                 ) { backStackEntry ->
                     val examId = backStackEntry.arguments?.getString("examId") ?: ""
                     val rawRosterId = backStackEntry.arguments?.getString("rosterId")
                     val rosterId = if (rawRosterId == "none") null else rawRosterId
+                    // 2. Lấy templateId từ đường dẫn (nếu lỗi mặc định là 1)
+                    val templateId = backStackEntry.arguments?.getString("templateId")?.toIntOrNull() ?: 1
 
                     AutoScanCameraScreen(
                         examId = examId,
                         rosterId = rosterId,
+                        templateId = templateId, // 3. Truyền vào Camera Screen
                         onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }

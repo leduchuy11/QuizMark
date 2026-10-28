@@ -98,4 +98,7 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.3.1")
     implementation("androidx.camera:camera-lifecycle:1.3.1")
     implementation("androidx.camera:camera-view:1.3.1")
+
+    // OpenCV cho Android
+    implementation("com.quickbirdstudios:opencv:4.5.3.0")
 }
