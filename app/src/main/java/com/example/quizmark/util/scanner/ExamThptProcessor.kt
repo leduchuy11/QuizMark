@@ -12,8 +12,8 @@ import org.opencv.imgproc.Imgproc
 class ExamThptProcessor : ExamProcessor {
 
     // 1. THÔNG TIN CÁ NHÂN
-    private val roiSBD  = Rect(549, 78, 141, 255)
-    private val roiCode = Rect(714, 78, 72, 256)
+    private val roiSBD  = Rect(549, 84, 138, 253)
+    private val roiCode = Rect(713, 84, 70, 253)
 
     // 2. PHẦN I: 40 CÂU (4 Cột, mỗi cột 10 câu)
     private val roiP1_Col1 = Rect(53, 435, 147, 197)
@@ -100,7 +100,7 @@ class ExamThptProcessor : ExamProcessor {
     private fun readGridNumber(binaryRoi: Mat, colorMat: Mat, globalRect: Rect, rows: Int, cols: Int): String? {
         val cellW = binaryRoi.width().toDouble() / cols
         val cellH = binaryRoi.height().toDouble() / rows
-        val radius = (Math.min(cellW, cellH) * 0.38).toInt()
+        val radius = (Math.min(cellW, cellH) * 0.4).toInt()
         val circleArea = Math.PI * radius * radius
 
         val mask = Mat.zeros(Size(cellW, cellH), CvType.CV_8UC1)

@@ -190,9 +190,9 @@ fun CameraPreviewContent(
                                         }
                                         val scanResult = processor.process(resultBitmap)
 
-//                                        scanResult.processedBitmap?.let { annotatedBitmap ->
-//                                            saveBitmapToGallery(context, annotatedBitmap)
-//                                        }
+                                        scanResult.processedBitmap?.let { annotatedBitmap ->
+                                            saveBitmapToGallery(context, annotatedBitmap)
+                                        }
 
                                         android.util.Log.d("OMR_RESULT", "========== KẾT QUẢ QUÉT ==========")
                                         android.util.Log.d("OMR_RESULT", "Số Báo Danh: ${scanResult.sbd}")

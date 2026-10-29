@@ -107,11 +107,26 @@ class GradingViewModel @Inject constructor(
                     }
                 }
 
+                // CHUẨN BỊ DANH SÁCH CHI TIẾT
+                val uiList = if (isThpt) {
+                    val thptExam = examRepository.getThptExamById(examId)
+                    val matchedCode = thptExam?.codes?.find { it.code == scannedCode }
+                    getDetailedQuestionsUI(scanResult, matchedCode, null, true, thptConfig = thptExam?.config)
+                } else {
+                    val basicExam = examRepository.getBasicExamById(examId)
+                    val matchedCode = basicExam?.codes?.find { it.code == scannedCode }
+                    getDetailedQuestionsUI(scanResult, null, matchedCode?.answers, false, basicQuestionCount = basicExam?.questionCount ?: 0)
+                }
+
+                // TRẢ KẾT QUẢ CÙNG BỨC ẢNH VÀ DANH SÁCH CHI TIẾT
                 val resultData = FinalGradingResult(
                     studentName = finalStudentName, sbd = scannedSbd, examCode = scannedCode, score = finalScore,
                     correctCount = correctCount, wrongCount = wrongCount, blankCount = blankCount, totalQuestions = totalQuestions,
-                    processedImage = mutableBitmap // <--- ẢNH ĐÃ VẼ
+                    processedImage = mutableBitmap,
+                    detailedQuestions = uiList,
+                    templateId = templateId
                 )
+                _gradingState.value = GradingState.Success(resultData)
                 _gradingState.value = GradingState.Success(resultData)
             } catch (e: Exception) {
                 _gradingState.value = GradingState.Error(e.message ?: "Lỗi chấm thi")
@@ -192,6 +207,66 @@ class GradingViewModel @Inject constructor(
         }
 
         return ThptStats(Math.min(score, 10.0), correct, wrong, blank)
+    }
+
+    // Hàm này sẽ dùng để map dữ liệu từ ScanResult sang List UI cho màn hình con mắt
+    fun getDetailedQuestionsUI(
+        scanResult: ScanResult,
+        codeModel: ThptExamCodeModel?,
+        basicAnswers: Map<String, String>?,
+        isThpt: Boolean,
+        thptConfig: ThptExamConfig? = null,
+        basicQuestionCount: Int = 0
+    ): List<QuestionDetailUI> {
+        val uiList = mutableListOf<QuestionDetailUI>()
+
+        val validP1 = if (thptConfig != null) 1..thptConfig.p1Questions else 1..0
+        val validP2 = if (thptConfig != null) 41 until (41 + thptConfig.p2Questions * 4) else 1..0
+        val validP3 = if (thptConfig != null) 73 until (73 + thptConfig.p3Questions) else 1..0
+        val validBasic = 1..basicQuestionCount
+
+        scanResult.answers.forEach { q ->
+            val num = q.questionNumber
+
+            // LỌC: BỎ QUA NGAY NHỮNG CÂU VƯỢT QUÁ SỐ LƯỢNG TRONG CẤU HÌNH
+            if (isThpt && (num !in validP1 && num !in validP2 && num !in validP3)) return@forEach
+            if (!isThpt && num !in validBasic) return@forEach
+
+            var studentAns = q.selectedAnswer ?: "-"
+            if (q.isError) studentAns = "Lỗi"
+
+            var correctAns = ""
+
+            if (isThpt && codeModel != null) {
+                when (num) {
+                    in validP1 -> {
+                        correctAns = codeModel.part1[num.toString()] ?: "?"
+                        val status = if (q.isError || q.selectedAnswer == null) AnswerStatus.BLANK else if (q.selectedAnswer == correctAns) AnswerStatus.CORRECT else AnswerStatus.WRONG
+                        uiList.add(QuestionDetailUI(num.toString(), studentAns, correctAns, status))
+                    }
+                    in validP2 -> {
+                        val offset = num - 41
+                        val cau = (offset / 4) + 1
+                        val y = when (offset % 4) { 0 -> "a"; 1 -> "b"; 2 -> "c"; else -> "d" }
+                        val displayLabel = "${cau}${y}"
+                        correctAns = codeModel.part2[cau.toString()]?.get(y) ?: "?"
+                        val status = if (q.isError || q.selectedAnswer == null) AnswerStatus.BLANK else if (q.selectedAnswer == correctAns) AnswerStatus.CORRECT else AnswerStatus.WRONG
+                        uiList.add(QuestionDetailUI(displayLabel, studentAns, correctAns, status))
+                    }
+                    in validP3 -> {
+                        val cau = num - 72
+                        correctAns = codeModel.part3[cau.toString()] ?: "?"
+                        val status = if (q.isError || q.selectedAnswer == null) AnswerStatus.BLANK else if (q.selectedAnswer == correctAns) AnswerStatus.CORRECT else AnswerStatus.WRONG
+                        uiList.add(QuestionDetailUI((cau + 40).toString(), studentAns, correctAns, status))
+                    }
+                }
+            } else if (!isThpt && basicAnswers != null) {
+                correctAns = basicAnswers[num.toString()] ?: "?"
+                val status = if (q.isError || q.selectedAnswer == null) AnswerStatus.BLANK else if (q.selectedAnswer == correctAns) AnswerStatus.CORRECT else AnswerStatus.WRONG
+                uiList.add(QuestionDetailUI(num.toString(), studentAns, correctAns, status))
+            }
+        }
+        return uiList
     }
 
     fun resetState() {

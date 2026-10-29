@@ -11,10 +11,10 @@ import org.opencv.imgproc.Imgproc
 
 class Exam40Processor : ExamProcessor {
 
-    private val roiSBD  = Rect(90, 338, 203, 386)   // SBD: 6 cột
-    private val roiCode = Rect(319, 338, 103, 386)   // Mã đề: 3 cột
+    private val roiSBD  = Rect(90, 337, 198 , 384)   // SBD: 6 cột
+    private val roiCode = Rect(320, 337, 100, 384)   // Mã đề: 3 cột
 
-    private val roiCol1 = Rect(520, 337, 130, 386)   // Cột 1: Câu 1-10
+    private val roiCol1 = Rect(520, 337, 130, 384)   // Cột 1: Câu 1-10
     private val roiCol2 = Rect(123, 757, 130, 386)   // Cột 2: Câu 11-20
     private val roiCol3 = Rect(321, 757, 130, 386)   // Cột 3: Câu 21-30
     private val roiCol4 = Rect(520, 757, 130, 386)   // Cột 4: Câu 31-40

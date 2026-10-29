@@ -635,7 +635,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                             totalQuestions = resultData.totalQuestions,
                             processedImage = resultData.processedImage,
                             onViewDetailsClick = {
-                                // TODO: Mở BottomSheet hoặc Dialog xem chi tiết
+                                bottomNavController.navigate("exam_detail")
                             },
                             onNextScanClick = {
                                 sharedGradingViewModel.resetState()
@@ -668,6 +668,33 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         rosterId = rosterId,
                         onNavigateBack = { bottomNavController.popBackStack() }
                     )
+                }
+
+                // MÀN HÌNH CHI TIẾT TỪNG CÂU (BẤM VÀO CON MẮT)
+                composable(
+                    route = "exam_detail",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    val gradingState by sharedGradingViewModel.gradingState.collectAsState()
+
+                    if (gradingState is com.example.quizmark.ui.main.scan.GradingState.Success) {
+                        val resultData = (gradingState as com.example.quizmark.ui.main.scan.GradingState.Success).result
+
+                        com.example.quizmark.ui.main.scan.ExamDetailScreen(
+                            studentName = resultData.studentName,
+                            sbd = resultData.sbd,
+                            examCode = resultData.examCode,
+                            score = resultData.score,
+                            correctCount = resultData.correctCount,
+                            wrongCount = resultData.wrongCount,
+                            blankCount = resultData.blankCount,
+                            totalQuestions = resultData.totalQuestions,
+                            isThpt = resultData.templateId == 1,
+                            questions = resultData.detailedQuestions,
+                            onBackClick = { bottomNavController.popBackStack() }
+                        )
+                    }
                 }
             }
         }

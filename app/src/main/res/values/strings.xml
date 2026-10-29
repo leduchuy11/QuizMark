@@ -339,4 +339,17 @@
     <string name="correct_questions">%1$d / %2$d câu đúng</string>
     <string name="graded_exam_title">BÀI ĐÃ CHẤM</string>
     <string name="exam_code_label">Mã đề %1$s</string>
+    <string name="question_details">Chi tiết từng câu</string>
+    <string name="part1_title">PHẦN I • %1$d CÂU</string>
+    <string name="part2_title">PHẦN II • %1$d CÂU</string>
+    <string name="part3_title">PHẦN III • %1$d CÂU</string>
+    <string name="answer_key_title">ĐÁP ÁN • %1$d CÂU</string>
+    <string name="student_exam_info">SBD: %1$s  •  Mã đề: %2$s</string>
+    <string name="correct_answers_count">%1$d / %2$d câu đúng</string>
+    <string name="student_selected">HS chọn</string>
+    <string name="correct_answer_label">Đáp án</string>
+    <string name="answer_status_correct">Đúng</string>
+    <string name="answer_status_wrong">Sai</string>
+    <string name="answer_status_blank">Bỏ trống</string>
+
 </resources>

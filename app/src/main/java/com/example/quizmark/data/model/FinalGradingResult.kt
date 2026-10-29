@@ -1,6 +1,7 @@
 package com.example.quizmark.data.model
 
 import android.graphics.Bitmap
+import com.example.quizmark.ui.main.scan.QuestionDetailUI
 
 data class FinalGradingResult(
     val studentName: String,
@@ -11,5 +12,7 @@ data class FinalGradingResult(
     val wrongCount: Int,
     val blankCount: Int,
     val totalQuestions: Int,
-    val processedImage: Bitmap?
+    val processedImage: Bitmap?,
+    val detailedQuestions: List<QuestionDetailUI>,
+    val templateId: Int
 )
