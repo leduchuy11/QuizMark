@@ -329,4 +329,14 @@
     <string name="camera_manual_instruction">Đưa vào khung để chụp</string>
     <string name="btn_capture_desc">Chụp ảnh</string>
     <string name="camera_aruco_instruction">Đưa đủ 4 marker ArUco của phiếu vào khung</string>
+
+    <string name="scan_result_title">Kết quả chấm</string>
+    <string name="grading_success">Chấm thành công</string>
+    <string name="stat_correct">%1$d Đúng</string>
+    <string name="stat_wrong">%1$d Sai</string>
+    <string name="stat_blank">%1$d Trống</string>
+    <string name="score_label">ĐIỂM</string>
+    <string name="correct_questions">%1$d / %2$d câu đúng</string>
+    <string name="graded_exam_title">BÀI ĐÃ CHẤM</string>
+    <string name="exam_code_label">Mã đề %1$s</string>
 </resources>

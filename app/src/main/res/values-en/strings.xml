@@ -331,4 +331,14 @@
     <string name="camera_manual_instruction">Place it within the frame for recognition</string>
     <string name="btn_capture_desc">Take a photo</string>
     <string name="camera_aruco_instruction">Fit all 4 ArUco markers of the answer sheet within the frame</string>
+
+    <string name="scan_result_title">Grading Results</string>
+    <string name="grading_success">Grading Successful</string>
+    <string name="stat_correct">%1$d Correct</string>
+    <string name="stat_wrong">%1$d Wrong</string>
+    <string name="stat_blank">%1$d Blank</string>
+    <string name="score_label">SCORE</string>
+    <string name="correct_questions">%1$d / %2$d questions correct</string>
+    <string name="graded_exam_title">GRADED EXAM</string>
+    <string name="exam_code_label">Exam code %1$s</string>
 </resources>

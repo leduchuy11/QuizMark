@@ -1,6 +1,7 @@
 package com.example.quizmark.util.scanner
 
 import android.graphics.Bitmap
+import com.example.quizmark.data.model.BubbleInfo
 import org.opencv.android.Utils
 import org.opencv.core.*
 import com.example.quizmark.data.model.ScanResult
@@ -10,7 +11,6 @@ import org.opencv.imgproc.Imgproc
 
 class ExamThptProcessor : ExamProcessor {
 
-    // ================= TỌA ĐỘ ƯỚC LƯỢNG CHO PHIẾU THPT 2025 =================
     // 1. THÔNG TIN CÁ NHÂN
     private val roiSBD  = Rect(549, 78, 141, 255)
     private val roiCode = Rect(714, 78, 72, 256)
@@ -49,7 +49,7 @@ class ExamThptProcessor : ExamProcessor {
             grayMat = Mat()
             Imgproc.cvtColor(colorMat, grayMat, Imgproc.COLOR_BGRA2GRAY)
             binaryMat = Mat()
-// Dùng Adaptive Threshold để lọc sạch bóng râm và nhiễu sáng
+
             Imgproc.adaptiveThreshold(
                 grayMat,
                 binaryMat,
@@ -95,7 +95,7 @@ class ExamThptProcessor : ExamProcessor {
         }
     }
 
-    // ================= CÁC HÀM XỬ LÝ LÕI =================
+    // ================= CÁC HÀM XỬ LÝ =================
 
     private fun readGridNumber(binaryRoi: Mat, colorMat: Mat, globalRect: Rect, rows: Int, cols: Int): String? {
         val cellW = binaryRoi.width().toDouble() / cols
@@ -112,20 +112,38 @@ class ExamThptProcessor : ExamProcessor {
         for (c in 0 until cols) {
             var filledRow = -1
             var fillCount = 0
+            val bubbles = mutableListOf<Pair<Point, Boolean>>()
+
             for (r in 0 until rows) {
                 val cell = Mat(binaryRoi, Rect((c * cellW).toInt(), (r * cellH).toInt(), cellW.toInt(), cellH.toInt()))
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
-                if (Core.countNonZero(maskedCell) > circleArea * 0.50) {
+
+                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                if (isFilled) {
                     filledRow = r
                     fillCount++
-                    Imgproc.circle(colorMat, Point(globalRect.x + c * cellW + cellW / 2.0, globalRect.y + r * cellH + cellH / 2.0), radius, Scalar(0.0, 255.0, 0.0), 3)
-                } else {
-                    Imgproc.circle(colorMat, Point(globalRect.x + c * cellW + cellW / 2.0, globalRect.y + r * cellH + cellH / 2.0), radius, Scalar(0.0, 255.0, 255.0), 2)
                 }
+
+                val globalCenter = Point(globalRect.x + c * cellW + cellW / 2.0, globalRect.y + r * cellH + cellH / 2.0)
+                bubbles.add(Pair(globalCenter, isFilled))
+
                 cell.release(); maskedCell.release()
             }
-            if (fillCount != 1) hasError = true else result.append(filledRow)
+
+            val isColError = fillCount != 1
+            if (isColError) hasError = true else result.append(filledRow)
+
+
+            // VẼ GIAO DIỆN CHO CỘT SBD / MÃ ĐỀ
+            for (bubble in bubbles) {
+                if (bubble.second) {
+                    val color = if (isColError) Scalar(0.0, 255.0, 0.0) else Scalar(0.0, 255.0, 0.0)
+                    Imgproc.circle(colorMat, bubble.first, radius, color, 2)
+                } else {
+                    Imgproc.circle(colorMat, bubble.first, radius, Scalar(255.0, 255.0, 255.0), 1)
+                }
+            }
         }
         mask.release()
         return if (hasError) null else result.toString()
@@ -148,20 +166,23 @@ class ExamThptProcessor : ExamProcessor {
         for (r in 0 until rows) {
             var selectedAns: String? = null
             var fillCount = 0
+            val bubbles = mutableListOf<BubbleInfo>()
+
             for (c in 0 until cols) {
                 val cell = Mat(binaryRoi, Rect((c * cellW).toInt(), (r * cellH).toInt(), cellW.toInt(), cellH.toInt()))
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
-                if (Core.countNonZero(maskedCell) > circleArea * 0.50) {
-                    selectedAns = options[c]
-                    fillCount++
-                    Imgproc.circle(colorMat, Point(globalRect.x + c * cellW + cellW / 2.0, globalRect.y + r * cellH + cellH / 2.0), radius, Scalar(0.0, 255.0, 0.0), 3)
-                } else {
-                    Imgproc.circle(colorMat, Point(globalRect.x + c * cellW + cellW / 2.0, globalRect.y + r * cellH + cellH / 2.0), radius, Scalar(0.0, 255.0, 255.0), 2)
-                }
+
+                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                if (isFilled) { selectedAns = options[c]; fillCount++ }
+
+                val cx = (globalRect.x + c * cellW + cellW / 2.0).toFloat()
+                val cy = (globalRect.y + r * cellH + cellH / 2.0).toFloat()
+                bubbles.add(BubbleInfo(cx, cy, radius.toFloat(), isFilled))
+
                 cell.release(); maskedCell.release()
             }
-            results.add(QuestionResult(startQ + r, if (fillCount != 1) null else selectedAns, fillCount != 1))
+            results.add(QuestionResult(startQ + r, if (fillCount != 1) null else selectedAns, fillCount > 1, bubbles))
         }
         mask.release()
         return results
@@ -178,33 +199,36 @@ class ExamThptProcessor : ExamProcessor {
         val mask = Mat.zeros(Size(cellW, cellH), CvType.CV_8UC1)
         Imgproc.circle(mask, Point(cellW / 2.0, cellH / 2.0), radius, Scalar(255.0), -1)
 
-        val options = listOf("D", "S") // Đúng hoặc Sai
+        val options = listOf("Đ", "S")
         val results = mutableListOf<QuestionResult>()
 
         for (r in 0 until rows) {
             var selectedAns: String? = null
             var fillCount = 0
+            val bubbles = mutableListOf<BubbleInfo>()
+
             for (c in 0 until cols) {
                 val cell = Mat(binaryRoi, Rect((c * cellW).toInt(), (r * cellH).toInt(), cellW.toInt(), cellH.toInt()))
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
-                if (Core.countNonZero(maskedCell) > circleArea * 0.50) {
-                    selectedAns = options[c]
-                    fillCount++
-                    Imgproc.circle(colorMat, Point(globalRect.x + c * cellW + cellW / 2.0, globalRect.y + r * cellH + cellH / 2.0), radius, Scalar(0.0, 255.0, 0.0), 3)
-                } else {
-                    Imgproc.circle(colorMat, Point(globalRect.x + c * cellW + cellW / 2.0, globalRect.y + r * cellH + cellH / 2.0), radius, Scalar(0.0, 255.0, 255.0), 2)
-                }
+
+                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                if (isFilled) { selectedAns = options[c]; fillCount++ }
+
+                val cx = (globalRect.x + c * cellW + cellW / 2.0).toFloat()
+                val cy = (globalRect.y + r * cellH + cellH / 2.0).toFloat()
+                bubbles.add(BubbleInfo(cx, cy, radius.toFloat(), isFilled))
+
                 cell.release(); maskedCell.release()
             }
-            results.add(QuestionResult(startQ + r, if (fillCount != 1) null else selectedAns, fillCount != 1))
+            results.add(QuestionResult(startQ + r, if (fillCount != 1) null else selectedAns, fillCount > 1, bubbles))
         }
         mask.release()
         return results
     }
 
     private fun readPart3Box(binaryRoi: Mat, colorMat: Mat, globalRect: Rect, qIndex: Int): QuestionResult {
-        val rows = 12 // Hàng 0: (-), Hàng 1: (,), Hàng 2-11: (0-9)
+        val rows = 12
         val cols = 4
         val cellW = binaryRoi.width().toDouble() / cols
         val cellH = binaryRoi.height().toDouble() / rows
@@ -215,17 +239,17 @@ class ExamThptProcessor : ExamProcessor {
         Imgproc.circle(mask, Point(cellW / 2.0, cellH / 2.0), radius, Scalar(255.0), -1)
 
         val colResults = mutableListOf<String>()
+        val allBubbles = mutableListOf<BubbleInfo>()
 
         for (c in 0 until cols) {
             var filledChar = ""
             var fillCount = 0
 
             for (r in 0 until rows) {
-                // Chỉ kiểm tra những vị trí thực sự có vòng tròn in trên giấy
                 val isValidBubble = when (r) {
-                    0 -> c == 0             // Dấu âm (-) chỉ có ở cột đầu
-                    1 -> c == 1 || c == 2   // Dấu phẩy (,) chỉ có ở 2 cột giữa
-                    else -> true            // Số (0-9) có ở mọi cột
+                    0 -> c == 0
+                    1 -> c == 1 || c == 2
+                    else -> true
                 }
 
                 if (!isValidBubble) continue
@@ -234,58 +258,42 @@ class ExamThptProcessor : ExamProcessor {
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
 
-                val globalCenter = Point(globalRect.x + c * cellW + cellW / 2.0, globalRect.y + r * cellH + cellH / 2.0)
-
-                if (Core.countNonZero(maskedCell) > circleArea * 0.50) {
+                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                if (isFilled) {
                     filledChar = when (r) {
                         0 -> "-"
-                        1 -> ","
+                        1 -> "."
                         else -> (r - 2).toString()
                     }
                     fillCount++
-                    Imgproc.circle(colorMat, globalCenter, radius, Scalar(0.0, 255.0, 0.0), 3)
-                } else {
-                    Imgproc.circle(colorMat, globalCenter, radius, Scalar(0.0, 255.0, 255.0), 2)
                 }
+
+                val cx = (globalRect.x + c * cellW + cellW / 2.0).toFloat()
+                val cy = (globalRect.y + r * cellH + cellH / 2.0).toFloat()
+                allBubbles.add(BubbleInfo(cx, cy, radius.toFloat(), isFilled))
+
                 cell.release(); maskedCell.release()
             }
 
-            if (fillCount == 1) {
-                colResults.add(filledChar)
-            } else if (fillCount == 0) {
-                colResults.add(" ") // Cột trống
-            } else {
-                colResults.add("E") // Lỗi tô đúp
-            }
+            if (fillCount == 1) colResults.add(filledChar)
+            else if (fillCount == 0) colResults.add(" ")
+            else colResults.add("E")
         }
         mask.release()
 
-        // QUY TẮC GHÉP CHUỖI ĐIỀN SỐ THPT
-        // 1. Nếu cột 1 bỏ trống -> Trả về null (Không làm bài)
-        if (colResults[0] == " ") {
-            return QuestionResult(qIndex, null, false)
-        }
+        if (colResults[0] == " ") return QuestionResult(qIndex, null, false, allBubbles)
 
-        // 2. Đọc từ trái sang phải, gặp cột trống thì dừng
         val finalAnswerBuilder = StringBuilder()
         var hasError = false
-
         for (char in colResults) {
-            if (char == " ") {
-                break // Dừng ngay khi gặp khoảng trắng
-            } else if (char == "E") {
-                hasError = true // Lỗi tô đúp
-                break
-            } else {
-                finalAnswerBuilder.append(char)
-            }
+            if (char == " ") break
+            else if (char == "E") { hasError = true; break }
+            else finalAnswerBuilder.append(char)
         }
 
         val finalAnswer = finalAnswerBuilder.toString()
-        if (hasError || finalAnswer.isEmpty()) {
-            return QuestionResult(qIndex, null, true)
-        }
+        if (hasError || finalAnswer.isEmpty()) return QuestionResult(qIndex, null, true, allBubbles)
 
-        return QuestionResult(qIndex, finalAnswer, false)
+        return QuestionResult(qIndex, finalAnswer, false, allBubbles)
     }
 }

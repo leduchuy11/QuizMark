@@ -1,10 +1,19 @@
 package com.example.quizmark.data.model
 
-// Kết quả của 1 câu hỏi
+// class này để lưu tọa độ từng ô tròn
+data class BubbleInfo(
+    val x: Float,
+    val y: Float,
+    val radius: Float,
+    val isFilled: Boolean
+)
+
+// Cập nhật lại QuestionResult
 data class QuestionResult(
     val questionNumber: Int,
-    val selectedAnswer: String?, // "A", "B", "C", "D" hoặc null nếu không tô
-    val isError: Boolean // true nếu tô đúp hoặc bỏ trống
+    val selectedAnswer: String?,
+    val isError: Boolean,
+    val bubbles: List<BubbleInfo> = emptyList() // <--- THÊM DÒNG NÀY
 )
 
 // Tổng hợp kết quả của toàn bộ bài thi

@@ -59,7 +59,9 @@ import com.example.quizmark.ui.main.examList.student.EditStudentScreen
 import com.example.quizmark.ui.main.examList.student.ImportStudentScreen
 import com.example.quizmark.ui.main.examList.student.PreviewImportScreen
 import com.example.quizmark.ui.main.scan.AutoScanCameraScreen
+import com.example.quizmark.ui.main.scan.GradingViewModel
 import com.example.quizmark.ui.main.scan.ManualCaptureCameraScreen
+import com.example.quizmark.ui.main.scan.ScanResultScreen
 import com.example.quizmark.ui.main.scan.ScanScreen
 
 import com.example.quizmark.ui.theme.DarkBlue
@@ -69,6 +71,7 @@ import com.example.quizmark.ui.theme.PrimaryDarkBlue
 fun MainScreen(onNavigateToLogin: () -> Unit,
                sharedAccountViewModel: AccountViewModel = hiltViewModel()) {
     val bottomNavController = rememberNavController()
+    val sharedGradingViewModel: GradingViewModel = hiltViewModel()
 
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -602,9 +605,52 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     AutoScanCameraScreen(
                         examId = examId,
                         rosterId = rosterId,
-                        templateId = templateId, // 3. Truyền vào Camera Screen
-                        onNavigateBack = { bottomNavController.popBackStack() }
+                        templateId = templateId,
+                        viewModel = sharedGradingViewModel,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToResult = {
+                            bottomNavController.navigate("scan_result") {
+                                popUpTo("auto_scan_camera/{examId}/{rosterId}/{templateId}") {
+                                    inclusive = true
+                                }
+                            }
+                        }
                     )
+                }
+
+                composable(route = "scan_result") {
+                    val gradingState by sharedGradingViewModel.gradingState.collectAsState()
+
+                    if (gradingState is com.example.quizmark.ui.main.scan.GradingState.Success) {
+                        val resultData = (gradingState as com.example.quizmark.ui.main.scan.GradingState.Success).result
+
+                        ScanResultScreen(
+                            studentName = resultData.studentName,
+                            sbd = resultData.sbd,
+                            examCode = resultData.examCode,
+                            score = resultData.score,
+                            correctCount = resultData.correctCount,
+                            wrongCount = resultData.wrongCount,
+                            blankCount = resultData.blankCount,
+                            totalQuestions = resultData.totalQuestions,
+                            processedImage = resultData.processedImage,
+                            onViewDetailsClick = {
+                                // TODO: Mở BottomSheet hoặc Dialog xem chi tiết
+                            },
+                            onNextScanClick = {
+                                sharedGradingViewModel.resetState()
+                                bottomNavController.popBackStack()
+                            },
+                            onBackClick = {
+                                sharedGradingViewModel.resetState()
+                                bottomNavController.popBackStack()
+                            }
+                        )
+                    } else {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = DarkBlue)
+                        }
+                    }
                 }
 
                 // Màn chụp thủ công (AI)
