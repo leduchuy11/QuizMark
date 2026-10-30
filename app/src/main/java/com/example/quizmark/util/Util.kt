@@ -7,6 +7,8 @@ import androidx.core.content.FileProvider
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
 import java.io.FileOutputStream
+import android.graphics.Bitmap
+
 
 // Hàm mở rộng giúp xóa dấu tiếng Việt
 fun String.unAccent(): String {
@@ -86,4 +88,16 @@ fun shareExcelFile(context: Context, file: File) {
     } catch (e: Exception) {
         e.printStackTrace()
     }
+}
+
+
+// Hàm nén ảnh vừa chấm xong thành file .jpg và lưu vào máy.
+fun saveBitmapToLocalFiles(context: Context, bitmap: Bitmap, recordId: String): String {
+    // Tạo file trong thư mục filesDir của app (không bị hệ điều hành tự động xóa)
+    val file = File(context.filesDir, "QuizMark_$recordId.jpg")
+    FileOutputStream(file).use { out ->
+        // Nén ảnh chất lượng 80% để tiết kiệm bộ nhớ (chỉ khoảng 150-300KB/ảnh)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
+    }
+    return file.absolutePath // Trả về đường dẫn để lưu vào Database
 }

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,8 +57,13 @@ fun ScanResultScreen(
     processedImage: Bitmap?,
     onViewDetailsClick: () -> Unit,
     onNextScanClick: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onSaveResult: () -> Unit
 ) {
+
+    LaunchedEffect(Unit) {
+        onSaveResult()
+    }
 
     BackHandler {
         onBackClick()
@@ -330,7 +336,7 @@ fun BottomActionRow(onViewDetailsClick: () -> Unit, onNextScanClick: () -> Unit)
             colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text(text = "Phiếu kế tiếp", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = stringResource(R.string.next_sheet), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }

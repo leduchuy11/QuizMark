@@ -353,4 +353,5 @@
     <string name="answer_status_correct">Correct</string>
     <string name="answer_status_wrong">Wrong</string>
     <string name="answer_status_blank">Blank</string>
+    <string name="next_sheet">Next Sheet</string>
 </resources>

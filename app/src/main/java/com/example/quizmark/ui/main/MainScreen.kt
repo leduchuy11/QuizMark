@@ -644,6 +644,9 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                             onBackClick = {
                                 sharedGradingViewModel.resetState()
                                 bottomNavController.popBackStack()
+                            },
+                            onSaveResult = {
+                                sharedGradingViewModel.saveCurrentResult()
                             }
                         )
                     } else {

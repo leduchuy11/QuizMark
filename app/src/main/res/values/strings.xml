@@ -351,5 +351,6 @@
     <string name="answer_status_correct">Đúng</string>
     <string name="answer_status_wrong">Sai</string>
     <string name="answer_status_blank">Bỏ trống</string>
+    <string name="next_sheet">Phiếu kế tiếp</string>
 
 </resources>

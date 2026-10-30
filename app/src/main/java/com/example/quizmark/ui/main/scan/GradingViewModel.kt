@@ -9,11 +9,14 @@ import com.example.quizmark.data.model.ThptExamCodeModel
 import com.example.quizmark.data.model.ThptExamConfig
 import com.example.quizmark.data.repository.ExamListRepository
 import com.example.quizmark.data.repository.ExamRepository
+import com.example.quizmark.data.repository.HistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 
 sealed class GradingState {
@@ -29,24 +32,42 @@ private data class ThptStats(val score: Double, val correct: Int, val wrong: Int
 @HiltViewModel
 class GradingViewModel @Inject constructor(
     private val examRepository: ExamRepository,
-    private val examListRepository: ExamListRepository
+    private val examListRepository: ExamListRepository,
+    private val historyRepository: HistoryRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _gradingState = MutableStateFlow<GradingState>(GradingState.Idle)
     val gradingState = _gradingState.asStateFlow()
 
+    private var currentRosterId: String? = null
+    private var isResultSaved = false
+
     fun gradeExam(scanResult: ScanResult, examId: String, rosterId: String?, templateId: Int) {
+        currentRosterId = rosterId
+        isResultSaved = false
+
         viewModelScope.launch {
             _gradingState.value = GradingState.Loading
             try {
-                // BƯỚC 1 TÌM HỌC SINH
+                // BƯỚC 1: TÌM HỌC SINH
                 val scannedSbd = scanResult.sbd ?: "Trống"
                 var finalStudentName = "Ẩn danh"
-                if (rosterId != null && scannedSbd != "Trống") {
-                    val roster = examListRepository.getRosterById(rosterId)
-                    if (roster != null) {
-                        val matchedStudent = roster.students.find { it.studentCode == scannedSbd }
-                        if (matchedStudent != null) finalStudentName = matchedStudent.name
+                var finalRosterName = "Ẩn danh"
+
+                if (rosterId != null) {
+                    try {
+                        val roster = examListRepository.getRosterById(rosterId)
+                        if (roster != null) {
+                            finalRosterName = roster.name
+                            if (scannedSbd != "Trống") {
+                                val matchedStudent = roster.students.find { it.studentCode == scannedSbd }
+                                if (matchedStudent != null) finalStudentName = matchedStudent.name
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // Nếu lấy danh sách thất bại (do mất mạng + không có cache), vẫn tiếp tục chấm bài!
+                        e.printStackTrace()
                     }
                 }
 
@@ -54,15 +75,16 @@ class GradingViewModel @Inject constructor(
                 val isThpt = templateId == 1
                 var correctCount = 0; var wrongCount = 0; var blankCount = 0; var finalScore = 0.0; var totalQuestions = 0
 
-                // KHỞI TẠO BÚT VẼ (CANVAS) TỪ ẢNH GỐC
                 val mutableBitmap = scanResult.processedBitmap?.copy(android.graphics.Bitmap.Config.ARGB_8888, true)
                 val canvas = mutableBitmap?.let { android.graphics.Canvas(it) }
 
-                // ĐỊNH NGHĨA 4 MÀU UI
                 val paintCorrect = android.graphics.Paint().apply { color = android.graphics.Color.GREEN; style = android.graphics.Paint.Style.STROKE; strokeWidth = 3.5f; isAntiAlias = true }
                 val paintWrong = android.graphics.Paint().apply { color = android.graphics.Color.RED; style = android.graphics.Paint.Style.STROKE; strokeWidth = 3.5f; isAntiAlias = true }
                 val paintError = android.graphics.Paint().apply { color = android.graphics.Color.YELLOW; style = android.graphics.Paint.Style.STROKE; strokeWidth = 3.5f; isAntiAlias = true }
                 val paintEmpty = android.graphics.Paint().apply { color = android.graphics.Color.WHITE; style = android.graphics.Paint.Style.STROKE; strokeWidth = 1.2f; isAntiAlias = true }
+
+                // BƯỚC 2: TÍNH ĐIỂM
+                var uiList = emptyList<QuestionDetailUI>()
 
                 if (isThpt) {
                     val thptExam = examRepository.getThptExamById(examId)
@@ -76,9 +98,12 @@ class GradingViewModel @Inject constructor(
                             val stats = calculateThptStats(scanResult, matchedCode, thptExam.config, canvas, paintCorrect, paintWrong, paintError, paintEmpty)
                             correctCount = stats.correct; wrongCount = stats.wrong; blankCount = stats.blank; finalScore = stats.score
                         }
+
+                        uiList = getDetailedQuestionsUI(scanResult, matchedCode, null, true, thptConfig = thptExam.config)
+                    } else {
+                        throw Exception("Không tìm thấy dữ liệu Đề thi. Vui lòng kết nối mạng để đồng bộ!")
                     }
                 } else {
-                    // Logic cho phiếu Basic
                     val basicExam = examRepository.getBasicExamById(examId)
                     if (basicExam != null) {
                         totalQuestions = basicExam.questionCount
@@ -104,21 +129,14 @@ class GradingViewModel @Inject constructor(
                             }
                             if (totalQuestions > 0) finalScore = (correctCount.toDouble() / totalQuestions) * 10.0
                         }
+
+                        uiList = getDetailedQuestionsUI(scanResult, null, matchedCode?.answers, false, basicQuestionCount = basicExam.questionCount)
+                    } else {
+                        throw Exception("Không tìm thấy dữ liệu Đề thi. Vui lòng kết nối mạng để đồng bộ!")
                     }
                 }
 
-                // CHUẨN BỊ DANH SÁCH CHI TIẾT
-                val uiList = if (isThpt) {
-                    val thptExam = examRepository.getThptExamById(examId)
-                    val matchedCode = thptExam?.codes?.find { it.code == scannedCode }
-                    getDetailedQuestionsUI(scanResult, matchedCode, null, true, thptConfig = thptExam?.config)
-                } else {
-                    val basicExam = examRepository.getBasicExamById(examId)
-                    val matchedCode = basicExam?.codes?.find { it.code == scannedCode }
-                    getDetailedQuestionsUI(scanResult, null, matchedCode?.answers, false, basicQuestionCount = basicExam?.questionCount ?: 0)
-                }
-
-                // TRẢ KẾT QUẢ CÙNG BỨC ẢNH VÀ DANH SÁCH CHI TIẾT
+                // BƯỚC 3: ĐÓNG GÓI KẾT QUẢ ĐỂ HIỂN THỊ
                 val resultData = FinalGradingResult(
                     studentName = finalStudentName, sbd = scannedSbd, examCode = scannedCode, score = finalScore,
                     correctCount = correctCount, wrongCount = wrongCount, blankCount = blankCount, totalQuestions = totalQuestions,
@@ -126,10 +144,42 @@ class GradingViewModel @Inject constructor(
                     detailedQuestions = uiList,
                     templateId = templateId
                 )
-                _gradingState.value = GradingState.Success(resultData)
+
+
+                // 5. KÍCH HOẠT GIAO DIỆN HIỂN THỊ
                 _gradingState.value = GradingState.Success(resultData)
             } catch (e: Exception) {
                 _gradingState.value = GradingState.Error(e.message ?: "Lỗi chấm thi")
+            }
+        }
+    }
+
+    fun saveCurrentResult() {
+        // NẾU ĐÃ LƯU RỒI THÌ BỎ QUA NGAY LẬP TỨC
+        if (isResultSaved) return
+
+        val currentState = _gradingState.value
+        if (currentState is GradingState.Success) {
+
+            isResultSaved = true // ĐÁNH DẤU LÀ ĐÃ LƯU ĐỂ CHẶN CÁC LẦN GỌI SAU
+
+            viewModelScope.launch {
+                try {
+                    val resultData = currentState.result
+                    var finalRosterName = "Ẩn danh"
+
+                    if (currentRosterId != null) {
+                        try {
+                            val roster = examListRepository.getRosterById(currentRosterId!!)
+                            if (roster != null) finalRosterName = roster.name
+                        } catch (e: Exception) { e.printStackTrace() }
+                    }
+
+                    historyRepository.saveRecord(context, resultData, currentRosterId, finalRosterName)
+
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }

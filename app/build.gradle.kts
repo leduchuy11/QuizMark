@@ -43,6 +43,22 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0",
+                "META-INF/*.kotlin_module"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -101,4 +117,26 @@ dependencies {
 
     // OpenCV cho Android
     implementation("com.quickbirdstudios:opencv:4.5.3.0")
+
+    // Firebase Storage (Lưu trữ ảnh trên đám mây)
+    implementation("com.google.firebase:firebase-storage")
+
+    // WorkManager (Quản lý tiến trình upload ảnh chạy ngầm khi có mạng)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // Coil Compose (Thư viện siêu nhẹ giúp hiển thị ảnh từ File local hoặc URL có sẵn cơ chế tự động Cache)
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // Gson (Giúp chuyển đổi dữ liệu gửi cho WorkManager dễ dàng hơn)
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    implementation("com.amazonaws:aws-android-sdk-s3:2.39.0")
+    implementation("com.amazonaws:aws-android-sdk-mobile-client:2.39.0")
+    // Xác thực tài khoản Google
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+
+    // Google Drive REST API
+    implementation("com.google.api-client:google-api-client-android:1.33.0")
+    implementation("com.google.apis:google-api-services-drive:v3-rev20230822-2.0.0")
+    implementation("com.google.http-client:google-http-client-gson:1.43.3")
 }
