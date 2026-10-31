@@ -58,11 +58,14 @@ import com.example.quizmark.ui.main.examList.student.AddStudentScreen
 import com.example.quizmark.ui.main.examList.student.EditStudentScreen
 import com.example.quizmark.ui.main.examList.student.ImportStudentScreen
 import com.example.quizmark.ui.main.examList.student.PreviewImportScreen
-import com.example.quizmark.ui.main.scan.AutoScanCameraScreen
-import com.example.quizmark.ui.main.scan.GradingViewModel
-import com.example.quizmark.ui.main.scan.ManualCaptureCameraScreen
-import com.example.quizmark.ui.main.scan.ScanResultScreen
+import com.example.quizmark.ui.main.scan.camera.AutoScanCameraScreen
+import com.example.quizmark.ui.main.scan.camera.GradingViewModel
+import com.example.quizmark.ui.main.scan.camera.ManualCaptureCameraScreen
+import com.example.quizmark.ui.main.scan.camera.ScanResultScreen
 import com.example.quizmark.ui.main.scan.ScanScreen
+import com.example.quizmark.ui.main.scan.camera.ExamDetailScreen
+import com.example.quizmark.ui.main.scan.camera.GradingState
+import com.example.quizmark.ui.main.scan.library.GalleryScreen
 
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
@@ -136,9 +139,13 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                                 bottomNavController.navigate("auto_scan_camera/$examId/$safeRosterId/$templateId")
                             }
                         },
-                        onNavigateToGallery = { examId, rosterId ->
-                            val safeRosterId = rosterId ?: "none"
-                            // TODO: Xử lý mở thư viện ảnh
+                        onNavigateToGallery = { examId, rosterId, templateId ->
+                            val route = if (rosterId != null) {
+                                "gallery_screen/$examId/$templateId?rosterId=$rosterId"
+                            } else {
+                                "gallery_screen/$examId/$templateId"
+                            }
+                            bottomNavController.navigate(route)
                         }
                     )
                 }
@@ -621,8 +628,8 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 composable(route = "scan_result") {
                     val gradingState by sharedGradingViewModel.gradingState.collectAsState()
 
-                    if (gradingState is com.example.quizmark.ui.main.scan.GradingState.Success) {
-                        val resultData = (gradingState as com.example.quizmark.ui.main.scan.GradingState.Success).result
+                    if (gradingState is GradingState.Success) {
+                        val resultData = (gradingState as GradingState.Success).result
 
                         ScanResultScreen(
                             studentName = resultData.studentName,
@@ -673,6 +680,43 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     )
                 }
 
+                composable(
+                    route = "gallery_screen/{examId}/{templateId}?rosterId={rosterId}",
+                    arguments = listOf(
+                        navArgument("examId") { type = NavType.StringType },
+                        navArgument("templateId") { type = NavType.IntType },
+                        navArgument("rosterId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        }
+                    ),
+                    enterTransition = {
+                        slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+                    }
+                ) { backStackEntry ->
+                    val examId = backStackEntry.arguments?.getString("examId") ?: ""
+                    val templateId = backStackEntry.arguments?.getInt("templateId") ?: 1
+                    val rosterId = backStackEntry.arguments?.getString("rosterId")
+
+                    GalleryScreen(
+                        examId = examId,
+                        rosterId = rosterId,
+                        templateId = templateId,
+                        onBackClick = { bottomNavController.popBackStack() },
+                        onNavigateToScan = {
+                            bottomNavController.navigate(BottomNavItem.Scan.route) {
+                                popUpTo(BottomNavItem.Scan.route) {
+                                    inclusive = false
+                                }
+                            }
+                        }
+                    )
+                }
+
                 // MÀN HÌNH CHI TIẾT TỪNG CÂU (BẤM VÀO CON MẮT)
                 composable(
                     route = "exam_detail",
@@ -681,10 +725,10 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 ) {
                     val gradingState by sharedGradingViewModel.gradingState.collectAsState()
 
-                    if (gradingState is com.example.quizmark.ui.main.scan.GradingState.Success) {
-                        val resultData = (gradingState as com.example.quizmark.ui.main.scan.GradingState.Success).result
+                    if (gradingState is GradingState.Success) {
+                        val resultData = (gradingState as GradingState.Success).result
 
-                        com.example.quizmark.ui.main.scan.ExamDetailScreen(
+                        ExamDetailScreen(
                             studentName = resultData.studentName,
                             sbd = resultData.sbd,
                             examCode = resultData.examCode,

@@ -1,7 +1,16 @@
-package com.example.quizmark.ui.main.scan
+package com.example.quizmark.ui.main.scan.camera
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.net.Uri
+import android.provider.Settings
+import android.util.Log
+import android.util.Size
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraControl
@@ -35,8 +44,13 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.ui.theme.DarkBlue
-import com.example.quizmark.util.scanner.saveBitmapToGallery
+import com.example.quizmark.util.scanner.Exam120Processor
+import com.example.quizmark.util.scanner.Exam20Processor
+import com.example.quizmark.util.scanner.Exam40Processor
+import com.example.quizmark.util.scanner.Exam50Processor
+import com.example.quizmark.util.scanner.ExamThptProcessor
 import com.example.quizmark.util.scanner.ScannerCore
+import java.util.concurrent.Executors
 
 @Composable
 fun AutoScanCameraScreen(
@@ -107,10 +121,10 @@ fun AutoScanCameraScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Button(
                         onClick = {
-                            val intent = android.content.Intent(
-                                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                            val intent = Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS
                             ).apply {
-                                data = android.net.Uri.fromParts("package", context.packageName, null)
+                                data = Uri.fromParts("package", context.packageName, null)
                             }
                             context.startActivity(intent)
                         },
@@ -136,7 +150,7 @@ fun CameraPreviewContent(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val scannerCore = remember { ScannerCore() }
-    val analyzerExecutor = remember { java.util.concurrent.Executors.newSingleThreadExecutor() }
+    val analyzerExecutor = remember { Executors.newSingleThreadExecutor() }
 
     var isScanning by remember { mutableStateOf(true) }
     var cameraControl by remember { mutableStateOf<CameraControl?>(null) }
@@ -156,7 +170,7 @@ fun CameraPreviewContent(
                     }
 
                     val imageAnalyzer = ImageAnalysis.Builder()
-                        .setTargetResolution(android.util.Size(720, 1280))
+                        .setTargetResolution(Size(720, 1280))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build()
                         .also { analysis ->
@@ -166,9 +180,9 @@ fun CameraPreviewContent(
                                     val rawBitmap = imageProxy.toBitmap()
 
                                     val rotatedBitmap = if (rotation != 0) {
-                                        val matrix = android.graphics.Matrix()
+                                        val matrix = Matrix()
                                         matrix.postRotate(rotation.toFloat())
-                                        android.graphics.Bitmap.createBitmap(
+                                        Bitmap.createBitmap(
                                             rawBitmap, 0, 0, rawBitmap.width, rawBitmap.height, matrix, true
                                         )
                                     } else {
@@ -181,12 +195,12 @@ fun CameraPreviewContent(
                                         isScanning = false // Khóa máy quét lại
 
                                         val processor = when (templateId) {
-                                            1 -> com.example.quizmark.util.scanner.ExamThptProcessor()
-                                            2 -> com.example.quizmark.util.scanner.Exam20Processor()
-                                            3 -> com.example.quizmark.util.scanner.Exam40Processor()
-                                            4 -> com.example.quizmark.util.scanner.Exam50Processor()
-                                            5 -> com.example.quizmark.util.scanner.Exam120Processor()
-                                            else -> com.example.quizmark.util.scanner.Exam20Processor()
+                                            1 -> ExamThptProcessor()
+                                            2 -> Exam20Processor()
+                                            3 -> Exam40Processor()
+                                            4 -> Exam50Processor()
+                                            5 -> Exam120Processor()
+                                            else -> Exam20Processor()
                                         }
                                         val scanResult = processor.process(resultBitmap)
 
@@ -194,40 +208,41 @@ fun CameraPreviewContent(
 //                                            saveBitmapToGallery(context, annotatedBitmap)
 //                                        }
 
-                                        android.util.Log.d("OMR_RESULT", "========== KẾT QUẢ QUÉT ==========")
-                                        android.util.Log.d("OMR_RESULT", "Số Báo Danh: ${scanResult.sbd}")
-                                        android.util.Log.d("OMR_RESULT", "Mã Đề: ${scanResult.examCode}")
+                                        Log.d("OMR_RESULT", "========== KẾT QUẢ QUÉT ==========")
+                                        Log.d("OMR_RESULT", "Số Báo Danh: ${scanResult.sbd}")
+                                        Log.d("OMR_RESULT", "Mã Đề: ${scanResult.examCode}")
 
                                         if (templateId == 1) {
-                                            android.util.Log.d("OMR_RESULT", "--- PHẦN I (Trắc nghiệm 4 lựa chọn) ---")
+                                            Log.d("OMR_RESULT", "--- PHẦN I (Trắc nghiệm 4 lựa chọn) ---")
                                             scanResult.answers.filter { it.questionNumber in 1..40 }.forEach {
-                                                android.util.Log.d("OMR_RESULT", "Câu ${it.questionNumber}: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp" else "Trống"}")
+                                                Log.d("OMR_RESULT", "Câu ${it.questionNumber}: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp" else "Trống"}")
                                             }
 
-                                            android.util.Log.d("OMR_RESULT", "--- PHẦN II (Đúng/Sai) ---")
+                                            Log.d("OMR_RESULT", "--- PHẦN II (Đúng/Sai) ---")
                                             scanResult.answers.filter { it.questionNumber in 41..72 }.forEach {
                                                 val offset = it.questionNumber - 41 // Đã sửa lỗi syntax
                                                 val cau = (offset / 4) + 1
                                                 val y = when (offset % 4) { 0 -> "a"; 1 -> "b"; 2 -> "c"; else -> "d" }
-                                                android.util.Log.d("OMR_RESULT", "Câu $cau ý $y: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp" else "Trống"}")
+                                                Log.d("OMR_RESULT", "Câu $cau ý $y: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp" else "Trống"}")
                                             }
 
-                                            android.util.Log.d("OMR_RESULT", "--- PHẦN III (Điền số) ---")
+                                            Log.d("OMR_RESULT", "--- PHẦN III (Điền số) ---")
                                             scanResult.answers.filter { it.questionNumber in 73..78 }.forEach {
                                                 val cau = it.questionNumber - 72 // Đã sửa lỗi syntax
-                                                android.util.Log.d("OMR_RESULT", "Câu $cau: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp/Sai quy tắc" else "Trống"}")
+                                                Log.d("OMR_RESULT", "Câu $cau: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp/Sai quy tắc" else "Trống"}")
                                             }
                                         } else {
                                             val answersStr = scanResult.answers.joinToString(separator = "\n") {
                                                 "Câu ${it.questionNumber}: ${it.selectedAnswer ?: if (it.isError) "Lỗi tô đúp/Bỏ trống" else "Bỏ trống"}"
                                             }
-                                            android.util.Log.d("OMR_RESULT", "Đáp án chi tiết:\n$answersStr")
+                                            Log.d("OMR_RESULT", "Đáp án chi tiết:\n$answersStr")
                                         }
-                                        android.util.Log.d("OMR_RESULT", "==================================")
+                                        Log.d("OMR_RESULT", "==================================")
 
                                         try {
-                                            val toneGen = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
-                                            toneGen.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 150)
+                                            val toneGen =
+                                                ToneGenerator(AudioManager.STREAM_MUSIC, 100)
+                                            toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
 
                                             // GỌI VIEW MODEL ĐỂ BẮT ĐẦU CHẤM ĐIỂM
                                             viewModel.gradeExam(scanResult, examId, rosterId, templateId)

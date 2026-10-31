@@ -1,7 +1,10 @@
-package com.example.quizmark.ui.main.scan
+package com.example.quizmark.ui.main.scan.camera
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraControl
@@ -16,12 +19,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FlashlightOff
 import androidx.compose.material.icons.filled.FlashlightOn
-import androidx.compose.material.icons.outlined.CropFree
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,7 +36,6 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -98,8 +98,8 @@ fun ManualCaptureCameraScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Button(
                         onClick = {
-                            val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = android.net.Uri.fromParts("package", context.packageName, null)
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
                             }
                             context.startActivity(intent)
                         },

@@ -49,7 +49,7 @@ import kotlinx.coroutines.delay
 fun ScanScreen(
     viewModel: ScanViewModel = hiltViewModel(),
     onNavigateToCamera: (String, String?, Int) -> Unit,
-    onNavigateToGallery: (String, String?) -> Unit
+    onNavigateToGallery: (String, String?, Int) -> Unit
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -316,8 +316,7 @@ fun ScanScreen(
                             toastMessage = context.getString(R.string.error_exam_not_selected)
                             toastType = ToastType.ERROR
                         } else {
-                            onNavigateToGallery(selectedExam!!.id, selectedRoster?.id)
-                        }
+                            onNavigateToGallery(selectedExam!!.id, selectedRoster?.id, selectedExam!!.templateId)                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()

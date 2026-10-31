@@ -353,4 +353,9 @@
     <string name="answer_status_blank">Bỏ trống</string>
     <string name="next_sheet">Phiếu kế tiếp</string>
 
+    <string name="grading_results">Kết quả chấm (%1$d)</string>
+    <string name="grading_error">Lỗi</string>
+    <string name="name">Tên</string>
+    <string name="grading_in_progress">Hệ thống đang chấm bài...</string>
+
 </resources>

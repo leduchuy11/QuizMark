@@ -1,6 +1,5 @@
-package com.example.quizmark.ui.main.scan
+package com.example.quizmark.ui.main.scan.camera
 
-import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.quizmark.data.model.FinalGradingResult
@@ -16,6 +15,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import dagger.hilt.android.qualifiers.ApplicationContext
 
 
@@ -75,13 +78,13 @@ class GradingViewModel @Inject constructor(
                 val isThpt = templateId == 1
                 var correctCount = 0; var wrongCount = 0; var blankCount = 0; var finalScore = 0.0; var totalQuestions = 0
 
-                val mutableBitmap = scanResult.processedBitmap?.copy(android.graphics.Bitmap.Config.ARGB_8888, true)
-                val canvas = mutableBitmap?.let { android.graphics.Canvas(it) }
+                val mutableBitmap = scanResult.processedBitmap?.copy(Bitmap.Config.ARGB_8888, true)
+                val canvas = mutableBitmap?.let { Canvas(it) }
 
-                val paintCorrect = android.graphics.Paint().apply { color = android.graphics.Color.GREEN; style = android.graphics.Paint.Style.STROKE; strokeWidth = 3.5f; isAntiAlias = true }
-                val paintWrong = android.graphics.Paint().apply { color = android.graphics.Color.RED; style = android.graphics.Paint.Style.STROKE; strokeWidth = 3.5f; isAntiAlias = true }
-                val paintError = android.graphics.Paint().apply { color = android.graphics.Color.YELLOW; style = android.graphics.Paint.Style.STROKE; strokeWidth = 3.5f; isAntiAlias = true }
-                val paintEmpty = android.graphics.Paint().apply { color = android.graphics.Color.WHITE; style = android.graphics.Paint.Style.STROKE; strokeWidth = 1.2f; isAntiAlias = true }
+                val paintCorrect = Paint().apply { color = Color.GREEN; style = Paint.Style.STROKE; strokeWidth = 3.5f; isAntiAlias = true }
+                val paintWrong = Paint().apply { color = Color.RED; style = Paint.Style.STROKE; strokeWidth = 3.5f; isAntiAlias = true }
+                val paintError = Paint().apply { color = Color.YELLOW; style = Paint.Style.STROKE; strokeWidth = 3.5f; isAntiAlias = true }
+                val paintEmpty = Paint().apply { color = Color.WHITE; style = Paint.Style.STROKE; strokeWidth = 1.2f; isAntiAlias = true }
 
                 // BƯỚC 2: TÍNH ĐIỂM
                 var uiList = emptyList<QuestionDetailUI>()
@@ -186,8 +189,8 @@ class GradingViewModel @Inject constructor(
 
     private fun calculateThptStats(
         scanResult: ScanResult, codeModel: ThptExamCodeModel, config: ThptExamConfig,
-        canvas: android.graphics.Canvas?, paintCorrect: android.graphics.Paint, paintWrong: android.graphics.Paint,
-        paintError: android.graphics.Paint, paintEmpty: android.graphics.Paint
+        canvas: Canvas?, paintCorrect: Paint, paintWrong: Paint,
+        paintError: Paint, paintEmpty: Paint
     ): ThptStats {
         var score = 0.0; var correct = 0; var wrong = 0; var blank = 0
         val p1Weight = if (config.p1Questions > 0) (config.p1Score / config.p1Questions.toDouble()) else 0.0
@@ -307,7 +310,14 @@ class GradingViewModel @Inject constructor(
                         val cau = num - 72
                         correctAns = codeModel.part3[cau.toString()] ?: "?"
                         val status = if (q.isError || q.selectedAnswer == null) AnswerStatus.BLANK else if (q.selectedAnswer == correctAns) AnswerStatus.CORRECT else AnswerStatus.WRONG
-                        uiList.add(QuestionDetailUI((cau + 40).toString(), studentAns, correctAns, status))
+                        uiList.add(
+                            QuestionDetailUI(
+                                (cau + 40).toString(),
+                                studentAns,
+                                correctAns,
+                                status
+                            )
+                        )
                     }
                 }
             } else if (!isThpt && basicAnswers != null) {

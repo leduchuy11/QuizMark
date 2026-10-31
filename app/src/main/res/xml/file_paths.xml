@@ -2,4 +2,11 @@
 <paths>
     <!-- Cho phép chia sẻ các file nằm trong thư mục cache của app -->
     <cache-path name="shared_pdfs" path="." />
+
+    <!-- Cấp quyền truy cập vào thư mục filesDir/history_images (nơi lưu ảnh chấm offline) -->
+    <files-path name="internal_images" path="history_images/" />
+
+    <!-- Cấp quyền cho ảnh cache (Thường dùng làm nơi lưu tạm ảnh chụp từ Camera) -->
+    <cache-path name="cache_images" path="." />
+    <external-cache-path name="external_cache_images" path="." />
 </paths>

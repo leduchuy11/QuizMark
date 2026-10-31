@@ -1,7 +1,7 @@
 package com.example.quizmark.data.model
 
 import android.graphics.Bitmap
-import com.example.quizmark.ui.main.scan.QuestionDetailUI
+import com.example.quizmark.ui.main.scan.camera.QuestionDetailUI
 
 data class FinalGradingResult(
     val studentName: String,

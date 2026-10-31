@@ -197,4 +197,45 @@ class ScannerCore {
 
         return warpedMat
     }
+
+    /**
+     * Dùng riêng cho ảnh tĩnh (chọn từ thư viện).
+     * Bỏ qua chống rung, tìm 4 góc và nắn phẳng ngay lập tức.
+     */
+    fun processStaticImage(bitmap: Bitmap): Bitmap? {
+        val srcMat = Mat()
+        Utils.bitmapToMat(bitmap, srcMat)
+
+        val grayMat = Mat()
+        Imgproc.cvtColor(srcMat, grayMat, Imgproc.COLOR_BGR2GRAY)
+
+        val blurredMat = Mat()
+        Imgproc.GaussianBlur(grayMat, blurredMat, Size(5.0, 5.0), 0.0)
+
+        val edgesMat = Mat()
+        Imgproc.Canny(blurredMat, edgesMat, 75.0, 200.0)
+
+        val contours = ArrayList<MatOfPoint>()
+        val hierarchy = Mat()
+        Imgproc.findContours(edgesMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE)
+
+        // Tìm 4 góc bằng hàm cũ
+        val corners = findExamCorners(contours)
+
+        if (corners == null || corners.size != 4) {
+            releaseMats(srcMat, grayMat, blurredMat, edgesMat, hierarchy)
+            return null // Không tìm thấy 4 góc trên ảnh tĩnh
+        }
+
+        // Nắn phẳng ngay lập tức
+        val warpedMat = warpImage(grayMat, corners)
+
+        val resultBitmap = Bitmap.createBitmap(warpedMat.cols(), warpedMat.rows(), Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(warpedMat, resultBitmap)
+
+        warpedMat.release()
+        releaseMats(srcMat, grayMat, blurredMat, edgesMat, hierarchy)
+
+        return resultBitmap
+    }
 }

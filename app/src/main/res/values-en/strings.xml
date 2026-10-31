@@ -354,4 +354,9 @@
     <string name="answer_status_wrong">Wrong</string>
     <string name="answer_status_blank">Blank</string>
     <string name="next_sheet">Next Sheet</string>
+
+    <string name="grading_results">Grading results (%1$d)</string>
+    <string name="grading_error">Err</string>
+    <string name="name">Name</string>
+    <string name="grading_in_progress">The system is grading...</string>
 </resources>
