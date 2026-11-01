@@ -293,7 +293,7 @@ fun ScannedImageCard(examCode: String, bitmap: Bitmap?) {
                         contentScale = ContentScale.Fit
                     )
                 } else {
-                    Text("Không có ảnh", modifier = Modifier.align(Alignment.Center))
+                    Text(text = stringResource(R.string.image_not_found), modifier = Modifier.align(Alignment.Center))
                 }
             }
         }

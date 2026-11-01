@@ -59,6 +59,7 @@ import com.example.quizmark.ui.main.examList.student.EditStudentScreen
 import com.example.quizmark.ui.main.examList.student.ImportStudentScreen
 import com.example.quizmark.ui.main.examList.student.PreviewImportScreen
 import com.example.quizmark.ui.main.home.HomeScreen
+import com.example.quizmark.ui.main.home.history.HistoryDetailScreen
 import com.example.quizmark.ui.main.home.history.HistoryScreen
 import com.example.quizmark.ui.main.scan.camera.AutoScanCameraScreen
 import com.example.quizmark.ui.main.scan.camera.GradingViewModel
@@ -138,6 +139,16 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         onNavigateToDetail = { recordId ->
                             bottomNavController.navigate("history_detail/$recordId")
                         }
+                    )
+                }
+                composable(
+                    route = "history_detail/{recordId}",
+                    arguments = listOf(navArgument("recordId") { type =NavType.StringType }),
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    HistoryDetailScreen(
+                        onBackClick = { bottomNavController.popBackStack() }
                     )
                 }
                 composable(BottomNavItem.Exam.route) {

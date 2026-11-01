@@ -384,4 +384,7 @@
     <string name="empty_history">No grading history available</string>
     <string name="delete_record_success">Record deleted successfully</string>
     <string name="delete_record_error">Error deleting record</string>
+    <string name="saved_to_history">Saved to history</string>
+    <string name="empty">Empty</string>
+    <string name="image_not_found">Image not found!</string>
 </resources>

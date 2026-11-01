@@ -382,5 +382,8 @@
     <string name="empty_history">Không có dữ liệu lịch sử</string>
     <string name="delete_record_success">Xóa bản ghi thành công</string>
     <string name="delete_record_error">Lỗi khi xóa bản ghi</string>
+    <string name="saved_to_history">Đã lưu vào lịch sử</string>
+    <string name="empty">Trống</string>
+    <string name="image_not_found">Ảnh không tồn tại!</string>
 
 </resources>
