@@ -404,4 +404,12 @@
     <string name="error_no_internet">No internet connection</string>
     <string name="export_data">Export Data</string>
     <string name="email_instruction">Please enter your email to receive the data </string>
+
+    <string name="today_goal">Set Today\'s Goal</string>
+    <string name="grade_today_goal">Grade %1$d papers today</string>
+    <string name="goal_completed">%1$d / %2$d completed</string>
+    <string name="today_goal_title">Today\'s Goal</string>
+    <string name="today_goal_description">How many exam papers do you want to grade today?</string>
+    <string name="exam_count_label">NUMBER OF EXAMS</string>
+    <string name="save_goal">Save Goal</string>
 </resources>

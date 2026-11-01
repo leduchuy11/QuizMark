@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -31,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +45,10 @@ import com.example.quizmark.ui.theme.ColorText2
 import com.example.quizmark.ui.theme.ColorText3
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
+import kotlinx.coroutines.launch
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     accountViewModel: AccountViewModel = hiltViewModel(),
@@ -64,6 +69,11 @@ fun HomeScreen(
     } else {
         accountViewModel.getUserEmail().substringBefore("@")
     }
+
+    // State cho BottomSheet
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    var showGoalBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = BackgroundScreen,
@@ -177,28 +187,42 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 4. Hoạt động gần đây
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = stringResource(R.string.recent_activity), fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, color = ColorText)
-                Text(
-                    text = stringResource(R.string.view_all),
-                    fontSize = 13.sp,
-                    color = Color(0xFF1873B9),
-                    modifier = Modifier.clickable { onNavigateToHistory() }
-                )
-            }
+            // ĐẶT MỤC TIÊU HÔM NAY
+            Text(text = stringResource(R.string.today_goal), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = ColorText)
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Render danh sách hoạt động (Mẫu)
-            ActivityItem(title = "Đã chấm 1 bài", score = "Điểm 0.6 / 10 (3/36)", timeAgo = "1 ngày trước")
-            Spacer(modifier = Modifier.height(10.dp))
-            ActivityItem(title = "Đã chấm 1 bài", score = "Điểm 7.5 / 10 (30/40)", timeAgo = "Hôm qua")
+            GoalCard(
+                goal = uiState.todayGoal,
+                current = uiState.todayScannedCount,
+                onClick = { showGoalBottomSheet = true }
+            )
 
             Spacer(modifier = Modifier.height(40.dp))
+
+        }
+
+        // BOTTOM SHEET ĐẶT MỤC TIÊU
+        if (showGoalBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showGoalBottomSheet = false },
+                sheetState = sheetState,
+                containerColor = Color.White,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                GoalBottomSheetContent(
+                    initialGoal = uiState.todayGoal,
+                    onSave = { newGoal ->
+                        homeViewModel.updateTodayGoal(newGoal)
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) showGoalBottomSheet = false
+                        }
+                    },
+                    onCancel = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) showGoalBottomSheet = false
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -343,33 +367,99 @@ fun StatCard(modifier: Modifier = Modifier, title: String, value: String, suffix
     }
 }
 
+
 @Composable
-fun ActivityItem(title: String, score: String, timeAgo: String) {
+fun GoalCard(goal: Int, current: Int, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(Color(0xFFDCFCE7), RoundedCornerShape(10.dp)),
+                modifier = Modifier.size(44.dp).background(Color(0xFFF1F5F9), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(22.dp))
+                Icon(painter = painterResource(id = R.drawable.ic_stars), contentDescription = null, modifier = Modifier.size(28.dp),tint = Color.Unspecified)
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = ColorText)
+                Text(text = stringResource(R.string.grade_today_goal, goal), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorText)
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(text = score, fontSize = 13.sp, color = Color.Gray, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = stringResource(R.string.goal_completed, current, goal), fontSize = 13.sp, color = Color.Gray)
             }
-            Text(text = timeAgo, fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+            Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = ColorText3, modifier = Modifier.size(28.dp))
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GoalBottomSheetContent(initialGoal: Int, onSave: (Int) -> Unit, onCancel: () -> Unit) {
+    var inputGoal by remember { mutableStateOf(initialGoal.toString()) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = stringResource(R.string.today_goal_title), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = ColorText)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = stringResource(R.string.today_goal_description), fontSize = 14.sp, color = Color.Gray)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(text = stringResource(R.string.exam_count_label), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6B7280))
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = inputGoal,
+                onValueChange = {
+                    if (it.isEmpty() || it.all { char -> char.isDigit() }) inputGoal = it
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFF1F5F9),
+                    unfocusedContainerColor = Color(0xFFF1F5F9),
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                textStyle = LocalTextStyle.current.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ColorText)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.dialog_cancel),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = ColorText,
+                modifier = Modifier.clickable { onCancel() }.padding(12.dp)
+            )
+
+            Button(
+                onClick = {
+                    val goal = inputGoal.toIntOrNull() ?: 10
+                    onSave(if (goal > 0) goal else 10)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.height(48.dp)
+            ) {
+                Text(text = stringResource(R.string.save_goal), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
