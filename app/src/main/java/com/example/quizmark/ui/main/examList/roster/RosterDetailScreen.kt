@@ -59,62 +59,35 @@ fun RosterDetailScreen(
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.ERROR) }
-    var navigateAfterToast by remember { mutableStateOf(false) }
 
     LaunchedEffect(rosterId) {
         viewModel.loadRoster(rosterId)
     }
 
-    //  Cập nhật State của Toast dựa trên kết quả Firebase
     LaunchedEffect(saveResult) {
         saveResult?.let { result ->
             if (result.isSuccess) {
-                if (showDeleteDialog) {
-                    toastMessage = context.getString(R.string.msg_update_success)
-                    toastType = ToastType.SUCCESS
-                    navigateAfterToast = true
-                } else {
-                    toastMessage = context.getString(R.string.msg_update_success)
-                    toastType = ToastType.SUCCESS
-                    navigateAfterToast = false
-                    viewModel.loadRoster(rosterId)
-                }
+                toastMessage = context.getString(R.string.msg_update_success)
+                toastType = ToastType.SUCCESS
+                viewModel.loadRoster(rosterId)
             } else {
                 toastMessage = context.getString(R.string.msg_update_error, result.exceptionOrNull()?.message)
                 toastType = ToastType.ERROR
-                navigateAfterToast = false
             }
             viewModel.resetSaveResult()
-            showDeleteDialog = false
         }
     }
 
     LaunchedEffect(toastMessage) {
         if (toastMessage != null) {
-            delay(1000)
+            delay(1500)
             toastMessage = null
-            if (navigateAfterToast) {
-                onNavigateBack()
-            }
         }
     }
 
-    if (currentRoster == null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BackgroundScreen),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = DarkBlue)
-        }
-        return
-    }
-
-    val roster = currentRoster!!
+    val roster = currentRoster ?: com.example.quizmark.data.model.RosterModel(name = "")
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -292,7 +265,6 @@ fun RosterDetailScreen(
             }
         }
 
-        // Hiển thị Animated Custom Toast ở đỉnh màn hình
         AnimatedVisibility(
             visible = toastMessage != null,
             enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
@@ -305,7 +277,7 @@ fun RosterDetailScreen(
         }
 
         // Dialog Xóa lớp
-        if (showDeleteDialog && toastMessage == null) {
+        if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
                 containerColor = Color.White,
@@ -314,7 +286,9 @@ fun RosterDetailScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
+                            showDeleteDialog = false
                             viewModel.deleteRoster(rosterId)
+                            onNavigateBack()
                         }
                     ) {
                         Text(
@@ -343,10 +317,8 @@ fun StudentItemRow(student: StudentModel, onRemoveConfirm: () -> Unit) {
 
     val initials = if (words.isNotEmpty() && words[0].isNotEmpty()) {
         if (words.size == 1) {
-            // Nếu tên chỉ có 1 chữ -> Lấy chữ cái đầu tiên
             words.first().take(1).uppercase()
         } else {
-            // Nếu tên có 2 chữ trở lên -> Lấy chữ cái đầu của từ đầu tiên + từ cuối cùng
             words.first().take(1).uppercase() + words.last().take(1).uppercase()
         }
     } else {
@@ -393,7 +365,6 @@ fun StudentItemRow(student: StudentModel, onRemoveConfirm: () -> Unit) {
         }
     }
 
-    // 1. Dialog Hiển thị thông tin học sinh
     if (showDetailDialog) {
         AlertDialog(
             onDismissRequest = { showDetailDialog = false },
@@ -418,7 +389,6 @@ fun StudentItemRow(student: StudentModel, onRemoveConfirm: () -> Unit) {
         )
     }
 
-    // 2. Dialog Xác nhận xóa học sinh khỏi danh sách thi
     if (showDeleteStudentDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteStudentDialog = false },
@@ -448,7 +418,6 @@ fun StudentItemRow(student: StudentModel, onRemoveConfirm: () -> Unit) {
     }
 }
 
-// Khối Compose phụ để format dòng thông tin hiển thị cho đẹp
 @Composable
 fun DetailTextRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth()) {

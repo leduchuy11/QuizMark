@@ -385,5 +385,6 @@
     <string name="saved_to_history">Đã lưu vào lịch sử</string>
     <string name="empty">Trống</string>
     <string name="image_not_found">Ảnh không tồn tại!</string>
+    <string name="delete_success">Xóa d.sách thành công</string>
 
 </resources>
