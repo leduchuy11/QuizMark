@@ -388,4 +388,17 @@
     <string name="empty">Empty</string>
     <string name="image_not_found">Image not found!</string>
     <string name="delete_success">Exam list deleted successfully</string>
+
+    <string name="statistics_title">Statistics</string>
+    <string name="stat_total_exams_upper">TOTAL</string>
+    <string name="stat_avg_score_upper">AVERAGE</string>
+    <string name="stat_pass_rate_upper">PASS RATE</string>
+    <string name="score_distribution">Score Distribution</string>
+    <string name="action_view_score_list">View score list</string>
+    <string name="action_export_score_file">Export score file</string>
+    <string name="filter_none">No specific roster</string>
+    <string name="score_list_title">Score List</string>
+    <string name="column_sbd">ID</string>
+    <string name="column_name">Name</string>
+    <string name="column_score">Score</string>
 </resources>

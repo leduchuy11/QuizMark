@@ -109,7 +109,6 @@ fun HistoryScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
             ) {
                 // KHU VỰC BỘ LỌC
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {

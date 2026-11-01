@@ -50,7 +50,8 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
     onNavigateToScan: () -> Unit,
     onNavigateToExam: () -> Unit,
-    onNavigateToHistory: () -> Unit
+    onNavigateToHistory: () -> Unit,
+    onNavigateToStatistics: () -> Unit
 ) {
     val userProfile by accountViewModel.userProfile.collectAsState()
     val scrollState = rememberScrollState()
@@ -155,7 +156,7 @@ fun HomeScreen(
                     icon = Icons.Rounded.Analytics,
                     iconTint = Color(0xFFE88B4B),
                     iconBgColor = Color(0xFFFDF3ED),
-                    onClick = { /* TODO */ }
+                    onClick = onNavigateToStatistics
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))

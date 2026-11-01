@@ -387,4 +387,17 @@
     <string name="image_not_found">Ảnh không tồn tại!</string>
     <string name="delete_success">Xóa d.sách thành công</string>
 
+    <string name="statistics_title">Thống kê</string>
+    <string name="stat_total_exams_upper">TỔNG BÀI</string>
+    <string name="stat_avg_score_upper">ĐIỂM TB</string>
+    <string name="stat_pass_rate_upper">TỈ LỆ ĐẠT</string>
+    <string name="score_distribution">Phân bố điểm</string>
+    <string name="action_view_score_list">Xem danh sách điểm</string>
+    <string name="action_export_score_file">Xuất file bảng điểm</string>
+    <string name="filter_none">Không thuộc danh sách nào</string>
+    <string name="score_list_title">Danh sách điểm</string>
+    <string name="column_sbd">SBD</string>
+    <string name="column_name">Tên</string>
+    <string name="column_score">Điểm</string>
+
 </resources>

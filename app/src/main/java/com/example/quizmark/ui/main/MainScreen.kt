@@ -61,6 +61,7 @@ import com.example.quizmark.ui.main.examList.student.PreviewImportScreen
 import com.example.quizmark.ui.main.home.HomeScreen
 import com.example.quizmark.ui.main.home.history.HistoryDetailScreen
 import com.example.quizmark.ui.main.home.history.HistoryScreen
+import com.example.quizmark.ui.main.home.statistics.StatisticsScreen
 import com.example.quizmark.ui.main.scan.camera.AutoScanCameraScreen
 import com.example.quizmark.ui.main.scan.camera.GradingViewModel
 import com.example.quizmark.ui.main.scan.camera.ManualCaptureCameraScreen
@@ -126,7 +127,34 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         },
                         onNavigateToHistory = {
                             bottomNavController.navigate("history_screen")
+                        },
+                        onNavigateToStatistics = {
+                            bottomNavController.navigate("statistics_screen")
                         }
+                    )
+                }
+                composable(
+                    route = "statistics_screen",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    StatisticsScreen(
+                        onBackClick = { bottomNavController.popBackStack() },
+                        onNavigateToScoreList = { rosterId ->
+                            bottomNavController.navigate("score_list_screen/$rosterId")                        },
+                        onExportFile = { rosterId ->
+                            // TODO: Xử lý xuất file
+                        }
+                    )
+                }
+                composable(
+                    route = "score_list_screen/{rosterId}",
+                    arguments = listOf(navArgument("rosterId") { type = NavType.StringType }),
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    com.example.quizmark.ui.main.home.statistics.ScoreListScreen(
+                        onBackClick = { bottomNavController.popBackStack() }
                     )
                 }
                 composable(
