@@ -399,5 +399,8 @@
     <string name="column_sbd">SBD</string>
     <string name="column_name">Tên</string>
     <string name="column_score">Điểm</string>
+    <string name="error_no_internet">Mất kết nối internet</string>
+    <string name="export_data">Xuất dữ liệu</string>
+    <string name="email_instruction">Vui lòng nhập email để nhận dữ liệu </string>
 
 </resources>

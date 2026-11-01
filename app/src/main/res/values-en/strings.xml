@@ -401,4 +401,7 @@
     <string name="column_sbd">ID</string>
     <string name="column_name">Name</string>
     <string name="column_score">Score</string>
+    <string name="error_no_internet">No internet connection</string>
+    <string name="export_data">Export Data</string>
+    <string name="email_instruction">Please enter your email to receive the data </string>
 </resources>

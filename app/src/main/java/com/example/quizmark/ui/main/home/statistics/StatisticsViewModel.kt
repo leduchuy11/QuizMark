@@ -26,7 +26,8 @@ data class StatisticsUiState(
     val passRate: Int = 0,
 
     // Dữ liệu đồ thị: 10 mốc từ [0,1] đến (9,10]
-    val scoreDistribution: List<Int> = List(10) { 0 }
+    val scoreDistribution: List<Int> = List(10) { 0 },
+    val filteredRecords: List<HistoryRecord> = emptyList()
 )
 
 @HiltViewModel
@@ -123,8 +124,13 @@ class StatisticsViewModel @Inject constructor(
                 totalExams = total,
                 averageScore = avgScore,
                 passRate = passRatePct,
-                scoreDistribution = buckets.toList()
+                scoreDistribution = buckets.toList(),
+                filteredRecords = filteredList
             )
         }
+    }
+
+    fun getCurrentUserEmail(): String {
+        return com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.email ?: ""
     }
 }

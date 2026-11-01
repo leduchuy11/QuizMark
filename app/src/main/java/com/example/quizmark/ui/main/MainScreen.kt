@@ -141,10 +141,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     StatisticsScreen(
                         onBackClick = { bottomNavController.popBackStack() },
                         onNavigateToScoreList = { rosterId ->
-                            bottomNavController.navigate("score_list_screen/$rosterId")                        },
-                        onExportFile = { rosterId ->
-                            // TODO: Xử lý xuất file
-                        }
+                            bottomNavController.navigate("score_list_screen/$rosterId")}
                     )
                 }
                 composable(

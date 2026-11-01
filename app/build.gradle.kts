@@ -139,4 +139,8 @@ dependencies {
     implementation("com.google.api-client:google-api-client-android:1.33.0")
     implementation("com.google.apis:google-api-services-drive:v3-rev20230822-2.0.0")
     implementation("com.google.http-client:google-http-client-gson:1.43.3")
+
+    // Thư viện Apache POI để tạo file Excel (.xlsx)
+    implementation("org.apache.poi:poi:5.2.2")
+    implementation("org.apache.poi:poi-ooxml:5.2.2")
 }

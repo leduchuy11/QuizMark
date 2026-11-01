@@ -9,4 +9,7 @@
     <!-- Cấp quyền cho ảnh cache (Thường dùng làm nơi lưu tạm ảnh chụp từ Camera) -->
     <cache-path name="cache_images" path="." />
     <external-cache-path name="external_cache_images" path="." />
+
+    <!-- Cho phép chia sẻ các file nằm trong thư mục cache/exports của ứng dụng -->
+    <cache-path name="shared_exports" path="exports/" />
 </paths>
