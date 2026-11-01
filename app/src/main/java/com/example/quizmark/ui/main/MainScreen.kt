@@ -58,6 +58,8 @@ import com.example.quizmark.ui.main.examList.student.AddStudentScreen
 import com.example.quizmark.ui.main.examList.student.EditStudentScreen
 import com.example.quizmark.ui.main.examList.student.ImportStudentScreen
 import com.example.quizmark.ui.main.examList.student.PreviewImportScreen
+import com.example.quizmark.ui.main.home.HomeScreen
+import com.example.quizmark.ui.main.home.history.HistoryScreen
 import com.example.quizmark.ui.main.scan.camera.AutoScanCameraScreen
 import com.example.quizmark.ui.main.scan.camera.GradingViewModel
 import com.example.quizmark.ui.main.scan.camera.ManualCaptureCameraScreen
@@ -103,12 +105,40 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
             ) {
                 composable(BottomNavItem.Home.route) {
                     BackHandler { activity?.finish() }
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(Color.White),
-                        Alignment.Center
-                    ) { Text("Màn hình Trang chủ") }
+                    HomeScreen(
+                        accountViewModel = sharedAccountViewModel,
+                        onNavigateToScan = {
+                            // Chuyển sang tab Quét và giữ nguyên trạng thái Backstack của BottomNav
+                            bottomNavController.navigate(BottomNavItem.Scan.route) {
+                                popUpTo(bottomNavController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onNavigateToExam = {
+                            // Chuyển sang tab Đề thi
+                            bottomNavController.navigate(BottomNavItem.Exam.route) {
+                                popUpTo(bottomNavController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onNavigateToHistory = {
+                            bottomNavController.navigate("history_screen")
+                        }
+                    )
+                }
+                composable(
+                    route = "history_screen",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    HistoryScreen(
+                        onBackClick = { bottomNavController.popBackStack() },
+                        onNavigateToDetail = { recordId ->
+                            bottomNavController.navigate("history_detail/$recordId")
+                        }
+                    )
                 }
                 composable(BottomNavItem.Exam.route) {
                     BackHandler { activity?.finish() }

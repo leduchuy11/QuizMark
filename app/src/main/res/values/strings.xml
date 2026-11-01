@@ -358,4 +358,29 @@
     <string name="name">Tên</string>
     <string name="grading_in_progress">Hệ thống đang chấm bài...</string>
 
+    <string name="greeting">Xin chào, %1$s</string>
+    <string name="welcome_subtitle">Hãy bắt đầu chấm bài thi miễn phí ngay!</string>
+    <string name="dashboard_history">LỊCH SỬ</string>
+    <string name="dashboard_statistics">THỐNG KÊ</string>
+    <string name="average_score">ĐIỂM TB</string>
+    <string name="classes">LỚP HỌC</string>
+    <string name="recent_activity">Hoạt động gần đây</string>
+    <string name="view_all">Xem tất cả ></string>
+    <string name="ready_to_grade">Sẵn sàng chấm bài?</string>
+    <string name="grade_description">Quét phiếu trả lời hoặc tạo đề thi mới</string>
+    <string name="scan_now">Quét ngay</string>
+    <string name="create_exam">Tạo đề</string>
+    <string name="history_title">Lịch sử chấm</string>
+    <string name="filter_anonymous">Không thuộc danh sách nào</string>
+    <string name="date_from">Từ</string>
+    <string name="date_to">Đến</string>
+    <string name="date_today">Hôm nay</string>
+    <string name="student_code_format">SBD: %s</string>
+    <string name="dialog_delete_history_title">Xóa bản ghi</string>
+    <string name="dialog_delete_history_desc">Bạn có chắc chắn muốn xóa kết quả chấm thi này không? Hành động này không thể hoàn tác.</string>
+    <string name="anonymous_student">Ẩn danh</string>
+    <string name="empty_history">Không có dữ liệu lịch sử</string>
+    <string name="delete_record_success">Xóa bản ghi thành công</string>
+    <string name="delete_record_error">Lỗi khi xóa bản ghi</string>
+
 </resources>

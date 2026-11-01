@@ -11,9 +11,15 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.google.firebase.firestore.Source
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 interface HistoryRepository {
     suspend fun saveRecord(context: Context, result: FinalGradingResult, rosterId: String?, rosterName: String?): String
+    fun getAllRecords(): Flow<List<HistoryRecord>>
+    suspend fun deleteRecord(context: Context, recordId: String)
 }
 
 @Singleton
@@ -113,5 +119,83 @@ class HistoryRepositoryImpl @Inject constructor(
         androidx.work.WorkManager.getInstance(context).enqueue(syncWork)
 
         return documentId
+    }
+
+    override fun getAllRecords(): Flow<List<HistoryRecord>> = callbackFlow {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val collectionRef = firestore.collection("users").document(userId).collection("history_records")
+
+        // addSnapshotListener làm 2 nhiệm vụ cùng lúc:
+        // 1. Nhả ngay dữ liệu từ Cache Local ra trước.
+        // 2. Lắng nghe Server. Nếu có mạng và Server có bản ghi mới, nó tự gọi lại khối lệnh này.
+        val listenerRegistration = collectionRef.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                error.printStackTrace()
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null) {
+                val records = snapshot.documents.mapNotNull { it.toObject(HistoryRecord::class.java) }
+                trySend(records) // Bắn dữ liệu mới vào luồng Flow
+            }
+        }
+        awaitClose {
+            listenerRegistration.remove()
+        }
+    }
+
+    override suspend fun deleteRecord(context: Context, recordId: String) {
+        val userId = auth.currentUser?.uid ?: return
+        val docRef = firestore.collection("users").document(userId).collection("history_records").document(recordId)
+
+        try {
+            // 1. Lấy thông tin từ Cache để xóa file ảnh cục bộ
+            val snapshot = try {
+                docRef.get(Source.CACHE).await()
+            } catch (e: Exception) {
+                null
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+                val record = snapshot.toObject(HistoryRecord::class.java)
+                record?.localImagePath?.let { path ->
+                    if (path.isNotBlank()) {
+                        val file = File(path)
+                        if (file.exists()) {
+                            file.delete()
+                        }
+                    }
+                }
+            }
+
+            // 2. Xóa Cache Local ngay lập tức
+            docRef.delete()
+
+            // 3. Đặt lịch WorkManager đảm bảo đồng bộ lệnh xóa lên Server
+            val inputData = androidx.work.Data.Builder()
+                .putString("USER_ID", userId)
+                .putString("ID", recordId)
+                .build()
+
+            val constraints = androidx.work.Constraints.Builder()
+                .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                .build()
+
+            val deleteWork = androidx.work.OneTimeWorkRequestBuilder<com.example.quizmark.util.worker.DeleteRecordWorker>()
+                .setConstraints(constraints)
+                .setInputData(inputData)
+                .build()
+
+            androidx.work.WorkManager.getInstance(context).enqueue(deleteWork)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
