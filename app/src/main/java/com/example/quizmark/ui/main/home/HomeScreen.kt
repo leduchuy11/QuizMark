@@ -47,12 +47,16 @@ import com.example.quizmark.ui.theme.PrimaryDarkBlue
 @Composable
 fun HomeScreen(
     accountViewModel: AccountViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
     onNavigateToScan: () -> Unit,
     onNavigateToExam: () -> Unit,
     onNavigateToHistory: () -> Unit
 ) {
     val userProfile by accountViewModel.userProfile.collectAsState()
     val scrollState = rememberScrollState()
+
+    // Thu thập State từ HomeViewModel
+    val uiState by homeViewModel.uiState.collectAsState()
 
     val displayName = if (userProfile.fullName.isNotBlank()) {
         userProfile.fullName
@@ -156,8 +160,18 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard(modifier = Modifier.weight(1f), title = stringResource(R.string.average_score), value = "0.0", suffix = "/10")
-                StatCard(modifier = Modifier.weight(1f), title = stringResource(R.string.classes), value = "2", suffix = "")
+                StatCard(
+                    modifier = Modifier.weight(1f),
+                    title = stringResource(R.string.average_score),
+                    value = String.format("%.1f", uiState.averageScore),
+                    suffix = "/10"
+                )
+                StatCard(
+                    modifier = Modifier.weight(1f),
+                    title = stringResource(R.string.classes),
+                    value = uiState.rosterCount.toString(),
+                    suffix = ""
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))

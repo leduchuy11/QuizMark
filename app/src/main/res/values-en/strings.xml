@@ -365,7 +365,7 @@
     <string name="dashboard_history">HISTORY</string>
     <string name="dashboard_statistics">STATISTICS</string>
     <string name="average_score">AVG. SCORE</string>
-    <string name="classes">CLASSES</string>
+    <string name="classes">EXAM LIST</string>
     <string name="recent_activity">Recent Activity</string>
     <string name="view_all">View All ></string>
     <string name="ready_to_grade">Ready to Grade?</string>

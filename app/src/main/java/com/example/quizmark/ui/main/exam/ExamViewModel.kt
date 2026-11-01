@@ -6,6 +6,7 @@ import com.example.quizmark.data.model.ExamModel
 import com.example.quizmark.data.model.ExamUiModel
 import com.example.quizmark.data.model.ThptExamModel
 import com.example.quizmark.data.repository.ExamRepository
+import com.example.quizmark.data.repository.ExamListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,7 +19,8 @@ import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class ExamViewModel @Inject constructor(
-    private val repository: ExamRepository
+    private val repository: ExamRepository,
+    private val examListRepository: ExamListRepository
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -32,6 +34,25 @@ class ExamViewModel @Inject constructor(
 
     private val _editingThptExam = MutableStateFlow<ThptExamModel?>(null)
     val editingThptExam: StateFlow<ThptExamModel?> = _editingThptExam.asStateFlow()
+
+    private val _rosterCount = MutableStateFlow(0)
+    val rosterCount: StateFlow<Int> = _rosterCount.asStateFlow()
+
+    init {
+        loadRosterCount()
+    }
+
+    private fun loadRosterCount() {
+        viewModelScope.launch {
+            try {
+                examListRepository.getAllRostersFlow().collect { rosters ->
+                    _rosterCount.value = rosters.size
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     // 2. Gộp 2 bảng dữ liệu, map về chung 1 Model và sắp xếp thời gian
     val examList: StateFlow<List<ExamUiModel>> = combine(
@@ -101,8 +122,6 @@ class ExamViewModel @Inject constructor(
             _isLoading.value = false
         }
     }
-
-
 
     fun loadBasicExam(examId: String) {
         viewModelScope.launch {

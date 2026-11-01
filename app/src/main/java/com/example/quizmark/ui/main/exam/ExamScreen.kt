@@ -44,6 +44,8 @@ fun ExamScreen(
     val examList by viewModel.examList.collectAsState()
     val totalExams = examList.size
 
+    val rosterCount by viewModel.rosterCount.collectAsState()
+
     Scaffold(
         containerColor = BackgroundScreen,
         // 1.TOOLBAR
@@ -142,7 +144,7 @@ fun ExamScreen(
                     StatCard(
                         modifier = Modifier.weight(1f),
                         title = stringResource(id = R.string.stat_total_lists),
-                        value = "0",
+                        value = rosterCount.toString(),
                         valueColor = Color(0xFFD97706),
                         iconRes = R.drawable.ic_sum_list_exam
                     )
