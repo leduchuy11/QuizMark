@@ -412,4 +412,26 @@
     <string name="today_goal_description">How many exam papers do you want to grade today?</string>
     <string name="exam_count_label">NUMBER OF EXAMS</string>
     <string name="save_goal">Save Goal</string>
+    <string name="sync_success">Data synchronized successfully!</string>
+
+    <!-- Privacy Policy Screen -->
+    <string name="privacy_title">Privacy Policy</string>
+    <string name="privacy_intro">Last updated: 11/2026\n\nWelcome to QuizMark. Protecting your personal information is our top priority. Please read the following policies carefully.</string>
+    <string name="privacy_h1">1. Data Collection</string>
+    <string name="privacy_b1">QuizMark only collects the data necessary to manage user accounts, student lists, and grading history. This data includes email addresses, names, and grade report files you create.</string>
+    <string name="privacy_h2">2. Data Storage &amp; Synchronization</string>
+    <string name="privacy_b2">Most data (including photos of exam papers) is processed directly on your device (Offline-first). Data is only synchronized with our cloud server (Firebase) when an internet connection is available, helping prevent data loss when you switch devices.</string>
+    <string name="privacy_h3">3. Data Sharing</string>
+    <string name="privacy_b3">We are committed to never selling, trading, or sharing personal information, class lists, or student scores with any third party for commercial purposes.</string>
+
+    <!-- Contact & Support Screen -->
+    <string name="contact_title">Contact &amp; Support</string>
+    <string name="contact_intro">Are you experiencing issues while using QuizMark, or do you have suggestions to help improve the app? Feel free to contact our development team through the channels below!</string>
+    <string name="contact_email_title">Email Us</string>
+    <string name="contact_email_value">lehuyduc113@gmail.com</string>
+    <string name="contact_phone_title">Technical Support Hotline</string>
+    <string name="contact_phone_value">0382 720 564</string>
+    <string name="contact_zalo_title">Zalo Community</string>
+    <string name="contact_zalo_value">QuizMark Teachers Group on Zalo</string>
+    <string name="contact_time">Working Hours: 8:00 AM - 5:30 PM (Monday - Friday)</string>
 </resources>

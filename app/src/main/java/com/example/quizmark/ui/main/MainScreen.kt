@@ -234,7 +234,34 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         onNavigateToLogin = onNavigateToLogin,
                         onNavigateToEditProfile = {
                             bottomNavController.navigate("profile_edit")
+                        },
+                        onNavigateToPrivacy = {
+                            bottomNavController.navigate("privacy_policy")
+                        },
+                        onNavigateToContact = {
+                            bottomNavController.navigate("contact_support")
                         }
+                    )
+                }
+                // MÀN HÌNH CHÍNH SÁCH BẢO MẬT
+                composable(
+                    route = "privacy_policy",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    com.example.quizmark.ui.main.account.PrivacyPolicyScreen(
+                        onBackClick = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                // MÀN HÌNH LIÊN HỆ VÀ HỖ TRỢ
+                composable(
+                    route = "contact_support",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    com.example.quizmark.ui.main.account.ContactSupportScreen(
+                        onBackClick = { bottomNavController.popBackStack() }
                     )
                 }
                 composable(

@@ -410,5 +410,27 @@
     <string name="today_goal_description">Bạn muốn chấm bao nhiêu bài thi hôm nay?</string>
     <string name="exam_count_label">SỐ BÀI THI</string>
     <string name="save_goal">Lưu mục tiêu</string>
+    <string name="sync_success">Đồng bộ thành công!</string>
+
+    <!-- Màn hình Chính sách bảo mật -->
+    <string name="privacy_title">Chính sách bảo mật</string>
+    <string name="privacy_intro">Cập nhật lần cuối: 11/2026\n\nChào mừng bạn đến với QuizMark. Việc bảo vệ thông tin cá nhân của bạn là ưu tiên hàng đầu của chúng tôi. Vui lòng đọc kỹ các chính sách dưới đây.</string>
+    <string name="privacy_h1">1. Thu thập dữ liệu</string>
+    <string name="privacy_b1">QuizMark chỉ thu thập các dữ liệu cần thiết để phục vụ cho việc quản lý tài khoản, danh sách học sinh và lịch sử chấm điểm. Dữ liệu này bao gồm email, tên, và các file bảng điểm bạn tạo ra.</string>
+    <string name="privacy_h2">2. Lưu trữ &amp; Đồng bộ</string>
+    <string name="privacy_b2">Hầu hết dữ liệu (bao gồm ảnh chụp bài thi) được xử lý ngay trên thiết bị của bạn (Offline-first). Dữ liệu chỉ được đồng bộ lên máy chủ đám mây (Firebase) khi có kết nối mạng để giúp bạn không bị mất dữ liệu khi đổi thiết bị.</string>
+    <string name="privacy_h3">3. Chia sẻ dữ liệu</string>
+    <string name="privacy_b3">Chúng tôi cam kết không bán, trao đổi hoặc chia sẻ thông tin cá nhân, danh sách lớp học hay điểm số của học sinh cho bất kỳ bên thứ ba nào vì mục đích thương mại.</string>
+
+    <!-- Màn hình Liên hệ & Hỗ trợ -->
+    <string name="contact_title">Liên hệ &amp; Hỗ trợ</string>
+    <string name="contact_intro">Bạn gặp sự cố trong quá trình sử dụng QuizMark hay có đóng góp để phát triển ứng dụng? Đừng ngần ngại liên hệ với đội ngũ phát triển qua các kênh dưới đây!</string>
+    <string name="contact_email_title">Gửi Email cho chúng tôi</string>
+    <string name="contact_email_value">lehuyduc113@gmail.com</string>
+    <string name="contact_phone_title">Hotline hỗ trợ kỹ thuật</string>
+    <string name="contact_phone_value">0382 720 564</string>
+    <string name="contact_zalo_title">Cộng đồng Zalo</string>
+    <string name="contact_zalo_value">Zalo Nhóm Giáo Viên QuizMark</string>
+    <string name="contact_time">Thời gian làm việc: 8h00 - 17h30 (Thứ 2 - Thứ 6)</string>
 
 </resources>

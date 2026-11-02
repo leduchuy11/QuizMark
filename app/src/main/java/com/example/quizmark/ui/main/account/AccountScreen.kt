@@ -47,7 +47,9 @@ import com.example.quizmark.ui.auth.ToastType
 fun AccountScreen(
     viewModel: AccountViewModel = hiltViewModel(),
     onNavigateToLogin: () -> Unit,
-    onNavigateToEditProfile: () -> Unit
+    onNavigateToEditProfile: () -> Unit,
+    onNavigateToPrivacy: () -> Unit,
+    onNavigateToContact: () -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -68,7 +70,7 @@ fun AccountScreen(
 
     LaunchedEffect(showToast) {
         if (showToast) {
-            delay(3000)
+            delay(1500)
             showToast = false
         }
     }
@@ -196,7 +198,17 @@ fun AccountScreen(
                     SettingItem(
                         icon = R.drawable.ic_sync,
                         title = stringResource(id = R.string.setting_sync_app),
-                        onClick = { /* TODO */ }
+                        onClick = {
+                            // Gọi tiện ích kiểm tra mạng
+                            if (com.example.quizmark.util.NetworkUtils.isNetworkAvailable(context)) {
+                                toastMessage = context.getString(R.string.sync_success)
+                                toastType = ToastType.SUCCESS
+                            } else {
+                                toastMessage = context.getString(R.string.error_no_internet)
+                                toastType = ToastType.ERROR
+                            }
+                            showToast = true
+                        }
                     )
                 }
 
@@ -214,13 +226,13 @@ fun AccountScreen(
                     SettingItem(
                         icon = R.drawable.ic_lock,
                         title = stringResource(id = R.string.setting_privacy),
-                        onClick = { /* TODO */ }
+                        onClick = onNavigateToPrivacy
                     )
                     HorizontalDivider(color = Color(0xFFF0F0F0), thickness = 1.dp)
                     SettingItem(
                         icon = R.drawable.ic_support,
                         title = stringResource(id = R.string.setting_contact),
-                        onClick = { /* TODO */ }
+                        onClick = onNavigateToContact
                     )
                 }
 
