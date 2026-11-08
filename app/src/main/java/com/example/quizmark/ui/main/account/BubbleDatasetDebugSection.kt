@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,8 +41,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Mục CHỈ HIỆN Ở BẢN DEBUG trong màn Tài khoản (công cụ cho nhà phát triển, nên chữ viết thẳng, không qua strings.xml):
+ * Mục CHỈ HIỆN Ở BẢN DEBUG trong màn Tài khoản:
  * bật/tắt thu dữ liệu ô tô, xuất zip lên Google Drive, xoá dữ liệu.
+ * Chữ hiển thị lấy từ strings.xml (debug_dataset_*) để theo ngôn ngữ app (Việt / Anh).
  * Dữ liệu dùng để train model phân loại ô trong repo quizmark-ml.
  *
  * @param onMessage hiện thông báo: (nội dung, có phải lỗi không)
@@ -65,7 +67,7 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
     // Đếm lại mỗi khi quay về màn Tài khoản (sau khi đi quét phiếu)
     LaunchedEffect(Unit) { refreshCount() }
 
-    SectionTitle(title = "Công cụ dữ liệu (chỉ bản debug)")
+    SectionTitle(title = stringResource(R.string.debug_dataset_section))
     SettingsGroup {
         // Công tắc thu dữ liệu
         Row(
@@ -83,13 +85,14 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Thu dữ liệu ô tô",
+                    text = stringResource(R.string.debug_dataset_collect),
                     fontSize = 15.sp,
                     color = ColorText,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = sampleCount?.let { "Đã thu: $it ô" } ?: "Đang đếm…",
+                    text = sampleCount?.let { stringResource(R.string.debug_dataset_count, it) }
+                        ?: stringResource(R.string.debug_dataset_counting),
                     fontSize = 13.sp,
                     color = Color.Gray
                 )
@@ -109,8 +112,8 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
         // Xuất zip -> hộp thoại chia sẻ -> chọn Google Drive
         SettingItem(
             icon = R.drawable.ic_sync,
-            title = "Xuất dữ liệu (zip) lên Drive",
-            trailingText = if (isExporting) "Đang nén…" else null,
+            title = stringResource(R.string.debug_dataset_export),
+            trailingText = if (isExporting) stringResource(R.string.debug_dataset_zipping) else null,
             onClick = {
                 if (isExporting) return@SettingItem
                 isExporting = true
@@ -119,7 +122,7 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
                     isExporting = false
                     result.onSuccess { zipFile ->
                         if (zipFile == null) {
-                            onMessage("Chưa có dữ liệu để xuất", true)
+                            onMessage(context.getString(R.string.debug_dataset_nothing), true)
                             return@onSuccess
                         }
                         val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", zipFile)
@@ -128,9 +131,11 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
                             putExtra(Intent.EXTRA_STREAM, uri)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
-                        context.startActivity(Intent.createChooser(sendIntent, "Lưu dữ liệu ô tô (chọn Google Drive)"))
+                        context.startActivity(
+                            Intent.createChooser(sendIntent, context.getString(R.string.debug_dataset_share_title))
+                        )
                     }.onFailure {
-                        onMessage("Xuất dữ liệu lỗi: ${it.message}", true)
+                        onMessage(context.getString(R.string.debug_dataset_export_failed, it.message ?: ""), true)
                     }
                 }
             }
@@ -140,15 +145,14 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
 
         SettingItem(
             icon = R.drawable.ic_delete,
-            title = "Xoá dữ liệu đã thu",
+            title = stringResource(R.string.debug_dataset_clear),
             showArrow = false,
             onClick = { showClearDialog = true }
         )
     }
 
     Text(
-        text = "Cách dùng: bật công tắc → quét phiếu mẫu 1–5 như bình thường → \"Xuất dữ liệu\" → " +
-                "chọn Google Drive, lưu vào thư mục quizmark-ml/data.",
+        text = stringResource(R.string.debug_dataset_help),
         fontSize = 12.sp,
         color = Color.Gray,
         modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp)
@@ -157,10 +161,16 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text(text = "Xoá dữ liệu đã thu?", fontWeight = FontWeight.Bold, color = ColorText) },
+            title = {
+                Text(
+                    text = stringResource(R.string.debug_dataset_clear_title),
+                    fontWeight = FontWeight.Bold,
+                    color = ColorText
+                )
+            },
             text = {
                 Text(
-                    text = "Xoá ${sampleCount ?: 0} ảnh ô trên máy. Hãy chắc chắn bạn đã xuất và lưu lên Drive trước.",
+                    text = stringResource(R.string.debug_dataset_clear_desc, sampleCount ?: 0),
                     color = ColorText
                 )
             },
@@ -170,15 +180,19 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
                     scope.launch {
                         withContext(Dispatchers.IO) { BubbleDatasetDumper.clear() }
                         refreshCount()
-                        onMessage("Đã xoá dữ liệu", false)
+                        onMessage(context.getString(R.string.debug_dataset_cleared), false)
                     }
                 }) {
-                    Text(text = "Xoá", color = Color(0xFFE53935), fontWeight = FontWeight.Bold)
+                    Text(
+                        text = stringResource(R.string.debug_dataset_clear_confirm),
+                        color = Color(0xFFE53935),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text(text = "Huỷ", color = Color.Gray)
+                    Text(text = stringResource(R.string.dialog_cancel), color = Color.Gray)
                 }
             },
             containerColor = Color.White

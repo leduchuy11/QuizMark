@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -56,8 +57,13 @@ fun AccountScreen(
     val coroutineScope = rememberCoroutineScope()
 
     var showLanguageSheet by remember { mutableStateOf(false) }
-    val currentLocaleTag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
-    var currentLanguage by remember { mutableStateOf(if (currentLocaleTag.startsWith("en")) "English" else "Tiếng Việt") }
+    // Ngôn ngữ app ĐANG hiển thị. Chưa chọn trong app thì app theo ngôn ngữ của máy, nên phải đọc từ
+    // cấu hình hiện tại thay vì mặc định "Tiếng Việt". App chỉ có tiếng Anh (values-en) và tiếng Việt
+    // (values mặc định), nên mọi ngôn ngữ khác tiếng Anh đều đang hiển thị tiếng Việt.
+    val activeLanguage = LocalConfiguration.current.locales[0].language
+    var currentLanguage by remember(activeLanguage) {
+        mutableStateOf(if (activeLanguage == "en") "English" else "Tiếng Việt")
+    }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
 

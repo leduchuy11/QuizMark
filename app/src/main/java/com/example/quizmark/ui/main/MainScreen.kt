@@ -859,6 +859,9 @@ fun CustomBottomNavigationBar(navController: NavHostController) {
             .fillMaxWidth()
             .shadow(elevation = 16.dp, spotColor = Color.LightGray)
             .background(Color.White)
+            // Android 15+ vẽ app tràn ra sau thanh điều hướng hệ thống. Máy dùng 3 nút (◁ ○ ≡) sẽ bị
+            // các nút đó đè lên nhãn → chừa chỗ cho thanh điều hướng (nền trắng vẫn kéo xuống tận đáy).
+            .navigationBarsPadding()
             .padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically

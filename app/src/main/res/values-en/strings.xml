@@ -434,4 +434,21 @@
     <string name="contact_zalo_title">Zalo Community</string>
     <string name="contact_zalo_value">QuizMark Teachers Group on Zalo</string>
     <string name="contact_time">Working Hours: 8:00 AM - 5:30 PM (Monday - Friday)</string>
+
+    <!-- Bubble data collection tool (debug build only) -->
+    <string name="debug_dataset_section">Data tools (debug build only)</string>
+    <string name="debug_dataset_collect">Collect bubble data</string>
+    <string name="debug_dataset_count">Collected: %1$d cells</string>
+    <string name="debug_dataset_counting">Counting…</string>
+    <string name="debug_dataset_export">Export data (zip) to Drive</string>
+    <string name="debug_dataset_zipping">Zipping…</string>
+    <string name="debug_dataset_share_title">Save bubble data (choose Google Drive)</string>
+    <string name="debug_dataset_nothing">No data to export yet</string>
+    <string name="debug_dataset_export_failed">Export failed: %1$s</string>
+    <string name="debug_dataset_clear">Delete collected data</string>
+    <string name="debug_dataset_clear_title">Delete collected data?</string>
+    <string name="debug_dataset_clear_desc">This deletes %1$d cell images on this phone. Make sure you have exported them to Drive first.</string>
+    <string name="debug_dataset_clear_confirm">Delete</string>
+    <string name="debug_dataset_cleared">Data deleted</string>
+    <string name="debug_dataset_help">How to use: turn on the switch → scan template 1–5 sheets as usual → \"Export data\" → choose Google Drive and save to the quizmark-ml/data folder.</string>
 </resources>

@@ -433,4 +433,21 @@
     <string name="contact_zalo_value">Zalo Nhóm Giáo Viên QuizMark</string>
     <string name="contact_time">Thời gian làm việc: 8h00 - 17h30 (Thứ 2 - Thứ 6)</string>
 
+    <!-- Công cụ thu dữ liệu ô tô (chỉ hiện ở bản debug) -->
+    <string name="debug_dataset_section">Công cụ dữ liệu (chỉ bản debug)</string>
+    <string name="debug_dataset_collect">Thu dữ liệu ô tô</string>
+    <string name="debug_dataset_count">Đã thu: %1$d ô</string>
+    <string name="debug_dataset_counting">Đang đếm…</string>
+    <string name="debug_dataset_export">Xuất dữ liệu (zip) lên Drive</string>
+    <string name="debug_dataset_zipping">Đang nén…</string>
+    <string name="debug_dataset_share_title">Lưu dữ liệu ô tô (chọn Google Drive)</string>
+    <string name="debug_dataset_nothing">Chưa có dữ liệu để xuất</string>
+    <string name="debug_dataset_export_failed">Xuất dữ liệu lỗi: %1$s</string>
+    <string name="debug_dataset_clear">Xoá dữ liệu đã thu</string>
+    <string name="debug_dataset_clear_title">Xoá dữ liệu đã thu?</string>
+    <string name="debug_dataset_clear_desc">Xoá %1$d ảnh ô trên máy. Hãy chắc chắn bạn đã xuất và lưu lên Drive trước.</string>
+    <string name="debug_dataset_clear_confirm">Xoá</string>
+    <string name="debug_dataset_cleared">Đã xoá dữ liệu</string>
+    <string name="debug_dataset_help">Cách dùng: bật công tắc → quét phiếu mẫu 1–5 như bình thường → \"Xuất dữ liệu\" → chọn Google Drive, lưu vào thư mục quizmark-ml/data.</string>
+
 </resources>
