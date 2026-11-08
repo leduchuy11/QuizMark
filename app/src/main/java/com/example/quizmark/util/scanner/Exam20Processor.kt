@@ -18,6 +18,8 @@ class Exam20Processor : ExamProcessor {
     private val roiCol2 = Rect(418, 760, 131, 380)
 
     override fun process(bitmap: Bitmap): ScanResult {
+        // Chỉ khác null ở bản debug khi bật "Thu dữ liệu ô tô" (xem BubbleDatasetDumper)
+        val dump = BubbleDatasetDumper.beginSheet(templateId = 2)
         val colorMat = Mat()
         var grayMat: Mat? = null
         var binaryMat: Mat? = null
@@ -45,18 +47,18 @@ class Exam20Processor : ExamProcessor {
             )
 
             sbdMat = Mat(binaryMat, roiSBD)
-            val sbdResult = readGridNumber(sbdMat, colorMat, roiSBD, 10, 6)
+            val sbdResult = readGridNumber(sbdMat, colorMat, roiSBD, 10, 6, grayMat, "sbd", dump)
 
             codeMat = Mat(binaryMat, roiCode)
-            val codeResult = readGridNumber(codeMat, colorMat, roiCode, 10, 3)
+            val codeResult = readGridNumber(codeMat, colorMat, roiCode, 10, 3, grayMat, "code", dump)
 
             val answers = mutableListOf<QuestionResult>()
 
             col1Mat = Mat(binaryMat, roiCol1)
-            answers.addAll(readAnswers(col1Mat, colorMat, roiCol1, 1, 10))
+            answers.addAll(readAnswers(col1Mat, colorMat, roiCol1, 1, 10, grayMat, dump))
 
             col2Mat = Mat(binaryMat, roiCol2)
-            answers.addAll(readAnswers(col2Mat, colorMat, roiCol2, 11, 20))
+            answers.addAll(readAnswers(col2Mat, colorMat, roiCol2, 11, 20, grayMat, dump))
 
             val debugBitmap = Bitmap.createBitmap(colorMat.cols(), colorMat.rows(), Bitmap.Config.ARGB_8888)
             Utils.matToBitmap(colorMat, debugBitmap)
@@ -78,7 +80,10 @@ class Exam20Processor : ExamProcessor {
         }
     }
 
-    private fun readGridNumber(binaryRoi: Mat, colorMat: Mat, globalRect: Rect, rows: Int, cols: Int): String? {
+    private fun readGridNumber(
+        binaryRoi: Mat, colorMat: Mat, globalRect: Rect, rows: Int, cols: Int,
+        gray: Mat, region: String, dump: BubbleDatasetDumper.Session?
+    ): String? {
         val cellW = binaryRoi.width().toDouble() / cols
         val cellH = binaryRoi.height().toDouble() / rows
         val radius = (Math.min(cellW, cellH) * 0.38).toInt()
@@ -101,6 +106,7 @@ class Exam20Processor : ExamProcessor {
                 Core.bitwise_and(cell, mask, maskedCell)
 
                 val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), region, "c$c", "$r", isFilled)
                 if (isFilled) {
                     filledRow = r
                     fillCount++
@@ -130,7 +136,10 @@ class Exam20Processor : ExamProcessor {
         return if (hasError) null else result.toString()
     }
 
-    private fun readAnswers(binaryRoi: Mat, colorMat: Mat, globalRect: Rect, startQ: Int, endQ: Int): List<QuestionResult> {
+    private fun readAnswers(
+        binaryRoi: Mat, colorMat: Mat, globalRect: Rect, startQ: Int, endQ: Int,
+        gray: Mat, dump: BubbleDatasetDumper.Session?
+    ): List<QuestionResult> {
         val rows = endQ - startQ + 1
         val cols = 4
         val cellW = binaryRoi.width().toDouble() / cols
@@ -155,6 +164,7 @@ class Exam20Processor : ExamProcessor {
                 Core.bitwise_and(cell, mask, maskedCell)
 
                 val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), "ans", "q${startQ + r}", options[c], isFilled)
                 if (isFilled) {
                     selectedAns = options[c]
                     fillCount++

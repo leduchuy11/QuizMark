@@ -40,6 +40,8 @@ class ExamThptProcessor : ExamProcessor {
     private val roiP3_Q6 = Rect(653, 894, 101, 244)
 
     override fun process(bitmap: Bitmap): ScanResult {
+        // Chỉ khác null ở bản debug khi bật "Thu dữ liệu ô tô" (xem BubbleDatasetDumper)
+        val dump = BubbleDatasetDumper.beginSheet(templateId = 1)
         val colorMat = Mat()
         var grayMat: Mat? = null
         var binaryMat: Mat? = null
@@ -59,27 +61,27 @@ class ExamThptProcessor : ExamProcessor {
                 51,   // Kích thước vùng quét (Block Size)
                 10.0  // Hệ số trừ nhiễu bóng râm
             )
-            val sbdResult = readGridNumber(Mat(binaryMat, roiSBD), colorMat, roiSBD, 10, 8)
-            val codeResult = readGridNumber(Mat(binaryMat, roiCode), colorMat, roiCode, 10, 4)
+            val sbdResult = readGridNumber(Mat(binaryMat, roiSBD), colorMat, roiSBD, 10, 8, grayMat, "sbd", dump)
+            val codeResult = readGridNumber(Mat(binaryMat, roiCode), colorMat, roiCode, 10, 4, grayMat, "code", dump)
 
             val answers = mutableListOf<QuestionResult>()
 
-            answers.addAll(readPart1Answers(Mat(binaryMat, roiP1_Col1), colorMat, roiP1_Col1, 1, 10))
-            answers.addAll(readPart1Answers(Mat(binaryMat, roiP1_Col2), colorMat, roiP1_Col2, 11, 20))
-            answers.addAll(readPart1Answers(Mat(binaryMat, roiP1_Col3), colorMat, roiP1_Col3, 21, 30))
-            answers.addAll(readPart1Answers(Mat(binaryMat, roiP1_Col4), colorMat, roiP1_Col4, 31, 40))
+            answers.addAll(readPart1Answers(Mat(binaryMat, roiP1_Col1), colorMat, roiP1_Col1, 1, 10, grayMat, dump))
+            answers.addAll(readPart1Answers(Mat(binaryMat, roiP1_Col2), colorMat, roiP1_Col2, 11, 20, grayMat, dump))
+            answers.addAll(readPart1Answers(Mat(binaryMat, roiP1_Col3), colorMat, roiP1_Col3, 21, 30, grayMat, dump))
+            answers.addAll(readPart1Answers(Mat(binaryMat, roiP1_Col4), colorMat, roiP1_Col4, 31, 40, grayMat, dump))
 
             val p2Rois = listOf(roiP2_Q1, roiP2_Q2, roiP2_Q3, roiP2_Q4, roiP2_Q5, roiP2_Q6, roiP2_Q7, roiP2_Q8)
             var currentP2Index = 41
             for (roi in p2Rois) {
-                answers.addAll(readPart2Box(Mat(binaryMat, roi), colorMat, roi, currentP2Index))
+                answers.addAll(readPart2Box(Mat(binaryMat, roi), colorMat, roi, currentP2Index, grayMat, dump))
                 currentP2Index += 4
             }
 
             val p3Rois = listOf(roiP3_Q1, roiP3_Q2, roiP3_Q3, roiP3_Q4, roiP3_Q5, roiP3_Q6)
             var currentP3Index = 73
             for (roi in p3Rois) {
-                answers.add(readPart3Box(Mat(binaryMat, roi), colorMat, roi, currentP3Index))
+                answers.add(readPart3Box(Mat(binaryMat, roi), colorMat, roi, currentP3Index, grayMat, dump))
                 currentP3Index++
             }
 
@@ -97,7 +99,10 @@ class ExamThptProcessor : ExamProcessor {
 
     // ================= CÁC HÀM XỬ LÝ =================
 
-    private fun readGridNumber(binaryRoi: Mat, colorMat: Mat, globalRect: Rect, rows: Int, cols: Int): String? {
+    private fun readGridNumber(
+        binaryRoi: Mat, colorMat: Mat, globalRect: Rect, rows: Int, cols: Int,
+        gray: Mat, region: String, dump: BubbleDatasetDumper.Session?
+    ): String? {
         val cellW = binaryRoi.width().toDouble() / cols
         val cellH = binaryRoi.height().toDouble() / rows
         val radius = (Math.min(cellW, cellH) * 0.4).toInt()
@@ -120,6 +125,7 @@ class ExamThptProcessor : ExamProcessor {
                 Core.bitwise_and(cell, mask, maskedCell)
 
                 val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), region, "c$c", "$r", isFilled)
                 if (isFilled) {
                     filledRow = r
                     fillCount++
@@ -149,7 +155,10 @@ class ExamThptProcessor : ExamProcessor {
         return if (hasError) null else result.toString()
     }
 
-    private fun readPart1Answers(binaryRoi: Mat, colorMat: Mat, globalRect: Rect, startQ: Int, endQ: Int): List<QuestionResult> {
+    private fun readPart1Answers(
+        binaryRoi: Mat, colorMat: Mat, globalRect: Rect, startQ: Int, endQ: Int,
+        gray: Mat, dump: BubbleDatasetDumper.Session?
+    ): List<QuestionResult> {
         val rows = endQ - startQ + 1
         val cols = 4
         val cellW = binaryRoi.width().toDouble() / cols
@@ -174,6 +183,7 @@ class ExamThptProcessor : ExamProcessor {
                 Core.bitwise_and(cell, mask, maskedCell)
 
                 val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), "p1", "q${startQ + r}", options[c], isFilled)
                 if (isFilled) { selectedAns = options[c]; fillCount++ }
 
                 val cx = (globalRect.x + c * cellW + cellW / 2.0).toFloat()
@@ -188,7 +198,10 @@ class ExamThptProcessor : ExamProcessor {
         return results
     }
 
-    private fun readPart2Box(binaryRoi: Mat, colorMat: Mat, globalRect: Rect, startQ: Int): List<QuestionResult> {
+    private fun readPart2Box(
+        binaryRoi: Mat, colorMat: Mat, globalRect: Rect, startQ: Int,
+        gray: Mat, dump: BubbleDatasetDumper.Session?
+    ): List<QuestionResult> {
         val rows = 4
         val cols = 2
         val cellW = binaryRoi.width().toDouble() / cols
@@ -213,6 +226,8 @@ class ExamThptProcessor : ExamProcessor {
                 Core.bitwise_and(cell, mask, maskedCell)
 
                 val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                // Tên file chỉ dùng ký tự ASCII: Đ -> T (true), S -> F (false)
+                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), "p2", "q${startQ + r}", if (c == 0) "T" else "F", isFilled)
                 if (isFilled) { selectedAns = options[c]; fillCount++ }
 
                 val cx = (globalRect.x + c * cellW + cellW / 2.0).toFloat()
@@ -227,7 +242,10 @@ class ExamThptProcessor : ExamProcessor {
         return results
     }
 
-    private fun readPart3Box(binaryRoi: Mat, colorMat: Mat, globalRect: Rect, qIndex: Int): QuestionResult {
+    private fun readPart3Box(
+        binaryRoi: Mat, colorMat: Mat, globalRect: Rect, qIndex: Int,
+        gray: Mat, dump: BubbleDatasetDumper.Session?
+    ): QuestionResult {
         val rows = 12
         val cols = 4
         val cellW = binaryRoi.width().toDouble() / cols
@@ -259,6 +277,9 @@ class ExamThptProcessor : ExamProcessor {
                 Core.bitwise_and(cell, mask, maskedCell)
 
                 val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                // Hàng 0 là dấu "-", hàng 1 là dấu thập phân ".", các hàng sau là chữ số 0-9
+                val optionLabel = when (r) { 0 -> "neg"; 1 -> "dot"; else -> (r - 2).toString() }
+                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), "p3", "q${qIndex}c$c", optionLabel, isFilled)
                 if (isFilled) {
                     filledChar = when (r) {
                         0 -> "-"

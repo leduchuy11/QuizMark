@@ -42,6 +42,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true // dùng BuildConfig.DEBUG cho công cụ thu dữ liệu ô tô
     }
 
     packaging {

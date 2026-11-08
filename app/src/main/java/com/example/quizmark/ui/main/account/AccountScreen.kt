@@ -41,6 +41,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.example.quizmark.ui.auth.CustomToastUI
 import com.example.quizmark.ui.auth.ToastType
+import com.example.quizmark.util.scanner.BubbleDatasetDumper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -234,6 +235,15 @@ fun AccountScreen(
                         title = stringResource(id = R.string.setting_contact),
                         onClick = onNavigateToContact
                     )
+                }
+
+                // Công cụ thu dữ liệu ô tô để train model (chỉ hiện ở bản debug)
+                if (BubbleDatasetDumper.isAvailable) {
+                    BubbleDatasetDebugSection(onMessage = { message, isError ->
+                        toastMessage = message
+                        toastType = if (isError) ToastType.ERROR else ToastType.SUCCESS
+                        showToast = true
+                    })
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
