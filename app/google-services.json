@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "258395767437-kdo0jo7tf0gtp0rbkki1ck3jolpj2jb3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.quizmark",
+            "certificate_hash": "fc7badd00285df6a1c2020067bf2d13d1fad7b98"
+          }
+        },
+        {
           "client_id": "258395767437-q7urkt9g057jase5lsu88afebgg7s1km.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
