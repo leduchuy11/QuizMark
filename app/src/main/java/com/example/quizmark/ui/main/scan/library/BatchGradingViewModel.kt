@@ -20,6 +20,8 @@ import com.example.quizmark.ui.main.scan.camera.QuestionDetailUI
 import com.example.quizmark.R
 import com.example.quizmark.util.scanner.ExamProcessorFactory
 import com.example.quizmark.util.OriginalScanStore
+import com.example.quizmark.util.requireAnswerKey
+import com.example.quizmark.util.gradingErrorMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -110,33 +112,25 @@ class BatchGradingViewModel @Inject constructor(
 
                     if (isThpt && thptExam != null) {
                         totalQuestions = thptExam.config.p1Questions + (thptExam.config.p2Questions * 4) + thptExam.config.p3Questions
-                        val matchedCode = thptExam.codes.find { it.code == scannedCode }
-
-                        if (scannedCode == "Trống" || matchedCode == null) {
-                            scanResult.answers.forEach { if (it.selectedAnswer == null) blankCount++ else wrongCount++ }
-                        } else {
-                            val stats = calculateThptStats(scanResult, matchedCode, thptExam.config)
-                            correctCount = stats.correct; wrongCount = stats.wrong; blankCount = stats.blank; finalScore = stats.score
-                        }
+                        val matchedCode = requireAnswerKey(scanResult.examCode, thptExam.codes) { it.code }
+                        val stats = calculateThptStats(scanResult, matchedCode, thptExam.config)
+                        correctCount = stats.correct; wrongCount = stats.wrong; blankCount = stats.blank; finalScore = stats.score
                         uiList = getDetailedQuestionsUI(scanResult, matchedCode, null, true, thptConfig = thptExam.config)
                     } else if (!isThpt && basicExam != null) {
                         totalQuestions = basicExam.questionCount
-                        val matchedCode = basicExam.codes.find { it.code == scannedCode }
-
-                        if (scannedCode == "Trống" || matchedCode == null) {
-                            scanResult.answers.forEach { if (it.selectedAnswer == null) blankCount++ else wrongCount++ }
-                        } else {
-                            val correctAnswersMap = matchedCode.answers
-                            scanResult.answers.forEach { q ->
-                                val correctAns = correctAnswersMap[q.questionNumber.toString()]
-                                if (q.isError) wrongCount++
-                                else if (q.selectedAnswer != null && q.selectedAnswer == correctAns) correctCount++
-                                else if (q.selectedAnswer != null) wrongCount++
-                                else blankCount++
-                            }
-                            if (totalQuestions > 0) finalScore = (correctCount.toDouble() / totalQuestions) * 10.0
+                        val matchedCode = requireAnswerKey(scanResult.examCode, basicExam.codes) { it.code }
+                        val correctAnswersMap = matchedCode.answers
+                        scanResult.answers.filter { it.questionNumber in 1..totalQuestions }.forEach { q ->
+                            val correctAns = correctAnswersMap[q.questionNumber.toString()]
+                            if (q.isError) wrongCount++
+                            else if (q.selectedAnswer != null && q.selectedAnswer == correctAns) correctCount++
+                            else if (q.selectedAnswer != null) wrongCount++
+                            else blankCount++
                         }
-                        uiList = getDetailedQuestionsUI(scanResult, null, matchedCode?.answers, false, basicQuestionCount = basicExam.questionCount)
+                        if (totalQuestions > 0) finalScore = (correctCount.toDouble() / totalQuestions) * 10.0
+                        uiList = getDetailedQuestionsUI(scanResult, null, matchedCode.answers, false, basicQuestionCount = basicExam.questionCount)
+                    } else {
+                        throw IllegalStateException(context.getString(R.string.scan_exam_unavailable))
                     }
 
                     // Truyền ảnh CỦA OPENCV (đã có sẵn viền SBD/Mã đề) vào để vẽ tiếp đáp án
@@ -169,14 +163,19 @@ class BatchGradingViewModel @Inject constructor(
                         FinalGradingResult(
                             studentName = "Lỗi ảnh", sbd = "Lỗi", examCode = "Lỗi", score = 0.0,
                             correctCount = 0, wrongCount = 0, blankCount = 0, totalQuestions = 0,
-                            processedImage = null, detailedQuestions = emptyList(), templateId = templateId
+                            processedImage = null, detailedQuestions = emptyList(), templateId = templateId,
+                            errorMessage = gradingErrorMessage(context, e)
                         )
                     )
                 }
             }
 
             // 6. KIỂM TRA TRÙNG LẶP SBD (ĐỂ XUẤT CẢNH BÁO)
-            val warningMsg = generateDuplicateWarning(resultsList, rosterId)
+            val errors = resultsList.mapIndexedNotNull { index, result ->
+                result.errorMessage?.let { context.getString(R.string.scan_image_error, index + 1, it) }
+            }
+            val warningMsg = (errors + listOfNotNull(generateDuplicateWarning(resultsList, rosterId)))
+                .joinToString("\n").takeIf { it.isNotBlank() }
             _batchState.value = BatchState.Finished(resultsList, warningMsg)
         }
     }

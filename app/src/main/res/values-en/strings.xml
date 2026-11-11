@@ -455,6 +455,18 @@
     <string name="debug_model_help">Practice model trained on generated images. Turn off to compare with the original scanner.</string>
     <string name="debug_model_unavailable">Model unavailable. Scanning uses the original rule. Restart the app to try again.</string>
     <string name="scan_template_unsupported">This sheet template is not supported. Please choose template 1–5.</string>
+    <string name="scan_cannot_grade">Unable to grade</string>
+    <string name="scan_retry">Scan again</string>
+    <string name="scan_no_answer_keys">This exam has no answer keys. Add answers before grading.</string>
+    <string name="scan_code_unreadable">The exam code could not be read. Saved codes: %1$s. Check the marked code and scan again.</string>
+    <string name="scan_code_mismatch">The sheet has exam code %1$s, but the saved answer keys use %2$s. Choose the correct exam or edit its code in Exams, then scan again.</string>
+    <string name="scan_exam_unavailable">Exam data could not be found. Connect to the internet to sync and try again.</string>
+    <string name="scan_image_error">Image %1$d: %2$s</string>
+    <string name="dialog_update_exam_title">Confirm update</string>
+    <string name="dialog_update_exam_text">Save changes to “%1$s”?\n\nExam codes: %2$s → %3$s\n\nEach code row keeps its answers when renamed.</string>
+    <string name="dialog_update_answers_text">Update answers for “%1$s”, exam codes %2$s?</string>
+    <string name="toast_update_exam_success">Exam changes saved</string>
+    <string name="edit_codes_need_answers">New exam codes or questions need complete answers. Choose Edit answers, fill them in, then save.</string>
     <string name="original_scan_title">ORIGINAL SCAN</string>
     <string name="original_scan_description">Your marks before grading highlights were added.</string>
 </resources>

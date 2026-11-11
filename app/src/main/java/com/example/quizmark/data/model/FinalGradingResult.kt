@@ -15,5 +15,6 @@ data class FinalGradingResult(
     val processedImage: Bitmap?,
     val detailedQuestions: List<QuestionDetailUI>,
     val templateId: Int,
+    val errorMessage: String? = null,
     val originalImagePath: String? = null
 )

@@ -31,6 +31,7 @@ import com.example.quizmark.data.model.ThptExamCodeModel
 import com.example.quizmark.data.model.ThptExamConfig
 import com.example.quizmark.data.model.ThptExamModel
 import com.example.quizmark.ui.main.exam.ExamViewModel
+import com.example.quizmark.util.ExamCodeUpdates
 import com.example.quizmark.ui.main.exam.addExam.CustomToastUI
 import com.example.quizmark.ui.main.exam.addExam.ThptExamCodeCard
 import com.example.quizmark.ui.main.exam.addExam.ToastType
@@ -65,6 +66,8 @@ fun EditThptAnswersScreen(
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.ERROR) }
     var navigateAfterToast by remember { mutableStateOf(false) }
+    var originalExam by remember(examId) { mutableStateOf<ThptExamModel?>(null) }
+    var pendingUpdate by remember { mutableStateOf<ThptExamModel?>(null) }
 
 
     LaunchedEffect(examId) {
@@ -72,8 +75,8 @@ fun EditThptAnswersScreen(
     }
 
     LaunchedEffect(editingExam) {
-        editingExam?.let { oldExam ->
-            val newAnswers = mutableMapOf<String, ThptExamCodeModel>()
+        editingExam?.takeIf { it.id == examId && originalExam == null }?.let { oldExam ->
+            originalExam = oldExam
             val oldConfig = oldExam.config
 
             // LOGIC KÉP: Kiểm tra cấu trúc phần 1,2,3 CÓ THAY ĐỔI KHÔNG?
@@ -81,17 +84,9 @@ fun EditThptAnswersScreen(
                     (oldConfig.p2Questions == p2Q) &&
                     (oldConfig.p3Questions == p3Q)
 
-            examCodes.forEach { newCodeStr ->
-                val oldCodeModel = oldExam.codes.find { it.code == newCodeStr }
-
-                // Chỉ giữ đáp án NẾU MÃ TỒN TẠI VÀ CẤU TRÚC KHÔNG ĐỔI
-                if (oldCodeModel != null && isStructureUnchanged) {
-                    newAnswers[newCodeStr] = oldCodeModel
-                } else {
-                    newAnswers[newCodeStr] = ThptExamCodeModel(code = newCodeStr)
-                }
-            }
-            answers = newAnswers
+            answers = if (isStructureUnchanged) {
+                ExamCodeUpdates.thpt(oldExam.codes, examCodes).associateBy { it.code }
+            } else examCodes.associateWith { ThptExamCodeModel(code = it) }
             viewModel.resetEditingThptExam()
         }
     }
@@ -167,15 +162,14 @@ fun EditThptAnswersScreen(
 
                             val config = ThptExamConfig(p1Questions = p1Q, p1Score = p1S, p2Questions = p2Q, p3Questions = p3Q, p3Score = p3S)
 
-                            val updatedExam = ThptExamModel(
-                                id = examId,
+                            pendingUpdate = originalExam?.copy(
                                 name = examName,
                                 templateId = templateId,
                                 config = config,
-                                codes = answers.values.toList()
+                                codes = examCodes.map { answers.getValue(it) }
                             )
-                            viewModel.saveThptExam(updatedExam)
                         },
+                        enabled = originalExam != null && !isLoading && !navigateAfterToast,
                         modifier = Modifier.weight(1f).height(54.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                         shape = RoundedCornerShape(16.dp)
@@ -208,6 +202,14 @@ fun EditThptAnswersScreen(
                     )
                 }
             }
+        }
+
+        pendingUpdate?.let { updated ->
+            ConfirmExamUpdateDialog(
+                summary = stringResource(R.string.dialog_update_answers_text, examName, examCodes.joinToString(", ")),
+                onConfirm = { pendingUpdate = null; viewModel.saveThptExam(updated) },
+                onDismiss = { pendingUpdate = null }
+            )
         }
 
         AnimatedVisibility(

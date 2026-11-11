@@ -454,6 +454,18 @@
     <string name="debug_model_help">Model thử nghiệm được huấn luyện bằng ảnh tạo trên máy tính. Tắt để so sánh với cách quét cũ.</string>
     <string name="debug_model_unavailable">Model không khả dụng. Đang dùng cách quét cũ. Khởi động lại ứng dụng để thử lại.</string>
     <string name="scan_template_unsupported">Mẫu phiếu này chưa được hỗ trợ. Vui lòng chọn mẫu 1–5.</string>
+    <string name="scan_cannot_grade">Chưa thể chấm bài</string>
+    <string name="scan_retry">Quét lại</string>
+    <string name="scan_no_answer_keys">Đề thi chưa có đáp án. Hãy cập nhật đáp án trước khi chấm.</string>
+    <string name="scan_code_unreadable">Không đọc được mã đề trên phiếu. Mã đã lưu: %1$s. Hãy kiểm tra phần tô mã đề và quét lại.</string>
+    <string name="scan_code_mismatch">Phiếu có mã đề %1$s, nhưng đáp án đã lưu có mã %2$s. Hãy chọn đúng đề hoặc sửa mã đề trong mục Đề thi rồi quét lại.</string>
+    <string name="scan_exam_unavailable">Không tìm thấy dữ liệu đề thi. Hãy kết nối mạng để đồng bộ rồi thử lại.</string>
+    <string name="scan_image_error">Ảnh %1$d: %2$s</string>
+    <string name="dialog_update_exam_title">Xác nhận cập nhật</string>
+    <string name="dialog_update_exam_text">Bạn có muốn lưu thay đổi cho đề “%1$s”?\n\nMã đề: %2$s → %3$s\n\nĐáp án của từng dòng mã đề được giữ lại khi đổi mã.</string>
+    <string name="dialog_update_answers_text">Bạn có muốn cập nhật đáp án của đề “%1$s” cho mã %2$s?</string>
+    <string name="toast_update_exam_success">Đã lưu thay đổi đề thi</string>
+    <string name="edit_codes_need_answers">Mã đề mới hoặc câu hỏi mới chưa có đủ đáp án. Hãy chọn Sửa đáp án, nhập đầy đủ rồi lưu.</string>
     <string name="original_scan_title">ẢNH BAN ĐẦU</string>
     <string name="original_scan_description">Các ô bạn đã tô trước khi ứng dụng thêm vòng màu chấm bài.</string>
 </resources>

@@ -7,6 +7,8 @@ import com.example.quizmark.data.model.ExamUiModel
 import com.example.quizmark.data.model.ThptExamModel
 import com.example.quizmark.data.repository.ExamRepository
 import com.example.quizmark.data.repository.ExamListRepository
+import com.example.quizmark.util.ExamCodeUpdates
+import com.example.quizmark.util.IncompleteAnswerKeyException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -111,6 +113,39 @@ class ExamViewModel @Inject constructor(
             val result = repository.saveThptExam(exam)
             _saveResult.value = result
             _isLoading.value = false
+        }
+    }
+
+    fun updateExamDetails(examId: String, templateId: Int, name: String, codes: List<String>, customQuestionCount: Int) {
+        if (_isLoading.value) return
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                _saveResult.value = if (templateId == 1) {
+                    val original = checkNotNull(repository.getThptExamById(examId))
+                    val renamed = ExamCodeUpdates.thpt(original.codes, codes)
+                    val config = original.config
+                    if (renamed.any { key ->
+                        (1..config.p1Questions).any { key.part1[it.toString()].isNullOrBlank() } ||
+                        (1..config.p2Questions).any { q ->
+                            listOf("a", "b", "c", "d").any { key.part2[q.toString()]?.get(it).isNullOrBlank() }
+                        } || (1..config.p3Questions).any { key.part3[it.toString()].isNullOrBlank() }
+                    }) throw IncompleteAnswerKeyException()
+                    repository.saveThptExam(original.copy(name = name, codes = renamed))
+                } else {
+                    val original = checkNotNull(repository.getBasicExamById(examId))
+                    val count = if (templateId == 6) customQuestionCount else original.questionCount
+                    val renamed = ExamCodeUpdates.basic(original.codes, codes)
+                    if (renamed.any { key -> (1..count).any { key.answers[it.toString()].isNullOrBlank() } }) {
+                        throw IncompleteAnswerKeyException()
+                    }
+                    repository.saveBasicExam(original.copy(name = name, questionCount = count, codes = renamed))
+                }
+            } catch (error: Exception) {
+                _saveResult.value = Result.failure(error)
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 

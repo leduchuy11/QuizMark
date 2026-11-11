@@ -20,6 +20,8 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.example.quizmark.util.requireAnswerKey
+import com.example.quizmark.util.gradingErrorMessage
 import com.example.quizmark.util.OriginalScanStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -96,14 +98,9 @@ class GradingViewModel @Inject constructor(
                     val thptExam = examRepository.getThptExamById(examId)
                     if (thptExam != null) {
                         totalQuestions = thptExam.config.p1Questions + (thptExam.config.p2Questions * 4) + thptExam.config.p3Questions
-                        val matchedCode = thptExam.codes.find { it.code == scannedCode }
-
-                        if (scannedCode == "Trống" || matchedCode == null) {
-                            scanResult.answers.forEach { if (it.selectedAnswer == null) blankCount++ else wrongCount++ }
-                        } else {
-                            val stats = calculateThptStats(scanResult, matchedCode, thptExam.config, canvas, paintCorrect, paintWrong, paintError, paintEmpty)
-                            correctCount = stats.correct; wrongCount = stats.wrong; blankCount = stats.blank; finalScore = stats.score
-                        }
+                        val matchedCode = requireAnswerKey(scanResult.examCode, thptExam.codes) { it.code }
+                        val stats = calculateThptStats(scanResult, matchedCode, thptExam.config, canvas, paintCorrect, paintWrong, paintError, paintEmpty)
+                        correctCount = stats.correct; wrongCount = stats.wrong; blankCount = stats.blank; finalScore = stats.score
 
                         uiList = getDetailedQuestionsUI(scanResult, matchedCode, null, true, thptConfig = thptExam.config)
                     } else {
@@ -113,30 +110,25 @@ class GradingViewModel @Inject constructor(
                     val basicExam = examRepository.getBasicExamById(examId)
                     if (basicExam != null) {
                         totalQuestions = basicExam.questionCount
-                        val matchedCode = basicExam.codes.find { it.code == scannedCode }
+                        val matchedCode = requireAnswerKey(scanResult.examCode, basicExam.codes) { it.code }
+                        val correctAnswersMap = matchedCode.answers
+                        scanResult.answers.filter { it.questionNumber in 1..totalQuestions }.forEach { q ->
+                            val correctAns = correctAnswersMap[q.questionNumber.toString()]
+                            var statusPaint = paintEmpty
 
-                        if (scannedCode == "Trống" || matchedCode == null) {
-                            scanResult.answers.forEach { if (it.selectedAnswer == null) blankCount++ else wrongCount++ }
-                        } else {
-                            val correctAnswersMap = matchedCode.answers
-                            scanResult.answers.forEach { q ->
-                                val correctAns = correctAnswersMap[q.questionNumber.toString()]
-                                var statusPaint = paintEmpty
+                            if (q.isError) { statusPaint = paintError; wrongCount++ }
+                            else if (q.selectedAnswer != null && q.selectedAnswer == correctAns) { correctCount++; statusPaint = paintCorrect }
+                            else if (q.selectedAnswer != null) { wrongCount++; statusPaint = paintWrong }
+                            else { blankCount++; statusPaint = paintEmpty }
 
-                                if (q.isError) { statusPaint = paintError; wrongCount++ }
-                                else if (q.selectedAnswer != null && q.selectedAnswer == correctAns) { correctCount++; statusPaint = paintCorrect }
-                                else if (q.selectedAnswer != null) { wrongCount++; statusPaint = paintWrong }
-                                else { blankCount++; statusPaint = paintEmpty }
-
-                                q.bubbles.forEach { b ->
-                                    if (b.isFilled) canvas?.drawCircle(b.x, b.y, b.radius, statusPaint)
-                                    else canvas?.drawCircle(b.x, b.y, b.radius, paintEmpty)
-                                }
+                            q.bubbles.forEach { b ->
+                                if (b.isFilled) canvas?.drawCircle(b.x, b.y, b.radius, statusPaint)
+                                else canvas?.drawCircle(b.x, b.y, b.radius, paintEmpty)
                             }
-                            if (totalQuestions > 0) finalScore = (correctCount.toDouble() / totalQuestions) * 10.0
                         }
+                        if (totalQuestions > 0) finalScore = (correctCount.toDouble() / totalQuestions) * 10.0
 
-                        uiList = getDetailedQuestionsUI(scanResult, null, matchedCode?.answers, false, basicQuestionCount = basicExam.questionCount)
+                        uiList = getDetailedQuestionsUI(scanResult, null, matchedCode.answers, false, basicQuestionCount = basicExam.questionCount)
                     } else {
                         throw Exception("Không tìm thấy dữ liệu Đề thi. Vui lòng kết nối mạng để đồng bộ!")
                     }
@@ -158,7 +150,7 @@ class GradingViewModel @Inject constructor(
                 // 5. KÍCH HOẠT GIAO DIỆN HIỂN THỊ
                 _gradingState.value = GradingState.Success(resultData)
             } catch (e: Exception) {
-                _gradingState.value = GradingState.Error(e.message ?: "Lỗi chấm thi")
+                _gradingState.value = GradingState.Error(gradingErrorMessage(context, e))
             }
         }
     }

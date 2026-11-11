@@ -138,7 +138,7 @@ fun ResultRowItem(index: Int, result: FinalGradingResult,onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable(enabled = result.errorMessage == null) { onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -164,11 +164,11 @@ fun ResultRowItem(index: Int, result: FinalGradingResult,onClick: () -> Unit) {
         Column(modifier = Modifier.weight(1.5f)) {
             Text(text =  stringResource(R.string.name), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9CA3AF))
             Text(
-                text = result.studentName,
-                fontSize = 16.sp,
+                text = result.errorMessage ?: result.studentName,
+                fontSize = if (result.errorMessage == null) 16.sp else 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = ColorText,
-                maxLines = 1,
+                color = if (result.errorMessage == null) ColorText else Color(0xFFDC2626),
+                maxLines = if (result.errorMessage == null) 1 else 5,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -186,7 +186,7 @@ fun ResultRowItem(index: Int, result: FinalGradingResult,onClick: () -> Unit) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = if (result.score == 0.0 && result.sbd == "Lỗi")
+                text = if (result.errorMessage != null || (result.score == 0.0 && result.sbd == "Lỗi"))
                     stringResource(R.string.grading_error)
                 else
                     String.format("%.1f", result.score),

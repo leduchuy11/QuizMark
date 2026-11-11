@@ -35,6 +35,7 @@ import com.example.quizmark.R
 import com.example.quizmark.data.model.ExamCodeModel
 import com.example.quizmark.data.model.ExamModel
 import com.example.quizmark.ui.main.exam.ExamViewModel
+import com.example.quizmark.util.ExamCodeUpdates
 import com.example.quizmark.ui.main.exam.addExam.CustomToastUI
 import com.example.quizmark.ui.main.exam.addExam.ToastType
 import com.example.quizmark.ui.theme.BackgroundScreen
@@ -65,6 +66,8 @@ fun EditAiAnswersScreen(
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.SUCCESS) }
     var navigateAfterToast by remember { mutableStateOf(false) }
+    var originalExam by remember(examId) { mutableStateOf<ExamModel?>(null) }
+    var pendingUpdate by remember { mutableStateOf<ExamModel?>(null) }
 
     // 1. Tải dữ liệu cũ khi vừa vào màn hình
     LaunchedEffect(examId) {
@@ -73,21 +76,11 @@ fun EditAiAnswersScreen(
 
     // 2. LOGIC ĐIỀN LẠI ĐÁP ÁN
     LaunchedEffect(editingExam) {
-        editingExam?.let { oldExam ->
-            val newAnswers = mutableMapOf<String, ExamCodeModel>()
-
-            examCodes.forEach { newCodeStr ->
-                val oldCodeModel = oldExam.codes.find { it.code == newCodeStr }
-
-                // ĐIỀU KIỆN KÉP: Mã đề phải tồn tại VÀ Số lượng câu hỏi không được thay đổi
-                if (oldCodeModel != null && oldExam.questionCount == customQuestionCount) {
-                    newAnswers[newCodeStr] = oldCodeModel
-                } else {
-                    // Nếu đổi mã HOẶC đổi số câu -> Reset lại form trắng cho mã này
-                    newAnswers[newCodeStr] = ExamCodeModel(code = newCodeStr)
-                }
-            }
-            answers = newAnswers
+        editingExam?.takeIf { it.id == examId && originalExam == null }?.let { oldExam ->
+            originalExam = oldExam
+            answers = if (oldExam.questionCount == customQuestionCount) {
+                ExamCodeUpdates.basic(oldExam.codes, examCodes).associateBy { it.code }
+            } else examCodes.associateWith { ExamCodeModel(code = it) }
             viewModel.resetEditingExam()
         }
     }
@@ -188,16 +181,15 @@ fun EditAiAnswersScreen(
                                 return@Button
                             }
 
-                            val updatedExam = ExamModel(
-                                id = examId,
+                            pendingUpdate = originalExam?.copy(
                                 name = examName,
                                 templateId = templateId,
                                 questionCount = customQuestionCount,
-                                codes = answers.values.toList()
+                                codes = examCodes.map { answers.getValue(it) }
                             )
 
-                            viewModel.saveBasicExam(updatedExam)
                         },
+                        enabled = originalExam != null && !isLoading && !navigateAfterToast,
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
@@ -253,6 +245,14 @@ fun EditAiAnswersScreen(
                     )
                 }
             }
+        }
+
+        pendingUpdate?.let { updated ->
+            ConfirmExamUpdateDialog(
+                summary = stringResource(R.string.dialog_update_answers_text, examName, examCodes.joinToString(", ")),
+                onConfirm = { pendingUpdate = null; viewModel.saveBasicExam(updated) },
+                onDismiss = { pendingUpdate = null }
+            )
         }
 
         AnimatedVisibility(

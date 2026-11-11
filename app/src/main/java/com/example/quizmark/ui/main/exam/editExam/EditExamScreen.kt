@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +37,7 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.ui.main.exam.ExamViewModel
+import com.example.quizmark.util.IncompleteAnswerKeyException
 import com.example.quizmark.ui.main.exam.addExam.CustomToastUI
 import com.example.quizmark.ui.main.exam.addExam.ToastType
 import com.example.quizmark.ui.main.exam.addExam.getTemplateListForSelection
@@ -61,21 +63,42 @@ fun EditExamScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    var examName by remember { mutableStateOf(initialExamName) }
+    var examName by rememberSaveable(examId) { mutableStateOf(initialExamName) }
     val selectedTemplate = remember { getTemplateListForSelection().find { it.id == templateId } }
 
-    var examCodes by remember { mutableStateOf(initialExamCodes) }
-    var examCodeCountStr by remember { mutableStateOf(initialExamCodes.size.toString()) }
-    var customQuestionCountStr by remember { mutableStateOf(if (initialCustomQuestionCount > 0) initialCustomQuestionCount.toString() else "") }
+    var examCodes by rememberSaveable(examId) { mutableStateOf(initialExamCodes) }
+    var examCodeCountStr by rememberSaveable(examId) { mutableStateOf(initialExamCodes.size.toString()) }
+    var customQuestionCountStr by rememberSaveable(examId) { mutableStateOf(if (initialCustomQuestionCount > 0) initialCustomQuestionCount.toString() else "") }
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.ERROR) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
+    var navigateAfterSave by remember { mutableStateOf(false) }
+    val isLoading by viewModel.isLoading.collectAsState()
+    val saveResult by viewModel.saveResult.collectAsState()
+
+    LaunchedEffect(saveResult) {
+        saveResult?.let { result ->
+            if (result.isSuccess) {
+                toastMessage = context.getString(R.string.toast_update_exam_success)
+                toastType = ToastType.SUCCESS
+                navigateAfterSave = true
+            } else {
+                toastMessage = if (result.exceptionOrNull() is IncompleteAnswerKeyException) {
+                    context.getString(R.string.edit_codes_need_answers)
+                } else context.getString(R.string.error_prefix, result.exceptionOrNull()?.message)
+                toastType = ToastType.ERROR
+            }
+            viewModel.resetSaveResult()
+        }
+    }
 
     LaunchedEffect(toastMessage) {
         if (toastMessage != null) {
             delay(2500)
             toastMessage = null
+            if (navigateAfterSave) onNavigateBack()
         }
     }
 
@@ -85,6 +108,23 @@ fun EditExamScreen(
         if (safeCount != examCodes.size) {
             examCodes = List(safeCount) { index -> examCodes.getOrNull(index) ?: "" }
         }
+    }
+
+    fun validateInputs(): Boolean {
+        val error = when {
+            examName.isBlank() -> R.string.error_fill_all_fields
+            examCodes.isEmpty() || examCodes.any { it.isBlank() } -> R.string.error_fill_all_codes
+            examCodes.toSet().size != examCodes.size -> R.string.error_duplicate_exam_codes
+            templateId == 6 && (customQuestionCountStr.toIntOrNull() ?: 0) !in 1..100 -> R.string.error_invalid_question_count
+            examCodes.any { it.length != if (templateId == 1) 4 else 3 } ->
+                if (templateId == 1) R.string.error_exam_code_length_4 else R.string.error_exam_code_length_3
+            else -> null
+        }
+        if (error != null) {
+            toastMessage = context.getString(error)
+            toastType = ToastType.ERROR
+        }
+        return error == null
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -124,42 +164,27 @@ fun EditExamScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = {
-                            if (examName.isBlank()) {
-                                toastMessage = context.getString(R.string.error_fill_all_fields)
-                                toastType = ToastType.ERROR
-                                return@Button
-                            }
-                            if (examCodes.isEmpty() || examCodes.any { it.isBlank() }) {
-                                toastMessage = context.getString(R.string.error_fill_all_codes)
-                                toastType = ToastType.ERROR
-                                return@Button
-                            }
-                            if (examCodes.toSet().size != examCodes.size) {
-                                toastMessage = context.getString(R.string.error_duplicate_exam_codes)
-                                toastType = ToastType.WARNING
-                                return@Button
-                            }
-                            if (templateId == 6) {
-                                val qCount = customQuestionCountStr.toIntOrNull() ?: 0
-                                if (qCount <= 0 || qCount > 100) {
-                                    toastMessage = context.getString(R.string.error_invalid_question_count)
-                                    toastType = ToastType.ERROR
-                                    return@Button
-                                }
-                            }
-                            val requiredLength = if (templateId == 1) 4 else 3
-                            val hasInvalidLength = examCodes.any { it.trim().length != requiredLength }
+                        onClick = { if (validateInputs()) showUpdateDialog = true },
+                        enabled = !isLoading && !navigateAfterSave,
+                        modifier = Modifier.fillMaxWidth().height(54.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text(stringResource(R.string.btn_save_changes), fontWeight = FontWeight.Bold)
+                        }
+                    }
 
-                            if (hasInvalidLength) {
-                                toastMessage = if (requiredLength == 4) context.getString(R.string.error_exam_code_length_4) else context.getString(R.string.error_exam_code_length_3)
-                                toastType = ToastType.WARNING
-                                return@Button
-                            }
+                    Button(
+                        onClick = {
+                            if (!validateInputs()) return@Button
                             val customQ = if (templateId == 6) customQuestionCountStr.toIntOrNull() ?: 0 else 0
 
                             onNavigateToEditAnswers(templateId, examName, examCodes, customQ)
                         },
+                        enabled = !isLoading && !navigateAfterSave,
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                         shape = RoundedCornerShape(12.dp)
@@ -171,6 +196,7 @@ fun EditExamScreen(
 
                     Button(
                         onClick = { showDeleteDialog = true },
+                        enabled = !isLoading && !navigateAfterSave,
                         modifier = Modifier.fillMaxWidth().height(54.dp).border(width = 1.dp, color = Color(0xFFDC2626),shape = RoundedCornerShape(12.dp)),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFCE8E8)),
                         elevation = ButtonDefaults.buttonElevation(0.dp),
@@ -341,6 +367,23 @@ fun EditExamScreen(
                 }
                 Spacer(modifier = Modifier.height(100.dp))
             }
+        }
+
+        if (showUpdateDialog) {
+            ConfirmExamUpdateDialog(
+                summary = stringResource(
+                    R.string.dialog_update_exam_text, examName,
+                    initialExamCodes.joinToString(", "), examCodes.joinToString(", ")
+                ),
+                onConfirm = {
+                    showUpdateDialog = false
+                    viewModel.updateExamDetails(
+                        examId, templateId, examName, examCodes,
+                        customQuestionCountStr.toIntOrNull() ?: 0
+                    )
+                },
+                onDismiss = { showUpdateDialog = false }
+            )
         }
 
         if (showDeleteDialog) {

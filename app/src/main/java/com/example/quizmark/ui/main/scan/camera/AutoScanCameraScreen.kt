@@ -162,6 +162,25 @@ fun CameraPreviewContent(
     var isScanning by remember { mutableStateOf(true) }
     var cameraControl by remember { mutableStateOf<CameraControl?>(null) }
     var isFlashOn by remember { mutableStateOf(false) }
+    val gradingState by viewModel.gradingState.collectAsState()
+
+    (gradingState as? GradingState.Error)?.let { error ->
+        AlertDialog(
+            onDismissRequest = { viewModel.resetState(); isScanning = true },
+            title = { Text(stringResource(R.string.scan_cannot_grade)) },
+            text = { Text(error.message) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.resetState(); isScanning = true }) {
+                    Text(stringResource(R.string.scan_retry))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.resetState(); onNavigateBack() }) {
+                    Text(stringResource(R.string.btn_back_text))
+                }
+            }
+        )
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
