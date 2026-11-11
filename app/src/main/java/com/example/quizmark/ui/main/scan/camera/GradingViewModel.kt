@@ -20,6 +20,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.example.quizmark.util.OriginalScanStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 sealed class GradingState {
@@ -145,7 +148,10 @@ class GradingViewModel @Inject constructor(
                     correctCount = correctCount, wrongCount = wrongCount, blankCount = blankCount, totalQuestions = totalQuestions,
                     processedImage = mutableBitmap,
                     detailedQuestions = uiList,
-                    templateId = templateId
+                    templateId = templateId,
+                    originalImagePath = withContext(Dispatchers.IO) {
+                        OriginalScanStore.save(context, scanResult.originalBitmap)
+                    }
                 )
 
 

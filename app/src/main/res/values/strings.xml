@@ -450,4 +450,6 @@
     <string name="debug_dataset_cleared">Đã xoá dữ liệu</string>
     <string name="debug_dataset_help">Cách dùng: bật công tắc → quét phiếu mẫu 1–5 như bình thường → \"Xuất dữ liệu\" → chọn Google Drive, lưu vào thư mục quizmark-ml/data.</string>
 
+    <string name="original_scan_title">ẢNH BAN ĐẦU</string>
+    <string name="original_scan_description">Các ô bạn đã tô trước khi ứng dụng thêm vòng màu chấm bài.</string>
 </resources>

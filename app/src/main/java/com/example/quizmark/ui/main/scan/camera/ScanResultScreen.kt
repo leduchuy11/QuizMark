@@ -37,6 +37,8 @@ import com.example.quizmark.R
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
+import coil.compose.SubcomposeAsyncImage
+import java.io.File
 
 val GreenCorrect = Color(0xFF4CAF50)
 val RedWrong = Color(0xFFF44336)
@@ -57,7 +59,8 @@ fun ScanResultScreen(
     onViewDetailsClick: () -> Unit,
     onNextScanClick: () -> Unit,
     onBackClick: () -> Unit,
-    onSaveResult: () -> Unit
+    onSaveResult: () -> Unit,
+    originalImagePath: String? = null
 ) {
 
     LaunchedEffect(Unit) {
@@ -139,6 +142,11 @@ fun ScanResultScreen(
 
             // 4. Card Ảnh bài đã chấm
             ScannedImageCard(examCode, processedImage)
+
+            if (!originalImagePath.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(20.dp))
+                OriginalScanImageCard(examCode, originalImagePath)
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -249,6 +257,31 @@ fun ScoreCircleIndicator(score: Double, correct: Int, total: Int) {
 
 @Composable
 fun ScannedImageCard(examCode: String, bitmap: Bitmap?) {
+    SheetImageCard(
+        examCode = examCode,
+        title = stringResource(R.string.graded_exam_title),
+        bitmap = bitmap
+    )
+}
+
+@Composable
+fun OriginalScanImageCard(examCode: String, imagePath: String) {
+    SheetImageCard(
+        examCode = examCode,
+        title = stringResource(R.string.original_scan_title),
+        imagePath = imagePath,
+        note = stringResource(R.string.original_scan_description)
+    )
+}
+
+@Composable
+private fun SheetImageCard(
+    examCode: String,
+    title: String,
+    bitmap: Bitmap? = null,
+    imagePath: String? = null,
+    note: String? = null
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -262,7 +295,7 @@ fun ScannedImageCard(examCode: String, bitmap: Bitmap?) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.graded_exam_title),
+                    text = title,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 1.sp,
@@ -276,6 +309,10 @@ fun ScannedImageCard(examCode: String, bitmap: Bitmap?) {
                     color = DarkBlue
                 )
             }
+            if (note != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = note, fontSize = 13.sp, color = Color.Gray)
+            }
             Spacer(modifier = Modifier.height(12.dp))
 
             Box(
@@ -285,10 +322,27 @@ fun ScannedImageCard(examCode: String, bitmap: Bitmap?) {
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color.LightGray)
             ) {
-                if (bitmap != null) {
+                if (imagePath != null) {
+                    SubcomposeAsyncImage(
+                        model = File(imagePath),
+                        contentDescription = title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit,
+                        loading = {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                            }
+                        },
+                        error = {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text(stringResource(R.string.image_not_found))
+                            }
+                        }
+                    )
+                } else if (bitmap != null) {
                     Image(
                         bitmap = bitmap.asImageBitmap(),
-                        contentDescription = "Scanned Paper",
+                        contentDescription = title,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )

@@ -187,6 +187,7 @@ fun GalleryScreen(
                                     blankCount = result.blankCount,
                                     totalQuestions = result.totalQuestions,
                                     processedImage = result.processedImage,
+                                    originalImagePath = result.originalImagePath,
                                     onViewDetailsClick = {
                                         showExamDetail = true
                                     },

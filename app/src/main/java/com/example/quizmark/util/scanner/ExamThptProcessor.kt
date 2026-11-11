@@ -88,7 +88,7 @@ class ExamThptProcessor : ExamProcessor {
             val debugBitmap = Bitmap.createBitmap(colorMat.cols(), colorMat.rows(), Bitmap.Config.ARGB_8888)
             Utils.matToBitmap(colorMat, debugBitmap)
 
-            return ScanResult(sbdResult, codeResult, answers, debugBitmap)
+            return ScanResult(sbdResult, codeResult, answers, debugBitmap, originalBitmap = bitmap)
 
         } finally {
             colorMat.release()

@@ -734,6 +734,7 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                             blankCount = resultData.blankCount,
                             totalQuestions = resultData.totalQuestions,
                             processedImage = resultData.processedImage,
+                            originalImagePath = resultData.originalImagePath,
                             onViewDetailsClick = {
                                 bottomNavController.navigate("exam_detail")
                             },

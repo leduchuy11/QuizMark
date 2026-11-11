@@ -24,6 +24,7 @@ import com.example.quizmark.ui.theme.DarkBlue
 // Import các thẻ giao diện từ ScanResultScreen
 import com.example.quizmark.ui.main.scan.camera.GreenCorrect
 import com.example.quizmark.ui.main.scan.camera.ScannedImageCard
+import com.example.quizmark.ui.main.scan.camera.OriginalScanImageCard
 import com.example.quizmark.ui.main.scan.camera.ScoreCircleIndicator
 import com.example.quizmark.ui.main.scan.camera.StudentInfoCard
 
@@ -127,6 +128,11 @@ fun HistoryDetailScreen(
                 examCode = currentRecord.examCode,
                 bitmap = recordBitmap
             )
+
+            if (currentRecord.localOriginalImagePath.isNotBlank()) {
+                Spacer(modifier = Modifier.height(20.dp))
+                OriginalScanImageCard(currentRecord.examCode, currentRecord.localOriginalImagePath)
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
         }

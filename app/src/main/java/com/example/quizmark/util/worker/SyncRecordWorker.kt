@@ -32,6 +32,7 @@ class SyncRecordWorker(
                 totalQuestions = inputData.getInt("TOTAL", 0),
                 templateId = inputData.getInt("TEMPLATE_ID", 1),
                 localImagePath = inputData.getString("IMAGE_PATH") ?: "",
+                localOriginalImagePath = inputData.getString("ORIGINAL_IMAGE_PATH") ?: "",
                 timestamp = inputData.getLong("TIMESTAMP", System.currentTimeMillis())
             )
 

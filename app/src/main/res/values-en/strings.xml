@@ -451,4 +451,6 @@
     <string name="debug_dataset_clear_confirm">Delete</string>
     <string name="debug_dataset_cleared">Data deleted</string>
     <string name="debug_dataset_help">How to use: turn on the switch → scan template 1–5 sheets as usual → \"Export data\" → choose Google Drive and save to the quizmark-ml/data folder.</string>
+    <string name="original_scan_title">ORIGINAL SCAN</string>
+    <string name="original_scan_description">Your marks before grading highlights were added.</string>
 </resources>

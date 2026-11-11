@@ -14,5 +14,6 @@ data class HistoryRecord(
     val totalQuestions: Int = 0,
     val templateId: Int = 1,
     val localImagePath: String = "",
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val localOriginalImagePath: String = ""
 )

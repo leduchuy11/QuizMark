@@ -78,7 +78,8 @@ class Exam40Processor : ExamProcessor {
                 sbd = sbdResult,
                 examCode = codeResult,
                 answers = answers,
-                processedBitmap = debugBitmap
+                processedBitmap = debugBitmap,
+                originalBitmap = bitmap
             )
         } finally {
             colorMat.release()

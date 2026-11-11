@@ -67,7 +67,8 @@ class Exam20Processor : ExamProcessor {
                 sbd = sbdResult,
                 examCode = codeResult,
                 answers = answers,
-                processedBitmap = debugBitmap // Trả về ảnh có khoanh tròn
+                processedBitmap = debugBitmap, // Trả về ảnh có khoanh tròn
+                originalBitmap = bitmap
             )
         } finally {
             colorMat.release()

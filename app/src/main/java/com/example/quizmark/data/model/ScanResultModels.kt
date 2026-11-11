@@ -21,7 +21,8 @@ data class ScanResult(
     val sbd: String?,      // Số báo danh (null nếu lỗi)
     val examCode: String?, // Mã đề (null nếu lỗi)
     val answers: List<QuestionResult>,
-    val processedBitmap: android.graphics.Bitmap? = null // Giữ lại ảnh để debug hoặc hiển thị lên UI
+    val processedBitmap: android.graphics.Bitmap? = null, // Giữ lại ảnh để debug hoặc hiển thị lên UI
+    val originalBitmap: android.graphics.Bitmap? = null // Phiếu đã nắn thẳng, trước khi vẽ vòng màu
 )
 
 // Interface chung cho tất cả các loại phiếu

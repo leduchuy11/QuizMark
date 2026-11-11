@@ -22,6 +22,7 @@ import com.example.quizmark.util.scanner.Exam20Processor
 import com.example.quizmark.util.scanner.Exam40Processor
 import com.example.quizmark.util.scanner.Exam50Processor
 import com.example.quizmark.util.scanner.ExamThptProcessor
+import com.example.quizmark.util.OriginalScanStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -162,7 +163,8 @@ class BatchGradingViewModel @Inject constructor(
                         totalQuestions = totalQuestions,
                         processedImage = finalPaintedBitmap,
                         detailedQuestions = uiList,
-                        templateId = templateId
+                        templateId = templateId,
+                        originalImagePath = OriginalScanStore.save(context, scanResult.originalBitmap)
                     )
 
                     historyRepository.saveRecord(context, finalResult, rosterId, finalRosterName)

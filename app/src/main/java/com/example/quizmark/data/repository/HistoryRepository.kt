@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import com.example.quizmark.data.model.FinalGradingResult
 import com.example.quizmark.data.model.HistoryRecord
+import com.example.quizmark.util.OriginalScanStore
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -78,6 +79,7 @@ class HistoryRepositoryImpl @Inject constructor(
             totalQuestions = result.totalQuestions,
             templateId = result.templateId,
             localImagePath = file.absolutePath,
+            localOriginalImagePath = result.originalImagePath.orEmpty(),
             timestamp = System.currentTimeMillis()
         )
 
@@ -104,6 +106,7 @@ class HistoryRepositoryImpl @Inject constructor(
             .putInt("TOTAL", record.totalQuestions)
             .putInt("TEMPLATE_ID", record.templateId)
             .putString("IMAGE_PATH", record.localImagePath)
+            .putString("ORIGINAL_IMAGE_PATH", record.localOriginalImagePath)
             .putLong("TIMESTAMP", record.timestamp)
             .build()
 
@@ -164,6 +167,7 @@ class HistoryRepositoryImpl @Inject constructor(
 
             if (snapshot != null && snapshot.exists()) {
                 val record = snapshot.toObject(HistoryRecord::class.java)
+                record?.localOriginalImagePath?.let { OriginalScanStore.delete(context, it) }
                 record?.localImagePath?.let { path ->
                     if (path.isNotBlank()) {
                         val file = File(path)
