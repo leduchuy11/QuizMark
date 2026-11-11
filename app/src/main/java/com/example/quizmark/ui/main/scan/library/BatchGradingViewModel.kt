@@ -17,11 +17,8 @@ import com.example.quizmark.data.repository.ExamRepository
 import com.example.quizmark.data.repository.HistoryRepository
 import com.example.quizmark.ui.main.scan.camera.AnswerStatus
 import com.example.quizmark.ui.main.scan.camera.QuestionDetailUI
-import com.example.quizmark.util.scanner.Exam120Processor
-import com.example.quizmark.util.scanner.Exam20Processor
-import com.example.quizmark.util.scanner.Exam40Processor
-import com.example.quizmark.util.scanner.Exam50Processor
-import com.example.quizmark.util.scanner.ExamThptProcessor
+import com.example.quizmark.R
+import com.example.quizmark.util.scanner.ExamProcessorFactory
 import com.example.quizmark.util.OriginalScanStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -60,13 +57,9 @@ class BatchGradingViewModel @Inject constructor(
 
             // Khởi tạo Processor phù hợp với loại đề
             val isThpt = templateId == 1
-            val processor = when (templateId) {
-                1 -> ExamThptProcessor()
-                2 -> Exam20Processor()
-                3 -> Exam40Processor()
-                4 -> Exam50Processor()
-                5 -> Exam120Processor()
-                else -> Exam20Processor() // Fallback mặc định
+            val processor = ExamProcessorFactory.create(templateId) ?: run {
+                _batchState.value = BatchState.Finished(emptyList(), context.getString(R.string.scan_template_unsupported))
+                return@launch
             }
 
             var finalRosterName = "Ẩn danh"

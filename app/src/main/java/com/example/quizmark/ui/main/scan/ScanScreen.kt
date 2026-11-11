@@ -42,6 +42,7 @@ import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.ColorText2
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
+import com.example.quizmark.util.scanner.ExamProcessorFactory
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +53,7 @@ fun ScanScreen(
     onNavigateToGallery: (String, String?, Int) -> Unit
 ) {
     val context = LocalContext.current
+    val unsupportedTemplateMessage = stringResource(R.string.scan_template_unsupported)
     val scrollState = rememberScrollState()
 
     val examList by viewModel.examList.collectAsState()
@@ -287,8 +289,12 @@ fun ScanScreen(
                             toastMessage = context.getString(R.string.error_exam_not_selected)
                             toastType = ToastType.ERROR
                         } else {
-                            // Truyền thêm templateId của đề thi đang chọn
-                            onNavigateToCamera(selectedExam!!.id, selectedRoster?.id, selectedExam!!.templateId)
+                            if (ExamProcessorFactory.supports(selectedExam!!.templateId)) {
+                                onNavigateToCamera(selectedExam!!.id, selectedRoster?.id, selectedExam!!.templateId)
+                            } else {
+                                toastMessage = unsupportedTemplateMessage
+                                toastType = ToastType.ERROR
+                            }
                         }
                     },
                     modifier = Modifier
@@ -316,7 +322,13 @@ fun ScanScreen(
                             toastMessage = context.getString(R.string.error_exam_not_selected)
                             toastType = ToastType.ERROR
                         } else {
-                            onNavigateToGallery(selectedExam!!.id, selectedRoster?.id, selectedExam!!.templateId)                         }
+                            if (ExamProcessorFactory.supports(selectedExam!!.templateId)) {
+                                onNavigateToGallery(selectedExam!!.id, selectedRoster?.id, selectedExam!!.templateId)
+                            } else {
+                                toastMessage = unsupportedTemplateMessage
+                                toastType = ToastType.ERROR
+                            }
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()

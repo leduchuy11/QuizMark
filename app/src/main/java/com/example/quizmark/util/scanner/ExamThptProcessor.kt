@@ -9,7 +9,9 @@ import com.example.quizmark.data.model.ExamProcessor
 import com.example.quizmark.data.model.QuestionResult
 import org.opencv.imgproc.Imgproc
 
-class ExamThptProcessor : ExamProcessor {
+class ExamThptProcessor(
+    private val classifier: BubbleClassifier = ThresholdBubbleClassifier
+) : ExamProcessor {
 
     // 1. THÔNG TIN CÁ NHÂN
     private val roiSBD  = Rect(549, 84, 138, 253)
@@ -124,8 +126,10 @@ class ExamThptProcessor : ExamProcessor {
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
 
-                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
-                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), region, "c$c", "$r", isFilled)
+                val thresholdFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val cellRect = Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt())
+                val isFilled = classifier.isFilled(gray, cellRect, thresholdFilled)
+                dump?.save(gray, cellRect, region, "c$c", "$r", thresholdFilled)
                 if (isFilled) {
                     filledRow = r
                     fillCount++
@@ -182,8 +186,10 @@ class ExamThptProcessor : ExamProcessor {
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
 
-                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
-                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), "p1", "q${startQ + r}", options[c], isFilled)
+                val thresholdFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val cellRect = Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt())
+                val isFilled = classifier.isFilled(gray, cellRect, thresholdFilled)
+                dump?.save(gray, cellRect, "p1", "q${startQ + r}", options[c], thresholdFilled)
                 if (isFilled) { selectedAns = options[c]; fillCount++ }
 
                 val cx = (globalRect.x + c * cellW + cellW / 2.0).toFloat()
@@ -225,9 +231,11 @@ class ExamThptProcessor : ExamProcessor {
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
 
-                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val thresholdFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val cellRect = Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt())
+                val isFilled = classifier.isFilled(gray, cellRect, thresholdFilled)
                 // Tên file chỉ dùng ký tự ASCII: Đ -> T (true), S -> F (false)
-                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), "p2", "q${startQ + r}", if (c == 0) "T" else "F", isFilled)
+                dump?.save(gray, cellRect, "p2", "q${startQ + r}", if (c == 0) "T" else "F", thresholdFilled)
                 if (isFilled) { selectedAns = options[c]; fillCount++ }
 
                 val cx = (globalRect.x + c * cellW + cellW / 2.0).toFloat()
@@ -276,10 +284,12 @@ class ExamThptProcessor : ExamProcessor {
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
 
-                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val thresholdFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val cellRect = Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt())
+                val isFilled = classifier.isFilled(gray, cellRect, thresholdFilled)
                 // Hàng 0 là dấu "-", hàng 1 là dấu thập phân ".", các hàng sau là chữ số 0-9
                 val optionLabel = when (r) { 0 -> "neg"; 1 -> "dot"; else -> (r - 2).toString() }
-                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), "p3", "q${qIndex}c$c", optionLabel, isFilled)
+                dump?.save(gray, cellRect, "p3", "q${qIndex}c$c", optionLabel, thresholdFilled)
                 if (isFilled) {
                     filledChar = when (r) {
                         0 -> "-"

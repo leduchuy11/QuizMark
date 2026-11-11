@@ -9,7 +9,9 @@ import com.example.quizmark.data.model.ExamProcessor
 import com.example.quizmark.data.model.QuestionResult
 import org.opencv.imgproc.Imgproc
 
-class Exam20Processor : ExamProcessor {
+class Exam20Processor(
+    private val classifier: BubbleClassifier = ThresholdBubbleClassifier
+) : ExamProcessor {
 
     // Tọa độ cắt vùng (ROI) trên ảnh 800x1200
     private val roiSBD = Rect(186, 337, 201, 381)
@@ -106,8 +108,10 @@ class Exam20Processor : ExamProcessor {
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
 
-                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
-                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), region, "c$c", "$r", isFilled)
+                val thresholdFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val cellRect = Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt())
+                val isFilled = classifier.isFilled(gray, cellRect, thresholdFilled)
+                dump?.save(gray, cellRect, region, "c$c", "$r", thresholdFilled)
                 if (isFilled) {
                     filledRow = r
                     fillCount++
@@ -164,8 +168,10 @@ class Exam20Processor : ExamProcessor {
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
 
-                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
-                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), "ans", "q${startQ + r}", options[c], isFilled)
+                val thresholdFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val cellRect = Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt())
+                val isFilled = classifier.isFilled(gray, cellRect, thresholdFilled)
+                dump?.save(gray, cellRect, "ans", "q${startQ + r}", options[c], thresholdFilled)
                 if (isFilled) {
                     selectedAns = options[c]
                     fillCount++

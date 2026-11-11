@@ -36,6 +36,7 @@ import com.example.quizmark.R
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 import com.example.quizmark.util.scanner.BubbleDatasetDumper
+import com.example.quizmark.util.scanner.BubbleClassifierProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,6 +55,8 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
     val scope = rememberCoroutineScope()
 
     var enabled by remember { mutableStateOf(BubbleDatasetDumper.isEnabled()) }
+    var modelEnabled by remember { mutableStateOf(BubbleClassifierProvider.isEnabled()) }
+    val modelReady = BubbleClassifierProvider.isModelReady
     var sampleCount by remember { mutableStateOf<Int?>(null) }
     var isExporting by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
@@ -69,6 +72,35 @@ fun BubbleDatasetDebugSection(onMessage: (String, Boolean) -> Unit) {
 
     SectionTitle(title = stringResource(R.string.debug_dataset_section))
     SettingsGroup {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                Text(
+                    text = stringResource(R.string.debug_model_use),
+                    fontSize = 15.sp,
+                    color = ColorText,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = stringResource(if (modelReady) R.string.debug_model_help else R.string.debug_model_unavailable),
+                    fontSize = 13.sp,
+                    color = Color.Gray
+                )
+            }
+            Switch(
+                checked = modelEnabled && modelReady,
+                enabled = modelReady,
+                onCheckedChange = {
+                    modelEnabled = it
+                    BubbleClassifierProvider.setEnabled(it)
+                },
+                colors = SwitchDefaults.colors(checkedTrackColor = PrimaryDarkBlue)
+            )
+        }
+        HorizontalDivider(color = Color(0xFFF0F0F0), thickness = 1.dp)
+
         // Công tắc thu dữ liệu
         Row(
             modifier = Modifier

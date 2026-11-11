@@ -9,7 +9,9 @@ import com.example.quizmark.data.model.ExamProcessor
 import com.example.quizmark.data.model.QuestionResult
 import org.opencv.imgproc.Imgproc
 
-class Exam40Processor : ExamProcessor {
+class Exam40Processor(
+    private val classifier: BubbleClassifier = ThresholdBubbleClassifier
+) : ExamProcessor {
 
     private val roiSBD  = Rect(90, 337, 198 , 384)   // SBD: 6 cột
     private val roiCode = Rect(320, 337, 100, 384)   // Mã đề: 3 cột
@@ -118,8 +120,10 @@ class Exam40Processor : ExamProcessor {
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
 
-                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
-                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), region, "c$c", "$r", isFilled)
+                val thresholdFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val cellRect = Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt())
+                val isFilled = classifier.isFilled(gray, cellRect, thresholdFilled)
+                dump?.save(gray, cellRect, region, "c$c", "$r", thresholdFilled)
                 if (isFilled) {
                     filledRow = r
                     fillCount++
@@ -176,8 +180,10 @@ class Exam40Processor : ExamProcessor {
                 val maskedCell = Mat()
                 Core.bitwise_and(cell, mask, maskedCell)
 
-                val isFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
-                dump?.save(gray, Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt()), "ans", "q${startQ + r}", options[c], isFilled)
+                val thresholdFilled = Core.countNonZero(maskedCell) > circleArea * 0.50
+                val cellRect = Rect(globalRect.x + (c * cellW).toInt(), globalRect.y + (r * cellH).toInt(), cellW.toInt(), cellH.toInt())
+                val isFilled = classifier.isFilled(gray, cellRect, thresholdFilled)
+                dump?.save(gray, cellRect, "ans", "q${startQ + r}", options[c], thresholdFilled)
                 if (isFilled) {
                     selectedAns = options[c]
                     fillCount++

@@ -451,6 +451,10 @@
     <string name="debug_dataset_clear_confirm">Delete</string>
     <string name="debug_dataset_cleared">Data deleted</string>
     <string name="debug_dataset_help">How to use: turn on the switch → scan template 1–5 sheets as usual → \"Export data\" → choose Google Drive and save to the quizmark-ml/data folder.</string>
+    <string name="debug_model_use">Use offline AI for scanning</string>
+    <string name="debug_model_help">Practice model trained on generated images. Turn off to compare with the original scanner.</string>
+    <string name="debug_model_unavailable">Model unavailable. Scanning uses the original rule. Restart the app to try again.</string>
+    <string name="scan_template_unsupported">This sheet template is not supported. Please choose template 1–5.</string>
     <string name="original_scan_title">ORIGINAL SCAN</string>
     <string name="original_scan_description">Your marks before grading highlights were added.</string>
 </resources>

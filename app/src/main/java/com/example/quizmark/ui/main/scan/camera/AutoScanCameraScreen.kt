@@ -44,11 +44,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.ui.theme.DarkBlue
-import com.example.quizmark.util.scanner.Exam120Processor
-import com.example.quizmark.util.scanner.Exam20Processor
-import com.example.quizmark.util.scanner.Exam40Processor
-import com.example.quizmark.util.scanner.Exam50Processor
-import com.example.quizmark.util.scanner.ExamThptProcessor
+import com.example.quizmark.util.scanner.ExamProcessorFactory
 import com.example.quizmark.util.scanner.ScannerCore
 import java.util.concurrent.Executors
 
@@ -62,6 +58,17 @@ fun AutoScanCameraScreen(
     onNavigateToResult: () -> Unit // Callback để chuyển sang màn kết quả
 ) {
     val context = LocalContext.current
+    if (!ExamProcessorFactory.supports(templateId)) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(stringResource(R.string.scan_template_unsupported), textAlign = TextAlign.Center)
+            Button(onClick = onNavigateBack) { Text(stringResource(R.string.btn_back_text)) }
+        }
+        return
+    }
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -194,14 +201,7 @@ fun CameraPreviewContent(
                                     if (resultBitmap != null) {
                                         isScanning = false // Khóa máy quét lại
 
-                                        val processor = when (templateId) {
-                                            1 -> ExamThptProcessor()
-                                            2 -> Exam20Processor()
-                                            3 -> Exam40Processor()
-                                            4 -> Exam50Processor()
-                                            5 -> Exam120Processor()
-                                            else -> Exam20Processor()
-                                        }
+                                        val processor = checkNotNull(ExamProcessorFactory.create(templateId))
                                         val scanResult = processor.process(resultBitmap)
 
 //                                        scanResult.processedBitmap?.let { annotatedBitmap ->

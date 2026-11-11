@@ -450,6 +450,10 @@
     <string name="debug_dataset_cleared">Đã xoá dữ liệu</string>
     <string name="debug_dataset_help">Cách dùng: bật công tắc → quét phiếu mẫu 1–5 như bình thường → \"Xuất dữ liệu\" → chọn Google Drive, lưu vào thư mục quizmark-ml/data.</string>
 
+    <string name="debug_model_use">Dùng AI ngoại tuyến để quét</string>
+    <string name="debug_model_help">Model thử nghiệm được huấn luyện bằng ảnh tạo trên máy tính. Tắt để so sánh với cách quét cũ.</string>
+    <string name="debug_model_unavailable">Model không khả dụng. Đang dùng cách quét cũ. Khởi động lại ứng dụng để thử lại.</string>
+    <string name="scan_template_unsupported">Mẫu phiếu này chưa được hỗ trợ. Vui lòng chọn mẫu 1–5.</string>
     <string name="original_scan_title">ẢNH BAN ĐẦU</string>
     <string name="original_scan_description">Các ô bạn đã tô trước khi ứng dụng thêm vòng màu chấm bài.</string>
 </resources>

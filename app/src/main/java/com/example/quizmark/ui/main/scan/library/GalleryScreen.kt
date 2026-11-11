@@ -7,6 +7,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import com.example.quizmark.R
 import com.example.quizmark.ui.main.scan.camera.ExamDetailScreen
 import androidx.compose.ui.text.font.FontStyle
+import com.example.quizmark.util.scanner.ExamProcessorFactory
 
 @Composable
 fun GalleryScreen(
@@ -40,6 +42,17 @@ fun GalleryScreen(
     onBackClick: () -> Unit,
     onNavigateToScan: () -> Unit
 ) {
+    if (!ExamProcessorFactory.supports(templateId)) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(stringResource(R.string.scan_template_unsupported))
+            Button(onClick = onBackClick) { Text(stringResource(R.string.btn_back_text)) }
+        }
+        return
+    }
     val batchState by viewModel.batchState.collectAsState()
     var hasLaunchedPicker by remember { mutableStateOf(false) }
 
