@@ -35,7 +35,8 @@ fun BatchResultScreen(
     results: List<FinalGradingResult>,
     warningMessage: String?,
     onItemClick: (FinalGradingResult) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onOpenScoreList: (() -> Unit)? = null
 ) {
     Scaffold(
         containerColor = BackgroundScreen,
@@ -72,6 +73,32 @@ fun BatchResultScreen(
                     containerColor = BackgroundScreen
                 )
             )
+        },
+        bottomBar = {
+            if (onOpenScoreList != null && results.isNotEmpty()) {
+                Surface(
+                    color = Color.White,
+                    shadowElevation = 8.dp
+                ) {
+                    Button(
+                        onClick = onOpenScoreList,
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .height(50.dp)
+                    ) {
+                        Text(
+                            text = "Xử lý trùng SBD & Đẩy ảnh lên Google Drive",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     ) { paddingValues ->
         Column(

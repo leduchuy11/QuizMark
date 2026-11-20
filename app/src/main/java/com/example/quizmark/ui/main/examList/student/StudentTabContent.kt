@@ -27,7 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.quizmark.R
-import com.example.quizmark.data.model.RosterModel
+import com.example.quizmark.data.model.ClassroomModel
 import com.example.quizmark.data.model.StudentModel
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
@@ -36,7 +36,7 @@ import com.example.quizmark.util.unAccent
 
 @Composable
 fun StudentTabContent(
-    rosterList: List<RosterModel>,
+    classroomList: List<ClassroomModel>,
     allStudentsList: List<StudentModel>,
     onNavigateToEditStudent: (String) -> Unit,
     onNavigateToImportFile: () -> Unit
@@ -50,9 +50,9 @@ fun StudentTabContent(
     var isSearchFocused by remember { mutableStateOf(false) }
 
 
-    // 1. Tạo danh sách tùy chọn cho Dropdown Lọc
-    val filterOptions = remember(rosterList, filterAllText) {
-        listOf(filterAllText) + rosterList.map { it.name }
+    // 1. Tạo danh sách tùy chọn cho Dropdown Lọc theo Lớp học
+    val filterOptions = remember(classroomList, filterAllText) {
+        listOf(filterAllText) + classroomList.map { it.name }
     }
 
     if (selectedFilter !in filterOptions) {
@@ -60,13 +60,13 @@ fun StudentTabContent(
     }
 
     // 2. Logic xử lý dữ liệu học sinh
-    val displayedStudents = remember(selectedFilter, searchQuery, rosterList, allStudentsList, filterAllText) {
+    val displayedStudents = remember(selectedFilter, searchQuery, classroomList, allStudentsList, filterAllText) {
         val baseList = if (selectedFilter == filterAllText) {
             // NẾU LÀ "TẤT CẢ" -> LẤY LUÔN DANH SÁCH TỔNG TỪ FIREBASE
             allStudentsList
         } else {
-            // NẾU CHỌN LỚP CỤ THỂ -> CHỈ LẤY HỌC SINH TRONG LỚP ĐÓ
-            rosterList.find { it.name == selectedFilter }?.students ?: emptyList()
+            // NẾU CHỌN LỚP CỤ THỂ -> CHỈ LẤY HỌC SINH TRONG LỚP HỌC ĐÓ
+            classroomList.find { it.name == selectedFilter }?.students ?: emptyList()
         }
 
         if (searchQuery.isBlank()) {
@@ -301,7 +301,11 @@ fun StudentGlobalItemCard(student: StudentModel, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = stringResource(id = R.string.sbd_prefix, student.studentCode),
+                text = if (student.className.isNotBlank()) {
+                    stringResource(id = R.string.sbd_and_class_format, student.studentCode, student.className)
+                } else {
+                    stringResource(id = R.string.sbd_prefix, student.studentCode)
+                },
                 fontSize = 13.sp,
                 color = Color.Gray
             )

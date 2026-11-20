@@ -51,6 +51,8 @@ class GradingViewModel @Inject constructor(
     private var currentRosterId: String? = null
     private var isResultSaved = false
 
+    fun getCurrentRosterId(): String? = currentRosterId
+
     fun gradeExam(scanResult: ScanResult, examId: String, rosterId: String?, templateId: Int) {
         currentRosterId = rosterId
         isResultSaved = false

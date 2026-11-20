@@ -40,7 +40,8 @@ fun GalleryScreen(
     templateId: Int,
     viewModel: BatchGradingViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
-    onNavigateToScan: () -> Unit
+    onNavigateToScan: () -> Unit,
+    onNavigateToScoreList: ((String) -> Unit)? = null
 ) {
     if (!ExamProcessorFactory.supports(templateId)) {
         Column(
@@ -210,7 +211,10 @@ fun GalleryScreen(
                                     onBackClick = {
                                         selectedResult = null
                                     },
-                                    onSaveResult = { }
+                                    onSaveResult = { },
+                                    onOpenScoreListClick = onNavigateToScoreList?.let { navigate ->
+                                        { navigate(rosterId ?: "NONE") }
+                                    }
                                 )
                             }
                         }
@@ -222,7 +226,10 @@ fun GalleryScreen(
                         onItemClick = { clickedItem ->
                             selectedResult = clickedItem
                         },
-                        onBackClick = onBackClick
+                        onBackClick = onBackClick,
+                        onOpenScoreList = onNavigateToScoreList?.let { navigate ->
+                            { navigate(rosterId ?: "NONE") }
+                        }
                     )
                 }
             }

@@ -32,8 +32,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.data.model.ExamCodeModel
 import com.example.quizmark.data.model.ExamModel
+import com.example.quizmark.ui.main.exam.AnswerKeyScanSummaryDialog
+import com.example.quizmark.ui.main.exam.AnswerKeyScannerHost
 import com.example.quizmark.ui.main.exam.ExamViewModel
+import com.example.quizmark.util.AnswerKeyImportSummary
+import com.example.quizmark.util.AnswerKeyScanner
 import com.example.quizmark.util.ExamCodeUpdates
+import com.example.quizmark.util.scanner.ExamProcessorFactory
 import com.example.quizmark.ui.main.exam.addExam.CustomToastUI
 import com.example.quizmark.ui.main.exam.addExam.ExamCodeSetupCard
 import com.example.quizmark.ui.main.exam.addExam.ToastType
@@ -69,6 +74,9 @@ fun EditBasicAnswersScreen(
     var navigateAfterToast by remember { mutableStateOf(false) }
     var originalExam by remember(examId) { mutableStateOf<ExamModel?>(null) }
     var pendingUpdate by remember { mutableStateOf<ExamModel?>(null) }
+    var scanningCode by remember { mutableStateOf<String?>(null) }
+    var scanSummary by remember { mutableStateOf<AnswerKeyImportSummary?>(null) }
+    val canScanKey = ExamProcessorFactory.supports(templateId)
 
     // 1. Tải dữ liệu cũ khi vừa vào màn hình
     LaunchedEffect(examId) {
@@ -242,10 +250,45 @@ fun EditBasicAnswersScreen(
                             val updatedAnswers = answers.toMutableMap()
                             updatedAnswers[code] = newState
                             answers = updatedAnswers
-                        }
+                        },
+                        onScanClick = if (canScanKey) { { scanningCode = code } } else null
                     )
                 }
             }
+        }
+
+        AnswerKeyScannerHost(
+            templateId = templateId,
+            targetCode = scanningCode,
+            onDismiss = { scanningCode = null },
+            onScanCompleted = { code, scanResult ->
+                val imported = AnswerKeyScanner.extractBasic(scanResult, code, questionCount)
+                val updatedAnswers = answers.toMutableMap()
+                updatedAnswers[code] = imported.codeModel
+                answers = updatedAnswers
+                if (imported.summary.hasIssues) {
+                    scanSummary = imported.summary
+                } else {
+                    toastMessage = context.getString(
+                        R.string.scan_key_success_full,
+                        imported.summary.filledCount,
+                        imported.summary.totalCount,
+                        code
+                    )
+                    toastType = ToastType.SUCCESS
+                }
+            },
+            onError = { errMsg ->
+                toastMessage = errMsg
+                toastType = ToastType.ERROR
+            }
+        )
+
+        scanSummary?.let { summary ->
+            AnswerKeyScanSummaryDialog(
+                summary = summary,
+                onDismiss = { scanSummary = null }
+            )
         }
 
         pendingUpdate?.let { updated ->

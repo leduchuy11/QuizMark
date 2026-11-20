@@ -44,7 +44,7 @@ fun PreviewImportScreen(
     viewModel: ExamListViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val rosterList by viewModel.rosterList.collectAsState()
+    val classroomList by viewModel.classroomList.collectAsState()
 
     var parsedStudents by remember { mutableStateOf<List<StudentModel>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -135,19 +135,19 @@ fun PreviewImportScreen(
                 ) {
                     Button(
                         onClick = {
-                            val existingStudentsInTargetRoster = if (rosterId != null) {
-                                rosterList.find { it.id == rosterId }?.students ?: emptyList()
+                            val existingStudentsInTargetClass = if (rosterId != null) {
+                                classroomList.find { it.id == rosterId }?.students ?: emptyList()
                             } else emptyList()
 
                             val duplicateSBDs = parsedStudents.filter { newStudent ->
-                                existingStudentsInTargetRoster.any { it.studentCode == newStudent.studentCode }
+                                existingStudentsInTargetClass.any { it.studentCode == newStudent.studentCode }
                             }
 
                             if (duplicateSBDs.isNotEmpty()) {
                                 duplicateCount = duplicateSBDs.size
                                 showConfirmDialog = true
                             } else {
-                                viewModel.importStudents(parsedStudents, rosterId)
+                                viewModel.importStudentsToClassroom(parsedStudents, rosterId)
                                 onNavigateToExamList()
                             }
                         },
@@ -229,7 +229,7 @@ fun PreviewImportScreen(
                     TextButton(
                         onClick = {
                             showConfirmDialog = false
-                            viewModel.importStudents(parsedStudents, rosterId)
+                            viewModel.importStudentsToClassroom(parsedStudents, rosterId)
                             onNavigateToExamList()
                         }
                     ) {

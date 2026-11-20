@@ -36,11 +36,17 @@ import com.example.quizmark.R
 import com.example.quizmark.data.model.ThptExamCodeModel
 import com.example.quizmark.data.model.ThptExamConfig
 import com.example.quizmark.data.model.ThptExamModel
+import com.example.quizmark.ui.main.exam.AnswerKeyScanSummaryDialog
+import com.example.quizmark.ui.main.exam.AnswerKeyScannerHost
 import com.example.quizmark.ui.main.exam.ExamViewModel
+import com.example.quizmark.ui.main.exam.ScanAnswerKeyChipButton
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
+import com.example.quizmark.util.AnswerKeyImportSummary
+import com.example.quizmark.util.AnswerKeyScanner
+import com.example.quizmark.util.scanner.ExamProcessorFactory
 import kotlinx.coroutines.delay
 import java.util.UUID
 
@@ -67,6 +73,9 @@ fun InputThptAnswersScreen(
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.ERROR) }
     var navigateAfterToast by remember { mutableStateOf(false) }
+    var scanningCode by remember { mutableStateOf<String?>(null) }
+    var scanSummary by remember { mutableStateOf<AnswerKeyImportSummary?>(null) }
+    val canScanKey = ExamProcessorFactory.supports(templateId)
 
     // Xử lý kết quả trả về từ ViewModel
     LaunchedEffect(saveResult) {
@@ -160,7 +169,7 @@ fun InputThptAnswersScreen(
                                 name = examName,
                                 templateId = templateId,
                                 config = config,
-                                codes = answers.values.toList()
+                                codes = examCodes.map { answers.getValue(it) }
                             )
 
                             viewModel.saveThptExam(newExam)
@@ -203,10 +212,45 @@ fun InputThptAnswersScreen(
                             val updatedAnswers = answers.toMutableMap()
                             updatedAnswers[code] = newState
                             answers = updatedAnswers
-                        }
+                        },
+                        onScanClick = if (canScanKey) { { scanningCode = code } } else null
                     )
                 }
             }
+        }
+
+        AnswerKeyScannerHost(
+            templateId = templateId,
+            targetCode = scanningCode,
+            onDismiss = { scanningCode = null },
+            onScanCompleted = { code, scanResult ->
+                val imported = AnswerKeyScanner.extractThpt(scanResult, code, p1Q, p2Q, p3Q)
+                val updatedAnswers = answers.toMutableMap()
+                updatedAnswers[code] = imported.codeModel
+                answers = updatedAnswers
+                if (imported.summary.hasIssues) {
+                    scanSummary = imported.summary
+                } else {
+                    toastMessage = context.getString(
+                        R.string.scan_key_success_full,
+                        imported.summary.filledCount,
+                        imported.summary.totalCount,
+                        code
+                    )
+                    toastType = ToastType.SUCCESS
+                }
+            },
+            onError = { errMsg ->
+                toastMessage = errMsg
+                toastType = ToastType.ERROR
+            }
+        )
+
+        scanSummary?.let { summary ->
+            AnswerKeyScanSummaryDialog(
+                summary = summary,
+                onDismiss = { scanSummary = null }
+            )
         }
 
         AnimatedVisibility(
@@ -230,7 +274,8 @@ fun ThptExamCodeCard(
     p2Q: Int,
     p3Q: Int,
     currentState: ThptExamCodeModel,
-    onUpdateState: (ThptExamCodeModel) -> Unit
+    onUpdateState: (ThptExamCodeModel) -> Unit,
+    onScanClick: (() -> Unit)? = null
 ) {
     Column(
         modifier = Modifier
@@ -239,11 +284,13 @@ fun ThptExamCodeCard(
             .background(Color.White, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFFF8FAFC))
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = stringResource(id = R.string.exam_code_header, examCode),
@@ -251,6 +298,9 @@ fun ThptExamCodeCard(
                 fontSize = 16.sp,
                 color = PrimaryDarkBlue
             )
+            if (onScanClick != null) {
+                ScanAnswerKeyChipButton(onClick = onScanClick)
+            }
         }
         HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 

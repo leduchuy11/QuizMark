@@ -39,7 +39,7 @@
     <string name="tab_home">Home</string>
     <string name="tab_exam">Exams</string>
     <string name="tab_scan">Scan</string>
-    <string name="tab_exam_list">Exam List</string>
+    <string name="tab_exam_list">Manage</string>
     <string name="tab_account">Account</string>
 
     <!-- Account Screen -->
@@ -469,4 +469,67 @@
     <string name="edit_codes_need_answers">New exam codes or questions need complete answers. Choose Edit answers, fill them in, then save.</string>
     <string name="original_scan_title">ORIGINAL SCAN</string>
     <string name="original_scan_description">Your marks before grading highlights were added.</string>
+
+    <!-- Scan master answer key -->
+    <string name="btn_scan_answer_key">Scan key</string>
+    <string name="scan_key_sheet_title">Scan answer key — Code %1$s</string>
+    <string name="scan_key_sheet_subtitle">Fill answers on a standard sheet, then scan with the camera or pick a photo from your gallery to auto-fill.</string>
+    <string name="scan_key_camera_title">Scan key (Code %1$s)</string>
+    <string name="scan_key_camera_instruction">Align the master answer sheet in frame</string>
+    <string name="scan_key_camera_sub">Auto-captures once all 4 corner markers hold steady</string>
+    <string name="scan_key_processing">Reading answer key…</string>
+    <string name="scan_key_corners_not_found">Could not detect the 4 sheet corners in this image. Make sure all 4 corner markers are clearly visible.</string>
+    <string name="scan_key_read_failed">Could not read the answer key image. Please try again.</string>
+    <string name="scan_key_success_full">Auto-filled %1$d/%2$d answers for code %3$s</string>
+    <string name="scan_key_summary_title">Answer key scan result (Code %1$s)</string>
+    <string name="scan_key_summary_filled">Auto-filled: %1$d/%2$d items.</string>
+    <string name="scan_key_summary_code_mismatch">Note: The code bubbled on the sheet is %1$s, which differs from code %2$s.</string>
+    <string name="scan_key_summary_blank">Blank (%1$d): %2$s</string>
+    <string name="scan_key_summary_error">Double-marked / invalid (%1$d): %2$s</string>
+    <string name="scan_key_summary_check_hint">Please review and complete any red-bordered items before saving.</string>
+    <string name="btn_understood">Got it</string>
+    <string name="btn_open_settings">Open Settings</string>
+
+    <!-- Classroom management & multi-class exam roster picker -->
+    <string name="tab_classroom">Classes</string>
+    <string name="cd_add_classroom">Add class</string>
+    <string name="total_classroom_count">Total %1$d classes</string>
+    <string name="empty_classroom_list">No classes yet. Create a class first to manage students.</string>
+    <string name="add_classroom_title">Add Class</string>
+    <string name="edit_classroom_title">Edit Class</string>
+    <string name="detail_classroom_title">Class Details</string>
+    <string name="label_classroom_name">Class name</string>
+    <string name="label_belong_to_classroom">Class</string>
+    <string name="action_edit_classroom">Edit class info</string>
+    <string name="action_delete_classroom">Delete class</string>
+    <string name="action_import_students">Import students from Excel</string>
+    <string name="toast_create_classroom_success">Class created successfully</string>
+    <string name="toast_update_classroom_success">Class updated successfully</string>
+    <string name="dialog_delete_classroom_text">Are you sure you want to delete this class? Existing exam rosters will remain intact.</string>
+    <string name="dialog_remove_student_from_classroom_text">Are you sure you want to remove this student from the class?</string>
+    <string name="dialog_remove_student_from_roster_text">Remove this candidate from the exam roster? The student will remain in their home class.</string>
+    <string name="label_class_short">Class</string>
+    <string name="sbd_and_class_format">ID: %1$s  •  Class %2$s</string>
+    <string name="roster_source_classes">From: %1$s</string>
+    <string name="section_select_from_classes">Select candidates from classes</string>
+    <string name="select_from_classes_hint">Check a box to select/unselect an entire class, or tap a class to include/exclude individual students (exempt, barred, etc.).</string>
+    <string name="selected_students_summary">Selected: %1$d candidates (%2$d classes)</string>
+    <string name="class_selected_ratio">Selected %1$d/%2$d</string>
+    <string name="btn_pick_individual">Pick</string>
+    <string name="btn_select_all">Select all</string>
+    <string name="btn_deselect_all">Clear all</string>
+    <string name="btn_done">Done</string>
+    <string name="empty_classes_for_roster">No classes yet. Create classes in the Classes tab first, or create an empty exam list and add students later.</string>
+    <string name="warning_duplicate_sbd_title">Duplicate Student IDs detected</string>
+    <string name="warning_duplicate_sbd_desc">%1$d Student ID(s) are duplicated across selected candidates (%2$s). Scanning may match the wrong name. Continue saving?</string>
+    <string name="warning_duplicate_sbd_inline">Warning: Duplicate IDs (%1$s) among selected candidates.</string>
+    <string name="btn_continue_save">Save anyway</string>
+    <string name="error_roster_name_required">Please enter an exam list name!</string>
+    <string name="add_from_classes_subtitle">Pick additional candidates from classes (students already in this exam list are hidden).</string>
+    <string name="section_free_students">Unassigned students (%1$d)</string>
+    <string name="empty_available_students_to_add">All students from your classes are already in this exam list.</string>
+    <string name="detail_exam_roster_title">Exam List Details</string>
+    <string name="action_delete_exam_roster">Delete exam list</string>
+    <string name="dialog_delete_exam_roster_text">Are you sure you want to delete this exam list? Students in their home classes will not be deleted.</string>
+    <string name="error_duplicate_sbd_in_class">ID %1$s already exists in class %2$s!</string>
 </resources>

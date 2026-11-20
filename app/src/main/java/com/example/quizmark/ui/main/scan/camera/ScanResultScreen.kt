@@ -60,7 +60,8 @@ fun ScanResultScreen(
     onNextScanClick: () -> Unit,
     onBackClick: () -> Unit,
     onSaveResult: () -> Unit,
-    originalImagePath: String? = null
+    originalImagePath: String? = null,
+    onOpenScoreListClick: (() -> Unit)? = null
 ) {
 
     LaunchedEffect(Unit) {
@@ -132,6 +133,23 @@ fun ScanResultScreen(
 
             // 2. Card Thông tin thí sinh
             StudentInfoCard(studentName, sbd, score, correctCount, wrongCount, blankCount)
+
+            if (onOpenScoreListClick != null) {
+                Spacer(modifier = Modifier.height(14.dp))
+                OutlinedButton(
+                    onClick = onOpenScoreListClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
+                ) {
+                    Text(
+                        text = "Mở Danh sách điểm (Xử lý trùng SBD & Đẩy ảnh lên Drive)",
+                        color = DarkBlue,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 

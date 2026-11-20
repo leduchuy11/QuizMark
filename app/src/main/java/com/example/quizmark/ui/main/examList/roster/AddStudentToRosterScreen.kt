@@ -6,23 +6,20 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
+import com.example.quizmark.data.model.RosterModel
 import com.example.quizmark.data.model.StudentModel
 import com.example.quizmark.ui.main.exam.addExam.CustomToastUI
 import com.example.quizmark.ui.main.exam.addExam.ToastType
@@ -40,7 +38,8 @@ import com.example.quizmark.ui.main.examList.ExamListViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
-import com.example.quizmark.util.unAccent
+import com.example.quizmark.ui.theme.PrimaryDarkBlue
+import com.example.quizmark.util.ExamRosterSelector
 import kotlinx.coroutines.delay
 
 @Composable
@@ -52,25 +51,21 @@ fun AddStudentToRosterScreen(
     val context = LocalContext.current
 
     val currentRoster by viewModel.currentRoster.collectAsState()
+    val rosterList by viewModel.rosterList.collectAsState()
     val allStudents by viewModel.allStudentsList.collectAsState()
-    val allRosters by viewModel.rosterList.collectAsState()
+    val classroomList by viewModel.classroomList.collectAsState()
     val saveResult by viewModel.saveResult.collectAsState()
 
     var selectedStudentIds by remember { mutableStateOf<Set<String>>(emptySet()) }
-    var showConflictDialog by remember { mutableStateOf(false) }
-    var duplicateCount by remember { mutableStateOf(0) }
+    var pendingSaveRoster by remember { mutableStateOf<RosterModel?>(null) }
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.ERROR) }
-
-    // Biến trạng thái cho thanh tìm kiếm
-    var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(rosterId) {
         viewModel.loadRoster(rosterId)
     }
 
-    // Logic xử lý kết quả lưu
     LaunchedEffect(saveResult) {
         saveResult?.let { result ->
             if (result.isSuccess) {
@@ -94,248 +89,203 @@ fun AddStudentToRosterScreen(
         }
     }
 
-    if (currentRoster == null) {
+    val roster = remember(rosterList, currentRoster, rosterId) {
+        rosterList.find { it.id == rosterId } ?: currentRoster
+    }
+
+    if (roster == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = DarkBlue)
         }
         return
     }
 
-    // 1. Logic lọc học sinh "Tự do"
-    val freeStudents = remember(allStudents, allRosters) {
-        val studentIdsInAnyRoster = allRosters.flatMap { it.students }.map { it.id }.toSet()
-        allStudents.filter { it.id !in studentIdsInAnyRoster }
+    // Ẩn những thí sinh ĐÃ có mặt trong chính danh sách thi hiện tại
+    val existingIds = remember(roster) { roster.students.map { it.id }.toSet() }
+
+    // Học sinh chưa thuộc lớp học nào
+    val unassignedStudents = remember(allStudents, classroomList, existingIds) {
+        val idsInClassrooms = classroomList.flatMap { it.students }.map { it.id }.toSet()
+        allStudents.filter { it.id !in idsInClassrooms && it.id !in existingIds }
     }
 
-    // 2. Logic Tìm kiếm
-    val displayedStudents = remember(freeStudents, searchQuery) {
-        if (searchQuery.isBlank()) {
-            freeStudents
-        } else {
-            val queryRaw = searchQuery.trim().lowercase().unAccent()
-            freeStudents.filter { student ->
-                val nameRaw = student.name.lowercase().unAccent()
-                nameRaw.contains(queryRaw)
-            }
-        }
+    val selectionResult = remember(classroomList, unassignedStudents, selectedStudentIds, roster) {
+        ExamRosterSelector.buildSelection(
+            classrooms = classroomList,
+            selectedIds = selectedStudentIds,
+            extraStudents = unassignedStudents,
+            existingStudents = roster.students
+        )
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = BackgroundScreen,
             topBar = {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .shadow(elevation = 4.dp, spotColor = Color.LightGray, ambientColor = Color.Transparent)
                         .background(Color.White)
+                        .padding(vertical = 6.dp)
                 ) {
-                    // Toolbar
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp)
-                    ) {
-                        IconButton(onClick = onNavigateBack, modifier = Modifier.align(Alignment.CenterStart)) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = ColorText)
-                        }
-                        Text(
-                            text = stringResource(id = R.string.add_student_to_roster_title),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ColorText,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                    IconButton(onClick = onNavigateBack, modifier = Modifier.align(Alignment.CenterStart)) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = ColorText)
                     }
-
-                    // Thanh tìm kiếm
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .height(44.dp)
-                            .background(Color(0xFFF1F5F9), RoundedCornerShape(12.dp)),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Search,
-                                contentDescription = "Search",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            BasicTextField(
-                                value = searchQuery,
-                                onValueChange = { searchQuery = it },
-                                singleLine = true,
-                                textStyle = LocalTextStyle.current.copy(fontSize = 15.sp, color = ColorText),
-                                modifier = Modifier.weight(1f),
-                                decorationBox = { innerTextField ->
-                                    if (searchQuery.isEmpty()) {
-                                        Text(text = context.getString(R.string.text_search), color = Color.Gray, fontSize = 15.sp)
-                                    }
-                                    innerTextField()
-                                }
-                            )
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(
-                                    onClick = { searchQuery = "" },
-                                    modifier = Modifier.size(20.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Clear,
-                                        contentDescription = "Clear",
-                                        tint = Color.Gray,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    Text(
+                        text = stringResource(id = R.string.add_student_to_roster_title),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorText,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
             },
             bottomBar = {
-                if (freeStudents.isNotEmpty()) {
-                    Box(
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(elevation = 8.dp, spotColor = Color.LightGray, ambientColor = Color.Transparent)
+                        .background(Color.White)
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            if (selectionResult.students.isEmpty()) return@Button
+                            val combinedStudents = roster.students + selectionResult.students
+                            val combinedClassIds = (roster.sourceClassIds + selectionResult.sourceClassIds).distinct()
+                            val combinedClassNames = (roster.sourceClassNames + selectionResult.sourceClassNames).distinct()
+                            val updatedRoster = roster.copy(
+                                students = combinedStudents,
+                                sourceClassIds = combinedClassIds,
+                                sourceClassNames = combinedClassNames
+                            )
+                            if (selectionResult.duplicateSbds.isNotEmpty()) {
+                                pendingSaveRoster = updatedRoster
+                            } else {
+                                viewModel.saveRoster(updatedRoster)
+                            }
+                        },
+                        enabled = selectionResult.students.isNotEmpty(),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .shadow(elevation = 8.dp, spotColor = Color.LightGray, ambientColor = Color.Transparent)
-                            .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 16.dp)
+                            .height(54.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DarkBlue,
+                            disabledContainerColor = Color(0xFFCBD5E1)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Button(
-                            onClick = {
-                                if (selectedStudentIds.isEmpty()) return@Button
-
-                                val selectedStudents = freeStudents.filter { it.id in selectedStudentIds }
-
-                                // KIỂM TRA TRÙNG LẶP NỘI BỘ
-                                val hasInternalDuplicates = selectedStudents
-                                    .groupBy { it.studentCode }
-                                    .any { it.value.size > 1 }
-
-                                if (hasInternalDuplicates) {
-                                    toastMessage = context.getString(R.string.error_internal_duplicate_sbd)
-                                    toastType = ToastType.ERROR
-                                    return@Button
-                                }
-
-                                // Kiểm tra trùng SBD với học sinh ĐANG CÓ
-                                val existingSbdList = currentRoster!!.students.map { it.studentCode }
-                                val duplicates = selectedStudents.filter { it.studentCode in existingSbdList }
-
-                                if (duplicates.isNotEmpty()) {
-                                    duplicateCount = duplicates.size
-                                    showConflictDialog = true
-                                } else {
-                                    val updatedRoster = currentRoster!!.copy(
-                                        students = currentRoster!!.students + selectedStudents
-                                    )
-                                    viewModel.saveRoster(updatedRoster)
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(54.dp),
-                            enabled = selectedStudentIds.isNotEmpty(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = DarkBlue,
-                                disabledContainerColor = Color.LightGray
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text(
-                                text = stringResource(id = R.string.btn_add_selected_count, selectedStudentIds.size),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
+                        Text(
+                            text = stringResource(id = R.string.add_students_count, selectionResult.students.size),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     }
                 }
             }
         ) { paddingValues ->
-            if (freeStudents.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                    Text(text = stringResource(id = R.string.empty_free_students), color = Color.Gray, fontSize = 15.sp)
-                }
-            } else if (displayedStudents.isEmpty()) {
-                // Hiển thị khi tìm kiếm không ra kết quả
-                Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                    Text(text = context.getString(R.string.result_search), color = Color.Gray, fontSize = 15.sp)
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .background(Color.White)
-                ) {
-                    itemsIndexed(displayedStudents) { index, student ->
-                        val isSelected = student.id in selectedStudentIds
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 20.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.add_from_classes_subtitle),
+                    fontSize = 13.sp,
+                    color = Color.Gray,
+                    lineHeight = 18.sp
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
-                        SelectableStudentItem(
-                            student = student,
-                            isSelected = isSelected,
-                            onClick = {
-                                selectedStudentIds = if (isSelected) {
-                                    selectedStudentIds - student.id
-                                } else {
-                                    selectedStudentIds + student.id
+                ClassStudentPickerSection(
+                    classrooms = classroomList,
+                    selectedStudentIds = selectedStudentIds,
+                    onSelectionChange = { selectedStudentIds = it },
+                    excludedStudentIds = existingIds,
+                    duplicateSbds = selectionResult.duplicateSbds
+                )
+
+                if (unassignedStudents.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = stringResource(id = R.string.section_free_students, unassignedStudents.size),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorText
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        unassignedStudents.forEach { student ->
+                            UnassignedStudentCheckboxRow(
+                                student = student,
+                                isChecked = student.id in selectedStudentIds,
+                                onToggle = {
+                                    selectedStudentIds = ExamRosterSelector.toggleStudent(student.id, selectedStudentIds)
                                 }
-                            }
-                        )
-
-                        if (index < displayedStudents.size - 1) {
-                            HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                            )
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
 
-        // Dialog Xử lý ghi đè
-        if (showConflictDialog) {
+        pendingSaveRoster?.let { rosterToSave ->
             AlertDialog(
-                onDismissRequest = { showConflictDialog = false },
+                onDismissRequest = { pendingSaveRoster = null },
                 containerColor = Color.White,
-                shape = RoundedCornerShape(12.dp),
-                title = { Text(text = stringResource(id = R.string.dialog_conflict_sbd_title), fontWeight = FontWeight.Bold, color = ColorText) },
-                text = { Text(text = stringResource(id = R.string.dialog_conflict_sbd_message, duplicateCount), color = Color.Gray) },
+                title = {
+                    Text(
+                        text = stringResource(id = R.string.warning_duplicate_sbd_title),
+                        fontWeight = FontWeight.Bold,
+                        color = ColorText
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(
+                            id = R.string.warning_duplicate_sbd_desc,
+                            selectionResult.duplicateSbds.size,
+                            selectionResult.duplicateSbds.keys.take(6).joinToString(", ")
+                        ),
+                        color = Color.Gray
+                    )
+                },
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            showConflictDialog = false
-                            val selectedStudents = freeStudents.filter { it.id in selectedStudentIds }
-
-                            val updatedStudents = currentRoster!!.students.toMutableList()
-                            selectedStudents.forEach { newStudent ->
-                                val existingIndex = updatedStudents.indexOfFirst { it.studentCode == newStudent.studentCode }
-                                if (existingIndex != -1) {
-                                    updatedStudents[existingIndex] = newStudent
-                                } else {
-                                    updatedStudents.add(newStudent)
-                                }
-                            }
-                            viewModel.saveRoster(currentRoster!!.copy(students = updatedStudents))
+                            pendingSaveRoster = null
+                            viewModel.saveRoster(rosterToSave)
                         }
                     ) {
-                        Text(text = stringResource(id = R.string.btn_overwrite), color = DarkBlue, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = stringResource(id = R.string.btn_continue_save),
+                            color = DarkBlue,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showConflictDialog = false }) {
-                        Text(stringResource(id = R.string.btn_cancel), color = Color.Gray, fontWeight = FontWeight.Bold)
+                    TextButton(onClick = { pendingSaveRoster = null }) {
+                        Text(
+                            text = stringResource(id = R.string.btn_cancel),
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             )
         }
 
-        // Animated Custom Toast
         AnimatedVisibility(
             visible = toastMessage != null,
             enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
@@ -351,57 +301,58 @@ fun AddStudentToRosterScreen(
 }
 
 @Composable
-fun SelectableStudentItem(
+private fun UnassignedStudentCheckboxRow(
     student: StudentModel,
-    isSelected: Boolean,
-    onClick: () -> Unit
+    isChecked: Boolean,
+    onToggle: () -> Unit
 ) {
-    val words = student.name.trim().split("\\s+".toRegex())
-    val initials = if (words.isNotEmpty() && words[0].isNotEmpty()) {
-        if (words.size == 1) {
-            words.first().take(1).uppercase()
-        } else {
-            words.first().take(1).uppercase() + words.last().take(1).uppercase()
+    val initials = remember(student.name) {
+        val words = student.name.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }
+        when {
+            words.isEmpty() -> ""
+            words.size == 1 -> words.first().take(1).uppercase()
+            else -> "${words.first().take(1)}${words.last().take(1)}".uppercase()
         }
-    } else ""
+    }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .clip(RoundedCornerShape(12.dp))
+            .border(
+                1.dp,
+                if (isChecked) Color(0xFF93C5FD) else Color(0xFFE2E8F0),
+                RoundedCornerShape(12.dp)
+            )
+            .background(if (isChecked) Color(0xFFF0F9FF) else Color.White)
+            .clickable { onToggle() }
+            .padding(horizontal = 10.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Checkbox(
+            checked = isChecked,
+            onCheckedChange = { onToggle() },
+            colors = CheckboxDefaults.colors(
+                checkedColor = PrimaryDarkBlue,
+                uncheckedColor = Color(0xFF94A3B8)
+            )
+        )
+        Spacer(modifier = Modifier.width(6.dp))
         Box(
             modifier = Modifier
-                .size(44.dp)
-                .background(Color(0xFFF3F7FC), CircleShape),
+                .size(36.dp)
+                .background(Color(0xFFE6F0FD), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = initials, color = DarkBlue, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(text = initials, color = DarkBlue, fontWeight = FontWeight.Bold, fontSize = 13.sp)
         }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
+        Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = student.name, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = ColorText)
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(text = student.studentCode, fontSize = 13.sp, color = Color(0xFF94A3B8))
-        }
-
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = "Selected",
-                tint = DarkBlue,
-                modifier = Modifier.size(24.dp)
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Outlined.RadioButtonUnchecked,
-                contentDescription = "Unselected",
-                tint = Color(0xFFCBD5E1),
-                modifier = Modifier.size(24.dp)
+            Text(text = student.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = ColorText)
+            Text(
+                text = stringResource(id = R.string.sbd_prefix, student.studentCode),
+                fontSize = 12.sp,
+                color = Color.Gray
             )
         }
     }

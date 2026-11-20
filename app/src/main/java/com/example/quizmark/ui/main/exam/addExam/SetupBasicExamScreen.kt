@@ -35,12 +35,18 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.data.model.ExamCodeModel
+import com.example.quizmark.ui.main.exam.AnswerKeyScanSummaryDialog
+import com.example.quizmark.ui.main.exam.AnswerKeyScannerHost
 import com.example.quizmark.ui.main.exam.ExamViewModel
+import com.example.quizmark.ui.main.exam.ScanAnswerKeyChipButton
 import com.example.quizmark.ui.main.exam.templateDownload.getTemplateDetailById
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
+import com.example.quizmark.util.AnswerKeyImportSummary
+import com.example.quizmark.util.AnswerKeyScanner
+import com.example.quizmark.util.scanner.ExamProcessorFactory
 import kotlinx.coroutines.delay
 
 @Composable
@@ -66,6 +72,9 @@ fun SetupBasicExamScreen(
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.SUCCESS) }
     var navigateAfterToast by remember { mutableStateOf(false) }
+    var scanningCode by remember { mutableStateOf<String?>(null) }
+    var scanSummary by remember { mutableStateOf<AnswerKeyImportSummary?>(null) }
+    val canScanKey = ExamProcessorFactory.supports(templateId)
 
     LaunchedEffect(saveResult) {
         saveResult?.let { result ->
@@ -169,7 +178,7 @@ fun SetupBasicExamScreen(
                                 name = examName,
                                 templateId = templateId,
                                 questionCount = questionCount,
-                                codes = answers.values.toList() // Chuyển map answers thành danh sách mã đề
+                                codes = examCodes.map { answers.getValue(it) }
                             )
 
                             // 3. Đẩy sang ViewModel để lưu nền
@@ -237,10 +246,45 @@ fun SetupBasicExamScreen(
                             val updatedAnswers = answers.toMutableMap()
                             updatedAnswers[code] = newState
                             answers = updatedAnswers
-                        }
+                        },
+                        onScanClick = if (canScanKey) { { scanningCode = code } } else null
                     )
                 }
             }
+        }
+
+        AnswerKeyScannerHost(
+            templateId = templateId,
+            targetCode = scanningCode,
+            onDismiss = { scanningCode = null },
+            onScanCompleted = { code, scanResult ->
+                val imported = AnswerKeyScanner.extractBasic(scanResult, code, questionCount)
+                val updatedAnswers = answers.toMutableMap()
+                updatedAnswers[code] = imported.codeModel
+                answers = updatedAnswers
+                if (imported.summary.hasIssues) {
+                    scanSummary = imported.summary
+                } else {
+                    toastMessage = context.getString(
+                        R.string.scan_key_success_full,
+                        imported.summary.filledCount,
+                        imported.summary.totalCount,
+                        code
+                    )
+                    toastType = ToastType.SUCCESS
+                }
+            },
+            onError = { errMsg ->
+                toastMessage = errMsg
+                toastType = ToastType.ERROR
+            }
+        )
+
+        scanSummary?.let { summary ->
+            AnswerKeyScanSummaryDialog(
+                summary = summary,
+                onDismiss = { scanSummary = null }
+            )
         }
 
         AnimatedVisibility(
@@ -264,7 +308,8 @@ fun ExamCodeSetupCard(
     examCode: String,
     questionCount: Int,
     currentState: ExamCodeModel, // Truyền hẳn Data Model
-    onUpdateState: (ExamCodeModel) -> Unit
+    onUpdateState: (ExamCodeModel) -> Unit,
+    onScanClick: (() -> Unit)? = null
 ) {
     Column(
         modifier = Modifier
@@ -273,11 +318,13 @@ fun ExamCodeSetupCard(
             .background(Color.White, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFFF8FAFC))
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = stringResource(id = R.string.exam_code_header, examCode),
@@ -285,6 +332,9 @@ fun ExamCodeSetupCard(
                 fontSize = 16.sp,
                 color = PrimaryDarkBlue
             )
+            if (onScanClick != null) {
+                ScanAnswerKeyChipButton(onClick = onScanClick)
+            }
         }
 
         HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)

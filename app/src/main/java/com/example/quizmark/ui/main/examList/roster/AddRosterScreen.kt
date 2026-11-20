@@ -35,6 +35,7 @@ import com.example.quizmark.ui.main.examList.ExamListViewModel
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.DarkBlue
+import com.example.quizmark.util.ExamRosterSelector
 import kotlinx.coroutines.delay
 import java.util.UUID
 
@@ -54,6 +55,14 @@ fun AddRosterScreen(
 
     val isLoading by viewModel.isLoading.collectAsState()
     val saveResult by viewModel.saveResult.collectAsState()
+    val classroomList by viewModel.classroomList.collectAsState()
+
+    var selectedStudentIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var pendingSaveRoster by remember { mutableStateOf<RosterModel?>(null) }
+
+    val selectionResult = remember(classroomList, selectedStudentIds) {
+        ExamRosterSelector.buildSelection(classroomList, selectedStudentIds)
+    }
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var toastType by remember { mutableStateOf(ToastType.ERROR) }
@@ -123,21 +132,33 @@ fun AddRosterScreen(
                         onClick = {
                             if (isLoading) return@Button
 
-                            if (rosterName.isBlank() || grade.isBlank() || subject.isBlank() || schoolYear.isBlank()) {
-                                toastMessage = context.getString(R.string.error_fill_all_blanks)
+                            if (rosterName.isBlank()) {
+                                toastMessage = context.getString(R.string.error_roster_name_required)
                                 toastType = ToastType.ERROR
                                 return@Button
                             }
 
+                            val firstClass = classroomList.firstOrNull { it.id in selectionResult.sourceClassIds }
+                            val finalGrade = grade.trim().ifBlank { firstClass?.grade.orEmpty() }
+                            val finalSubject = subject.trim().ifBlank { firstClass?.subject.orEmpty() }
+                            val finalYear = schoolYear.trim().ifBlank { firstClass?.schoolYear.orEmpty() }
+
                             val newRoster = RosterModel(
                                 id = UUID.randomUUID().toString(),
                                 name = rosterName.trim(),
-                                grade = grade.trim(),
-                                subject = subject.trim(),
-                                schoolYear = schoolYear.trim(),
-                                students = emptyList()
+                                grade = finalGrade,
+                                subject = finalSubject,
+                                schoolYear = finalYear,
+                                students = selectionResult.students,
+                                sourceClassIds = selectionResult.sourceClassIds,
+                                sourceClassNames = selectionResult.sourceClassNames
                             )
-                            viewModel.saveRoster(newRoster)
+
+                            if (selectionResult.duplicateSbds.isNotEmpty()) {
+                                pendingSaveRoster = newRoster
+                            } else {
+                                viewModel.saveRoster(newRoster)
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -148,8 +169,13 @@ fun AddRosterScreen(
                         if (isLoading) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                         } else {
+                            val btnText = if (selectionResult.students.isNotEmpty()) {
+                                "${stringResource(id = R.string.btn_add)} (${selectionResult.students.size})"
+                            } else {
+                                stringResource(id = R.string.btn_add)
+                            }
                             Text(
-                                text = stringResource(id = R.string.btn_add),
+                                text = btnText,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -193,8 +219,66 @@ fun AddRosterScreen(
                     onValueChange = { schoolYear = it }
                 )
 
+                Spacer(modifier = Modifier.height(20.dp))
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                Spacer(modifier = Modifier.height(20.dp))
+
+                ClassStudentPickerSection(
+                    classrooms = classroomList,
+                    selectedStudentIds = selectedStudentIds,
+                    onSelectionChange = { selectedStudentIds = it },
+                    duplicateSbds = selectionResult.duplicateSbds
+                )
+
                 Spacer(modifier = Modifier.height(40.dp))
             }
+        }
+
+        pendingSaveRoster?.let { rosterToSave ->
+            AlertDialog(
+                onDismissRequest = { pendingSaveRoster = null },
+                containerColor = Color.White,
+                title = {
+                    Text(
+                        text = stringResource(id = R.string.warning_duplicate_sbd_title),
+                        fontWeight = FontWeight.Bold,
+                        color = ColorText
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(
+                            id = R.string.warning_duplicate_sbd_desc,
+                            selectionResult.duplicateSbds.size,
+                            selectionResult.duplicateSbds.keys.take(6).joinToString(", ")
+                        ),
+                        color = Color.Gray
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            pendingSaveRoster = null
+                            viewModel.saveRoster(rosterToSave)
+                        }
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.btn_continue_save),
+                            color = DarkBlue,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingSaveRoster = null }) {
+                        Text(
+                            text = stringResource(id = R.string.btn_cancel),
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            )
         }
 
         AnimatedVisibility(

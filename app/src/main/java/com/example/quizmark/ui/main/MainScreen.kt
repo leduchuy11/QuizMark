@@ -49,6 +49,9 @@ import com.example.quizmark.ui.main.exam.editExam.EditThptAnswersScreen
 import com.example.quizmark.ui.main.exam.editExam.EditThptExamScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateDetailScreen
 import com.example.quizmark.ui.main.exam.templateDownload.TemplateListScreen
+import com.example.quizmark.ui.main.examList.classroom.AddClassroomScreen
+import com.example.quizmark.ui.main.examList.classroom.ClassroomDetailScreen
+import com.example.quizmark.ui.main.examList.classroom.EditClassroomScreen
 import com.example.quizmark.ui.main.examList.roster.AddRosterScreen
 import com.example.quizmark.ui.main.examList.ExamListScreen
 import com.example.quizmark.ui.main.examList.roster.AddStudentToRosterScreen
@@ -151,7 +154,10 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
                 ) {
                     com.example.quizmark.ui.main.home.statistics.ScoreListScreen(
-                        onBackClick = { bottomNavController.popBackStack() }
+                        onBackClick = { bottomNavController.popBackStack() },
+                        onNavigateToDetail = { recordId ->
+                            bottomNavController.navigate("history_detail/$recordId")
+                        }
                     )
                 }
                 composable(
@@ -218,6 +224,10 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 composable(BottomNavItem.ExamList.route) {
                     BackHandler { activity?.finish() }
                     ExamListScreen(
+                        onNavigateToAddClassroom = { bottomNavController.navigate("add_classroom") },
+                        onNavigateToClassroomDetail = { classId ->
+                            bottomNavController.navigate("classroom_detail/$classId")
+                        },
                         onNavigateToAddRoster = { bottomNavController.navigate("add_roster") },
                         onNavigateToAddStudent = { bottomNavController.navigate("add_student") },
                         onNavigateToRosterDetail = { rosterId ->
@@ -575,6 +585,51 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 }
 
                 composable(
+                    route = "add_classroom",
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) {
+                    AddClassroomScreen(
+                        onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = "classroom_detail/{classId}",
+                    arguments = listOf(navArgument("classId") { type = NavType.StringType }),
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val classId = backStackEntry.arguments?.getString("classId") ?: ""
+                    ClassroomDetailScreen(
+                        classId = classId,
+                        onNavigateBack = { bottomNavController.popBackStack() },
+                        onNavigateToAddStudent = { id ->
+                            bottomNavController.navigate("add_student?classId=$id")
+                        },
+                        onNavigateToImportStudent = { id ->
+                            bottomNavController.navigate("import_student?classId=$id")
+                        },
+                        onNavigateToEditClassroom = { id ->
+                            bottomNavController.navigate("edit_classroom/$id")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "edit_classroom/{classId}",
+                    arguments = listOf(navArgument("classId") { type = NavType.StringType }),
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+                ) { backStackEntry ->
+                    val classId = backStackEntry.arguments?.getString("classId") ?: ""
+                    EditClassroomScreen(
+                        classId = classId,
+                        onNavigateBack = { bottomNavController.popBackStack() }
+                    )
+                }
+
+                composable(
                     route = "add_roster",
                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, androidx.compose.animation.core.tween(300)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, androidx.compose.animation.core.tween(300)) }
@@ -618,11 +673,20 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 }
 
                 composable(
-                    route = "add_student",
+                    route = "add_student?classId={classId}",
+                    arguments = listOf(
+                        navArgument("classId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        }
+                    ),
                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
-                ) {
+                ) { backStackEntry ->
+                    val preselectedClassId = backStackEntry.arguments?.getString("classId")
                     AddStudentScreen(
+                        preselectedClassId = preselectedClassId,
                         onNavigateBack = { bottomNavController.popBackStack() }
                     )
                 }
@@ -642,16 +706,25 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
 
                 // Khai báo màn hình Nhập File
                 composable(
-                    route = "import_student",
+                    route = "import_student?classId={classId}",
+                    arguments = listOf(
+                        navArgument("classId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        }
+                    ),
                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
-                ) {
+                ) { backStackEntry ->
+                    val preselectedClassId = backStackEntry.arguments?.getString("classId")
                     ImportStudentScreen(
+                        preselectedClassId = preselectedClassId,
                         onNavigateBack = { bottomNavController.popBackStack() },
-                        onFileSelected = { uri, rosterId ->
+                        onFileSelected = { uri, classId ->
                             val encodedUri = java.net.URLEncoder.encode(uri.toString(), "UTF-8")
-                            val rId = rosterId ?: "none"
-                            bottomNavController.navigate("preview_import/$encodedUri/$rId")
+                            val cId = classId ?: "none"
+                            bottomNavController.navigate("preview_import/$encodedUri/$cId")
                         }
                     )
                 }
@@ -672,7 +745,9 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         rosterId = rosterId,
                         onNavigateBack = { bottomNavController.popBackStack() },
                         onNavigateToExamList = {
-                            bottomNavController.popBackStack(BottomNavItem.ExamList.route, inclusive = false)
+                            if (!bottomNavController.popBackStack("import_student?classId={classId}", inclusive = true)) {
+                                bottomNavController.popBackStack(BottomNavItem.ExamList.route, inclusive = false)
+                            }
                         }
                     )
                 }
@@ -748,6 +823,11 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                             },
                             onSaveResult = {
                                 sharedGradingViewModel.saveCurrentResult()
+                            },
+                            onOpenScoreListClick = {
+                                val targetRosterId = sharedGradingViewModel.getCurrentRosterId() ?: "NONE"
+                                sharedGradingViewModel.resetState()
+                                bottomNavController.navigate("score_list_screen/$targetRosterId")
                             }
                         )
                     } else {
@@ -807,6 +887,9 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                                     inclusive = false
                                 }
                             }
+                        },
+                        onNavigateToScoreList = { targetRosterId ->
+                            bottomNavController.navigate("score_list_screen/$targetRosterId")
                         }
                     )
                 }

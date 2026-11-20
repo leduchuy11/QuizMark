@@ -54,6 +54,7 @@ fun RosterDetailScreen(
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    val rosterList by viewModel.rosterList.collectAsState()
     val currentRoster by viewModel.currentRoster.collectAsState()
     val saveResult by viewModel.saveResult.collectAsState()
 
@@ -85,7 +86,9 @@ fun RosterDetailScreen(
         }
     }
 
-    val roster = currentRoster ?: com.example.quizmark.data.model.RosterModel(name = "")
+    val roster = remember(rosterList, currentRoster, rosterId) {
+        rosterList.find { it.id == rosterId } ?: currentRoster ?: com.example.quizmark.data.model.RosterModel(id = rosterId, name = "")
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -119,34 +122,51 @@ fun RosterDetailScreen(
                     }
 
                     Text(
-                        text = stringResource(id = R.string.detail_roster_title),
+                        text = stringResource(id = R.string.detail_exam_roster_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                 }
 
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(26.dp))
 
                 Text(
                     text = roster.name,
-                    fontSize = 42.sp,
+                    fontSize = 34.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(
-                        id = R.string.grade_subject_year_format,
-                        roster.grade,
-                        roster.subject,
-                        roster.schoolYear
-                    ),
-                    fontSize = 14.sp,
-                    color = Color(0xFF94A3B8)
-                )
+                val metaText = listOf(roster.grade, roster.subject, roster.schoolYear)
+                    .filter { it.isNotBlank() }
+                    .joinToString(" • ")
+                if (metaText.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = metaText,
+                        fontSize = 14.sp,
+                        color = Color(0xFF94A3B8)
+                    )
+                }
+                if (roster.sourceClassNames.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0x33FFFFFF), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(
+                                id = R.string.roster_source_classes,
+                                roster.sourceClassNames.joinToString(", ")
+                            ),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                    }
+                }
             }
 
             // --- PHẦN 2: NỘI DUNG ---
@@ -190,9 +210,16 @@ fun RosterDetailScreen(
                             roster.students.forEachIndexed { index, student ->
                                 StudentItemRow(
                                     student = student,
+                                    removeConfirmText = stringResource(id = R.string.dialog_remove_student_from_roster_text),
                                     onRemoveConfirm = {
                                         val updatedStudents = roster.students.filter { it.id != student.id }
-                                        val updatedRoster = roster.copy(students = updatedStudents)
+                                        val updatedClassIds = updatedStudents.mapNotNull { it.classId.ifBlank { null } }.distinct()
+                                        val updatedClassNames = updatedStudents.mapNotNull { it.className.ifBlank { null } }.distinct()
+                                        val updatedRoster = roster.copy(
+                                            students = updatedStudents,
+                                            sourceClassIds = updatedClassIds,
+                                            sourceClassNames = updatedClassNames
+                                        )
                                         viewModel.saveRoster(updatedRoster)
                                     }
                                 )
@@ -255,7 +282,7 @@ fun RosterDetailScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = stringResource(id = R.string.action_delete_roster),
+                            text = stringResource(id = R.string.action_delete_exam_roster),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFDC2626)
@@ -276,13 +303,13 @@ fun RosterDetailScreen(
             toastMessage?.let { CustomToastUI(message = it, type = toastType) }
         }
 
-        // Dialog Xóa lớp
+        // Dialog Xóa danh sách thi
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
                 containerColor = Color.White,
-                title = { Text(text = stringResource(id = R.string.action_delete_roster), fontWeight = FontWeight.Bold, color = ColorText) },
-                text = { Text(text = stringResource(id = R.string.dialog_delete_roster_text), color = Color.Gray) },
+                title = { Text(text = stringResource(id = R.string.action_delete_exam_roster), fontWeight = FontWeight.Bold, color = ColorText) },
+                text = { Text(text = stringResource(id = R.string.dialog_delete_exam_roster_text), color = Color.Gray) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -309,7 +336,11 @@ fun RosterDetailScreen(
 }
 
 @Composable
-fun StudentItemRow(student: StudentModel, onRemoveConfirm: () -> Unit) {
+fun StudentItemRow(
+    student: StudentModel,
+    removeConfirmText: String? = null,
+    onRemoveConfirm: () -> Unit
+) {
     var showDeleteStudentDialog by remember { mutableStateOf(false) }
     var showDetailDialog by remember { mutableStateOf(false) }
 
@@ -346,7 +377,15 @@ fun StudentItemRow(student: StudentModel, onRemoveConfirm: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = student.name, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = ColorText)
             Spacer(modifier = Modifier.height(2.dp))
-            Text(text = stringResource(id = R.string.sbd_prefix, student.studentCode), fontSize = 13.sp, color = Color.Gray)
+            Text(
+                text = if (student.className.isNotBlank()) {
+                    stringResource(id = R.string.sbd_and_class_format, student.studentCode, student.className)
+                } else {
+                    stringResource(id = R.string.sbd_prefix, student.studentCode)
+                },
+                fontSize = 13.sp,
+                color = Color.Gray
+            )
         }
 
         Box(
@@ -377,6 +416,9 @@ fun StudentItemRow(student: StudentModel, onRemoveConfirm: () -> Unit) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     DetailTextRow(label = stringResource(id = R.string.label_fullname), value = student.name)
                     DetailTextRow(label = stringResource(id = R.string.label_sbd), value = student.studentCode)
+                    if (student.className.isNotBlank()) {
+                        DetailTextRow(label = stringResource(id = R.string.label_class_short), value = student.className)
+                    }
                     DetailTextRow(label = stringResource(id = R.string.label_dob), value = student.dob)
                     DetailTextRow(label = stringResource(id = R.string.label_gender), value = student.gender)
                 }
@@ -394,7 +436,7 @@ fun StudentItemRow(student: StudentModel, onRemoveConfirm: () -> Unit) {
             onDismissRequest = { showDeleteStudentDialog = false },
             containerColor = Color.White,
             title = { Text(text = stringResource(id = R.string.action_delete_student), fontWeight = FontWeight.Bold, color = ColorText) },
-            text = { Text(text = stringResource(id = R.string.dialog_delete_student_text), color = Color.Gray) },
+            text = { Text(text = removeConfirmText ?: stringResource(id = R.string.dialog_delete_student_text), color = Color.Gray) },
             confirmButton = {
                 TextButton(
                     onClick = {

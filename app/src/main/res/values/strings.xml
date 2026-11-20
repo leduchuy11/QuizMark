@@ -37,7 +37,7 @@
     <string name="tab_home">Trang chủ</string>
     <string name="tab_exam">Đề</string>
     <string name="tab_scan">Quét</string>
-    <string name="tab_exam_list">D.sách thi</string>
+    <string name="tab_exam_list">Quản lí</string>
     <string name="tab_account">Tài khoản</string>
 
     <!-- Màn hình Tài khoản -->
@@ -468,4 +468,67 @@
     <string name="edit_codes_need_answers">Mã đề mới hoặc câu hỏi mới chưa có đủ đáp án. Hãy chọn Sửa đáp án, nhập đầy đủ rồi lưu.</string>
     <string name="original_scan_title">ẢNH BAN ĐẦU</string>
     <string name="original_scan_description">Các ô bạn đã tô trước khi ứng dụng thêm vòng màu chấm bài.</string>
+
+    <!-- Quét phiếu làm đáp án -->
+    <string name="btn_scan_answer_key">Quét đáp án</string>
+    <string name="scan_key_sheet_title">Quét phiếu đáp án — Mã %1$s</string>
+    <string name="scan_key_sheet_subtitle">Tô sẵn đáp án trên phiếu mẫu rồi quét bằng camera hoặc chọn ảnh từ thư viện để tự động điền.</string>
+    <string name="scan_key_camera_title">Quét đáp án (Mã %1$s)</string>
+    <string name="scan_key_camera_instruction">Đưa phiếu đáp án mẫu vào khung hình</string>
+    <string name="scan_key_camera_sub">Tự động nhận diện khi giữ vững 4 góc phiếu</string>
+    <string name="scan_key_processing">Đang nhận diện đáp án…</string>
+    <string name="scan_key_corners_not_found">Không nhận diện được 4 góc của phiếu thi trong ảnh. Hãy chụp rõ và đầy đủ 4 dấu góc đen.</string>
+    <string name="scan_key_read_failed">Không thể đọc ảnh phiếu đáp án. Vui lòng thử lại.</string>
+    <string name="scan_key_success_full">Đã điền đủ %1$d/%2$d mục đáp án cho mã %3$s</string>
+    <string name="scan_key_summary_title">Kết quả quét đáp án (Mã %1$s)</string>
+    <string name="scan_key_summary_filled">Đã tự động điền: %1$d/%2$d mục.</string>
+    <string name="scan_key_summary_code_mismatch">Lưu ý: Mã đề tô trên phiếu là %1$s, khác với mã %2$s bạn đang nhập.</string>
+    <string name="scan_key_summary_blank">Còn trống (%1$d): %2$s</string>
+    <string name="scan_key_summary_error">Lỗi tô đúp/sai quy tắc (%1$d): %2$s</string>
+    <string name="scan_key_summary_check_hint">Vui lòng kiểm tra và điền tay các mục viền đỏ trước khi lưu.</string>
+    <string name="btn_understood">Đã hiểu</string>
+    <string name="btn_open_settings">Mở Cài đặt</string>
+
+    <!-- Quản lý Lớp học & Chọn thí sinh từ nhiều lớp -->
+    <string name="tab_classroom">Lớp học</string>
+    <string name="cd_add_classroom">Thêm lớp học</string>
+    <string name="total_classroom_count">Tổng %1$d lớp học</string>
+    <string name="empty_classroom_list">Hiện chưa có lớp học nào. Hãy tạo lớp học trước để quản lý học sinh.</string>
+    <string name="add_classroom_title">Thêm lớp học</string>
+    <string name="edit_classroom_title">Sửa thông tin lớp học</string>
+    <string name="detail_classroom_title">Chi tiết lớp học</string>
+    <string name="label_classroom_name">Tên lớp</string>
+    <string name="label_belong_to_classroom">Thuộc lớp học</string>
+    <string name="action_edit_classroom">Sửa thông tin lớp</string>
+    <string name="action_delete_classroom">Xóa lớp học</string>
+    <string name="action_import_students">Nhập học sinh từ Excel</string>
+    <string name="toast_create_classroom_success">Tạo lớp học thành công</string>
+    <string name="toast_update_classroom_success">Cập nhật lớp học thành công</string>
+    <string name="dialog_delete_classroom_text">Bạn có chắc chắn muốn xóa lớp học này không? Các danh sách thi đã tạo trước đó vẫn giữ nguyên.</string>
+    <string name="dialog_remove_student_from_classroom_text">Bạn có chắc chắn muốn gỡ học sinh này khỏi lớp không?</string>
+    <string name="dialog_remove_student_from_roster_text">Bạn có chắc chắn muốn bỏ thí sinh này khỏi danh sách thi không? Học sinh vẫn còn nguyên trong lớp học gốc.</string>
+    <string name="label_class_short">Lớp</string>
+    <string name="sbd_and_class_format">SBD: %1$s  •  Lớp %2$s</string>
+    <string name="roster_source_classes">Từ lớp: %1$s</string>
+    <string name="section_select_from_classes">Chọn thí sinh từ lớp học</string>
+    <string name="select_from_classes_hint">Tích ô vuông để chọn/bỏ chọn cả lớp, hoặc bấm vào tên lớp để chọn/bỏ lẻ từng học sinh (cấm thi, miễn thi…).</string>
+    <string name="selected_students_summary">Đã chọn: %1$d thí sinh (%2$d lớp)</string>
+    <string name="class_selected_ratio">Đã chọn %1$d/%2$d</string>
+    <string name="btn_pick_individual">Chọn lẻ</string>
+    <string name="btn_select_all">Chọn tất cả</string>
+    <string name="btn_deselect_all">Bỏ chọn hết</string>
+    <string name="btn_done">Xong</string>
+    <string name="empty_classes_for_roster">Chưa có lớp học nào. Bạn có thể tạo lớp ở tab Lớp học trước, hoặc vẫn tạo danh sách thi trống rồi thêm thí sinh sau.</string>
+    <string name="warning_duplicate_sbd_title">Phát hiện trùng SBD giữa các lớp</string>
+    <string name="warning_duplicate_sbd_desc">Có %1$d SBD bị trùng giữa các thí sinh đã chọn (%2$s). Khi quét phiếu, app có thể khớp nhầm tên. Bạn vẫn muốn tiếp tục lưu?</string>
+    <string name="warning_duplicate_sbd_inline">Cảnh báo: Trùng SBD (%1$s) giữa các thí sinh đã chọn.</string>
+    <string name="btn_continue_save">Vẫn lưu</string>
+    <string name="error_roster_name_required">Vui lòng nhập tên danh sách thi!</string>
+    <string name="add_from_classes_subtitle">Chọn thêm thí sinh từ các lớp học (những em đã có trong danh sách thi này sẽ được ẩn).</string>
+    <string name="section_free_students">Học sinh chưa thuộc lớp nào (%1$d)</string>
+    <string name="empty_available_students_to_add">Tất cả học sinh trong các lớp đều đã có mặt trong danh sách thi này.</string>
+    <string name="detail_exam_roster_title">Chi tiết danh sách thi</string>
+    <string name="action_delete_exam_roster">Xóa danh sách thi</string>
+    <string name="dialog_delete_exam_roster_text">Bạn có chắc chắn muốn xóa danh sách thi này không? Học sinh trong các lớp gốc sẽ không bị xóa.</string>
+    <string name="error_duplicate_sbd_in_class">SBD %1$s đã tồn tại trong lớp %2$s!</string>
 </resources>

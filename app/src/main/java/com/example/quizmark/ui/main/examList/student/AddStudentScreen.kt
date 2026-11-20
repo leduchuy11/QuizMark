@@ -44,24 +44,36 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.platform.LocalDensity
-import com.example.quizmark.data.model.RosterModel
+import com.example.quizmark.data.model.ClassroomModel
 import com.example.quizmark.data.model.StudentModel
 import java.util.UUID
 
 @Composable
 fun AddStudentScreen(
+    preselectedClassId: String? = null,
     onNavigateBack: () -> Unit,
     viewModel: ExamListViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val rosterList by viewModel.rosterList.collectAsState()
+    val classroomList by viewModel.classroomList.collectAsState()
 
     // Form states
     var studentName by remember { mutableStateOf("") }
     var studentCode by remember { mutableStateOf("") }
 
     val optionNone = stringResource(id = R.string.option_none)
-    var selectedRoster by remember { mutableStateOf(optionNone) }
+    var selectedClassroomName by remember { mutableStateOf(optionNone) }
+    var hasAppliedPreselection by remember(preselectedClassId) { mutableStateOf(false) }
+
+    LaunchedEffect(classroomList, preselectedClassId) {
+        if (!hasAppliedPreselection && !preselectedClassId.isNullOrBlank()) {
+            val matched = classroomList.find { it.id == preselectedClassId }
+            if (matched != null) {
+                selectedClassroomName = matched.name
+                hasAppliedPreselection = true
+            }
+        }
+    }
 
     var dateOfBirth by remember { mutableStateOf("") }
 
@@ -157,18 +169,22 @@ fun AddStudentScreen(
                                 return@Button
                             }
 
-                            // 2. Lấy thông tin lớp được chọn
-                            var selectedRosterModel: RosterModel? = null
-                            if (selectedRoster != optionNone) {
-                                selectedRosterModel = rosterList.find { it.name == selectedRoster }
+                            // 2. Lấy thông tin lớp học được chọn
+                            var selectedClassroomModel: ClassroomModel? = null
+                            if (selectedClassroomName != optionNone) {
+                                selectedClassroomModel = classroomList.find { it.name == selectedClassroomName }
 
                                 // LOGIC CHECK TRÙNG SBD TRONG LỚP (Bảo vệ dữ liệu)
-                                if (selectedRosterModel != null) {
-                                    val isDuplicateSbd = selectedRosterModel.students.any {
+                                if (selectedClassroomModel != null) {
+                                    val isDuplicateSbd = selectedClassroomModel.students.any {
                                         it.studentCode == studentCode.trim()
                                     }
                                     if (isDuplicateSbd) {
-                                        toastMessage = "SBD $studentCode đã tồn tại trong lớp $selectedRoster!"
+                                        toastMessage = context.getString(
+                                            R.string.error_duplicate_sbd_in_class,
+                                            studentCode.trim(),
+                                            selectedClassroomName
+                                        )
                                         toastType = ToastType.ERROR
                                         return@Button
                                     }
@@ -180,10 +196,12 @@ fun AddStudentScreen(
                                 studentCode = studentCode.trim(),
                                 name = studentName.trim(),
                                 dob = dateOfBirth,
-                                gender = selectedGender.takeIf { it != "Chọn" } ?: ""
+                                gender = selectedGender.takeIf { it != "Chọn" } ?: "",
+                                classId = selectedClassroomModel?.id.orEmpty(),
+                                className = selectedClassroomModel?.name.orEmpty()
                             )
 
-                            viewModel.saveStudent(newStudent, selectedRosterModel)
+                            viewModel.saveStudentToClassroom(newStudent, selectedClassroomModel)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -226,13 +244,13 @@ fun AddStudentScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Thuộc danh sách (Dropdown)
-                val rosterOptions = remember(rosterList) { listOf(optionNone) + rosterList.map { it.name } }
+                // Thuộc lớp học (Dropdown)
+                val classOptions = remember(classroomList, optionNone) { listOf(optionNone) + classroomList.map { it.name } }
                 StudentDropdownField(
-                    label = stringResource(id = R.string.label_belong_to_roster),
-                    selectedOption = selectedRoster,
-                    options = rosterOptions,
-                    onOptionSelected = { selectedRoster = it }
+                    label = stringResource(id = R.string.label_belong_to_classroom),
+                    selectedOption = selectedClassroomName,
+                    options = classOptions,
+                    onOptionSelected = { selectedClassroomName = it }
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 

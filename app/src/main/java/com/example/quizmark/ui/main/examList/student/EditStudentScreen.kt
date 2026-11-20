@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
-import com.example.quizmark.data.model.RosterModel
+import com.example.quizmark.data.model.ClassroomModel
 import com.example.quizmark.data.model.StudentModel
 import com.example.quizmark.ui.main.exam.addExam.CustomToastUI
 import com.example.quizmark.ui.main.exam.addExam.ToastType
@@ -50,50 +50,50 @@ fun EditStudentScreen(
 ) {
     val context = LocalContext.current
 
-    val rosterList by viewModel.rosterList.collectAsState()
+    val classroomList by viewModel.classroomList.collectAsState()
     val allStudentsList by viewModel.allStudentsList.collectAsState()
 
     val rawStudentToEdit = remember(allStudentsList, studentId) {
         allStudentsList.find { it.id == studentId }
     }
-    val rawInitialRoster = remember(rosterList, studentId) {
-        rosterList.find { roster -> roster.students.any { it.id == studentId } }
+    val rawInitialClassroom = remember(classroomList, studentId) {
+        classroomList.find { cls -> cls.students.any { it.id == studentId } }
     }
 
     var cachedStudent by remember { mutableStateOf<StudentModel?>(null) }
-    var cachedRoster by remember { mutableStateOf<RosterModel?>(null) }
+    var cachedClassroom by remember { mutableStateOf<ClassroomModel?>(null) }
 
     LaunchedEffect(rawStudentToEdit) {
         if (rawStudentToEdit != null) cachedStudent = rawStudentToEdit
     }
-    LaunchedEffect(rawInitialRoster) {
-        if (rawInitialRoster != null) cachedRoster = rawInitialRoster
+    LaunchedEffect(rawInitialClassroom) {
+        if (rawInitialClassroom != null) cachedClassroom = rawInitialClassroom
     }
 
     val studentToEdit = rawStudentToEdit ?: cachedStudent
-    val initialRoster = rawInitialRoster ?: cachedRoster
+    val initialClassroom = rawInitialClassroom ?: cachedClassroom
 
     // Form states
     var studentName by remember { mutableStateOf("") }
     var studentCode by remember { mutableStateOf("") }
 
     val optionNone = stringResource(id = R.string.option_none)
-    var selectedRoster by remember { mutableStateOf(optionNone) }
+    var selectedClassroomName by remember { mutableStateOf(optionNone) }
     var dateOfBirth by remember { mutableStateOf("") }
 
     val genderOptions = listOf(stringResource(R.string.option_male), stringResource(R.string.option_female))
     var selectedGender by remember { mutableStateOf("") }
 
     // Đổ dữ liệu cũ vào Form khi tìm thấy học sinh
-    LaunchedEffect(studentToEdit, initialRoster) {
+    LaunchedEffect(studentToEdit, initialClassroom) {
         studentToEdit?.let {
             studentName = it.name
             studentCode = it.studentCode
             dateOfBirth = it.dob
             selectedGender = it.gender.ifEmpty { "Chọn" }
         }
-        initialRoster?.let {
-            selectedRoster = it.name
+        initialClassroom?.let {
+            selectedClassroomName = it.name
         }
     }
 
@@ -207,17 +207,21 @@ fun EditStudentScreen(
                                     return@Button
                                 }
 
-                                var selectedRosterModel: RosterModel? = null
-                                if (selectedRoster != optionNone) {
-                                    selectedRosterModel = rosterList.find { it.name == selectedRoster }
+                                var selectedClassroomModel: ClassroomModel? = null
+                                if (selectedClassroomName != optionNone) {
+                                    selectedClassroomModel = classroomList.find { it.name == selectedClassroomName }
 
                                     // Check trùng SBD (bỏ qua chính học sinh này)
-                                    if (selectedRosterModel != null) {
-                                        val isDuplicateSbd = selectedRosterModel.students.any {
+                                    if (selectedClassroomModel != null) {
+                                        val isDuplicateSbd = selectedClassroomModel.students.any {
                                             it.studentCode == studentCode.trim() && it.id != studentId
                                         }
                                         if (isDuplicateSbd) {
-                                            toastMessage = "SBD $studentCode đã tồn tại trong lớp $selectedRoster!"
+                                            toastMessage = context.getString(
+                                                R.string.error_duplicate_sbd_in_class,
+                                                studentCode.trim(),
+                                                selectedClassroomName
+                                            )
                                             toastType = ToastType.ERROR
                                             return@Button
                                         }
@@ -228,11 +232,13 @@ fun EditStudentScreen(
                                     studentCode = studentCode.trim(),
                                     name = studentName.trim(),
                                     dob = dateOfBirth,
-                                    gender = selectedGender
+                                    gender = selectedGender,
+                                    classId = selectedClassroomModel?.id.orEmpty(),
+                                    className = selectedClassroomModel?.name.orEmpty()
                                 )
 
                                 isDeleting = false
-                                viewModel.updateStudent(updatedStudent, initialRoster, selectedRosterModel)
+                                viewModel.updateStudentInClassroom(updatedStudent, initialClassroom, selectedClassroomModel)
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -273,12 +279,12 @@ fun EditStudentScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    val rosterOptions = remember(rosterList) { listOf(optionNone) + rosterList.map { it.name } }
+                    val classOptions = remember(classroomList, optionNone) { listOf(optionNone) + classroomList.map { it.name } }
                     StudentDropdownField(
-                        label = stringResource(id = R.string.label_belong_to_roster),
-                        selectedOption = selectedRoster,
-                        options = rosterOptions,
-                        onOptionSelected = { selectedRoster = it }
+                        label = stringResource(id = R.string.label_belong_to_classroom),
+                        selectedOption = selectedClassroomName,
+                        options = classOptions,
+                        onOptionSelected = { selectedClassroomName = it }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -330,7 +336,7 @@ fun EditStudentScreen(
                             showDeleteDialog = false
                             isDeleting = true
 
-                            viewModel.deleteStudent(studentId, initialRoster)
+                            viewModel.deleteStudentFromClassroom(studentId, initialClassroom)
                         }
                     ) {
                         Text(text = stringResource(id = R.string.action_delete), color = Color(0xFFDC2626), fontWeight = FontWeight.Bold)

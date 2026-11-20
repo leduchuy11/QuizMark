@@ -51,6 +51,9 @@ fun EditRosterScreen(
 
     // Mảng lưu danh sách sinh viên cũ để khi "Lưu" không bị mất học sinh
     var existingStudents by remember { mutableStateOf<List<StudentModel>>(emptyList()) }
+    var existingSourceClassIds by remember { mutableStateOf<List<String>>(emptyList()) }
+    var existingSourceClassNames by remember { mutableStateOf<List<String>>(emptyList()) }
+    var existingCreatedAt by remember { mutableStateOf(System.currentTimeMillis()) }
 
     val scrollState = rememberScrollState()
 
@@ -73,6 +76,9 @@ fun EditRosterScreen(
             subject = roster.subject
             schoolYear = roster.schoolYear
             existingStudents = roster.students
+            existingSourceClassIds = roster.sourceClassIds
+            existingSourceClassNames = roster.sourceClassNames
+            existingCreatedAt = roster.createdAt
         }
     }
 
@@ -140,8 +146,8 @@ fun EditRosterScreen(
                         onClick = {
                             if (isLoading) return@Button
 
-                            if (rosterName.isBlank() || grade.isBlank() || subject.isBlank() || schoolYear.isBlank()) {
-                                toastMessage = context.getString(R.string.error_fill_all_blanks)
+                            if (rosterName.isBlank()) {
+                                toastMessage = context.getString(R.string.error_roster_name_required)
                                 toastType = ToastType.ERROR
                                 return@Button
                             }
@@ -152,7 +158,10 @@ fun EditRosterScreen(
                                 grade = grade.trim(),
                                 subject = subject.trim(),
                                 schoolYear = schoolYear.trim(),
-                                students = existingStudents
+                                students = existingStudents,
+                                sourceClassIds = existingSourceClassIds,
+                                sourceClassNames = existingSourceClassNames,
+                                createdAt = existingCreatedAt
                             )
                             viewModel.saveRoster(updatedRoster)
                         },

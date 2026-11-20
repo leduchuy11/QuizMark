@@ -45,15 +45,27 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ImportStudentScreen(
+    preselectedClassId: String? = null,
     onNavigateBack: () -> Unit,
     onFileSelected: (Uri, String?) -> Unit,
     viewModel: ExamListViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val rosterList by viewModel.rosterList.collectAsState()
+    val classroomList by viewModel.classroomList.collectAsState()
 
     val optionNone = stringResource(id = R.string.option_none)
-    var selectedRosterName by remember { mutableStateOf(optionNone) }
+    var selectedClassName by remember { mutableStateOf(optionNone) }
+    var hasAppliedPreselection by remember(preselectedClassId) { mutableStateOf(false) }
+
+    LaunchedEffect(classroomList, preselectedClassId) {
+        if (!hasAppliedPreselection && !preselectedClassId.isNullOrBlank()) {
+            val matched = classroomList.find { it.id == preselectedClassId }
+            if (matched != null) {
+                selectedClassName = matched.name
+                hasAppliedPreselection = true
+            }
+        }
+    }
 
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
@@ -64,7 +76,7 @@ fun ImportStudentScreen(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri != null) {
-            val selectedRosterId = rosterList.find { it.name == selectedRosterName }?.id
+            val selectedClassId = classroomList.find { it.name == selectedClassName }?.id
 
             coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 try {
@@ -80,7 +92,7 @@ fun ImportStudentScreen(
                     val localUri = Uri.fromFile(tempFile)
 
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        onFileSelected(localUri, selectedRosterId)
+                        onFileSelected(localUri, selectedClassId)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -123,12 +135,12 @@ fun ImportStudentScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 1. Ô chọn danh sách
-            val rosterOptions = remember(rosterList) { listOf(optionNone) + rosterList.map { it.name } }
+            // 1. Ô chọn lớp học
+            val classOptions = remember(classroomList, optionNone) { listOf(optionNone) + classroomList.map { it.name } }
             ImportDropdownField(
-                selectedOption = selectedRosterName,
-                options = rosterOptions,
-                onOptionSelected = { selectedRosterName = it }
+                selectedOption = selectedClassName,
+                options = classOptions,
+                onOptionSelected = { selectedClassName = it }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
