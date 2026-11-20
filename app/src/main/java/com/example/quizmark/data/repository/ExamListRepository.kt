@@ -1,5 +1,6 @@
 package com.example.quizmark.data.repository
 
+import com.example.quizmark.data.model.ClassroomModel
 import com.example.quizmark.data.model.RosterModel
 import com.example.quizmark.data.model.StudentModel
 import com.google.firebase.auth.FirebaseAuth
@@ -262,6 +263,261 @@ class ExamListRepository @Inject constructor(
             rostersToUpdate.values.forEach { roster ->
                 val rosterDocRef = dbRef.collection("rosters").document(roster.id)
                 batch.set(rosterDocRef, roster)
+            }
+
+            batch.commit()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Quản lí lớp học
+
+    fun saveClassroom(classroom: ClassroomModel): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+            val normalizedStudents = classroom.students.map {
+                it.copy(classId = classroom.id, className = classroom.name)
+            }
+            val finalClassroom = classroom.copy(
+                userId = uid,
+                students = normalizedStudents
+            )
+
+            val batch = db.batch()
+            batch.set(dbRef.collection("classrooms").document(finalClassroom.id), finalClassroom)
+            normalizedStudents.forEach { student ->
+                batch.set(dbRef.collection("students").document(student.id), student)
+            }
+            batch.commit()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun getAllClassroomsFlow(): Flow<List<ClassroomModel>> = callbackFlow {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val listener = db.collection("users").document(uid).collection("classrooms")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val classes = snapshot?.toObjects(ClassroomModel::class.java)
+                    ?.sortedByDescending { it.createdAt }
+                    ?: emptyList()
+                trySend(classes)
+            }
+
+        awaitClose { listener.remove() }
+    }
+
+    suspend fun getClassroomById(classId: String): ClassroomModel? {
+        val uid = auth.currentUser?.uid ?: return null
+        val docRef = db.collection("users")
+            .document(uid)
+            .collection("classrooms")
+            .document(classId)
+
+        return try {
+            val snapshot = docRef.get(Source.CACHE).await()
+            snapshot.toObject(ClassroomModel::class.java)
+        } catch (e: Exception) {
+            try {
+                val snapshot = docRef.get(Source.SERVER).await()
+                snapshot.toObject(ClassroomModel::class.java)
+            } catch (ex: Exception) {
+                null
+            }
+        }
+    }
+
+    fun deleteClassroom(classroom: ClassroomModel): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+            val batch = db.batch()
+
+            batch.delete(dbRef.collection("classrooms").document(classroom.id))
+            // Gỡ liên kết lớp trên bảng tổng students
+            classroom.students.forEach { student ->
+                val detached = student.copy(classId = "", className = "")
+                batch.set(dbRef.collection("students").document(student.id), detached)
+            }
+            batch.commit()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun removeStudentFromClassroom(student: StudentModel, classroom: ClassroomModel): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+            val batch = db.batch()
+
+            val updatedClassroom = classroom.copy(
+                students = classroom.students.filter { it.id != student.id }
+            )
+            batch.set(dbRef.collection("classrooms").document(classroom.id), updatedClassroom)
+            batch.set(
+                dbRef.collection("students").document(student.id),
+                student.copy(classId = "", className = "")
+            )
+            batch.commit()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun saveStudentToClassroom(student: StudentModel, classroom: ClassroomModel?): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+            val finalStudent = student.copy(
+                classId = classroom?.id.orEmpty(),
+                className = classroom?.name.orEmpty()
+            )
+
+            val batch = db.batch()
+            batch.set(dbRef.collection("students").document(finalStudent.id), finalStudent)
+            if (classroom != null) {
+                val updatedStudents = classroom.students.toMutableList()
+                updatedStudents.add(finalStudent)
+                batch.set(
+                    dbRef.collection("classrooms").document(classroom.id),
+                    classroom.copy(students = updatedStudents)
+                )
+            }
+            batch.commit()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun updateStudentInClassroom(
+        updatedStudent: StudentModel,
+        initialClassroom: ClassroomModel?,
+        newClassroom: ClassroomModel?
+    ): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+            val finalStudent = updatedStudent.copy(
+                classId = newClassroom?.id.orEmpty(),
+                className = newClassroom?.name.orEmpty()
+            )
+
+            val batch = db.batch()
+            batch.set(dbRef.collection("students").document(finalStudent.id), finalStudent)
+
+            if (initialClassroom?.id == newClassroom?.id) {
+                if (newClassroom != null) {
+                    val updatedList = newClassroom.students.map {
+                        if (it.id == finalStudent.id) finalStudent else it
+                    }
+                    batch.set(
+                        dbRef.collection("classrooms").document(newClassroom.id),
+                        newClassroom.copy(students = updatedList)
+                    )
+                }
+            } else {
+                if (initialClassroom != null) {
+                    val updatedOldList = initialClassroom.students.filter { it.id != finalStudent.id }
+                    batch.set(
+                        dbRef.collection("classrooms").document(initialClassroom.id),
+                        initialClassroom.copy(students = updatedOldList)
+                    )
+                }
+                if (newClassroom != null) {
+                    val updatedNewList = newClassroom.students.toMutableList()
+                    updatedNewList.add(finalStudent)
+                    batch.set(
+                        dbRef.collection("classrooms").document(newClassroom.id),
+                        newClassroom.copy(students = updatedNewList)
+                    )
+                }
+            }
+
+            batch.commit()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun deleteStudentFromClassroom(studentId: String, initialClassroom: ClassroomModel?): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+            val batch = db.batch()
+
+            batch.delete(dbRef.collection("students").document(studentId))
+            if (initialClassroom != null) {
+                val updatedList = initialClassroom.students.filter { it.id != studentId }
+                batch.set(
+                    dbRef.collection("classrooms").document(initialClassroom.id),
+                    initialClassroom.copy(students = updatedList)
+                )
+            }
+            batch.commit()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun importStudentsToClassroom(
+        importedStudents: List<StudentModel>,
+        classroomId: String?,
+        classroomList: List<ClassroomModel>
+    ): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Người dùng chưa đăng nhập!")
+            val dbRef = db.collection("users").document(uid)
+            val batch = db.batch()
+
+            var targetClassroom = classroomId?.let { id -> classroomList.find { it.id == id } }
+
+            importedStudents.forEach { importedStudent ->
+                val existingInClass = targetClassroom?.students?.find {
+                    it.studentCode == importedStudent.studentCode
+                }
+                val finalId = existingInClass?.id ?: importedStudent.id
+                val finalStudent = importedStudent.copy(
+                    id = finalId,
+                    classId = targetClassroom?.id.orEmpty(),
+                    className = targetClassroom?.name.orEmpty()
+                )
+
+                batch.set(dbRef.collection("students").document(finalId), finalStudent)
+
+                if (targetClassroom != null) {
+                    val updatedList = targetClassroom!!.students.toMutableList()
+                    val existingIdx = updatedList.indexOfFirst { it.id == finalId }
+                    if (existingIdx != -1) {
+                        updatedList[existingIdx] = finalStudent
+                    } else {
+                        updatedList.add(finalStudent)
+                    }
+                    targetClassroom = targetClassroom!!.copy(students = updatedList)
+                }
+            }
+
+            targetClassroom?.let { cls ->
+                batch.set(dbRef.collection("classrooms").document(cls.id), cls)
             }
 
             batch.commit()

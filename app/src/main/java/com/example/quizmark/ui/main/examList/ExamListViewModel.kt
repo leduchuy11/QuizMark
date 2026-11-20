@@ -2,6 +2,7 @@ package com.example.quizmark.ui.main.examList
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.quizmark.data.model.ClassroomModel
 import com.example.quizmark.data.model.RosterModel
 import com.example.quizmark.data.model.StudentModel
 import com.example.quizmark.data.repository.ExamListRepository
@@ -28,8 +29,14 @@ class ExamListViewModel @Inject constructor(
     val rosterList: StateFlow<List<RosterModel>> = repository.getAllRostersFlow()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    val classroomList: StateFlow<List<ClassroomModel>> = repository.getAllClassroomsFlow()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
     private val _currentRoster = MutableStateFlow<RosterModel?>(null)
     val currentRoster: StateFlow<RosterModel?> = _currentRoster.asStateFlow()
+
+    private val _currentClassroom = MutableStateFlow<ClassroomModel?>(null)
+    val currentClassroom: StateFlow<ClassroomModel?> = _currentClassroom.asStateFlow()
 
     val allStudentsList: StateFlow<List<StudentModel>> = repository.getAllStudentsFlow()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -101,5 +108,82 @@ class ExamListViewModel @Inject constructor(
 
     fun resetSaveResult() {
         _saveResult.value = null
+    }
+
+    // update feature cho lớp học
+
+    fun saveClassroom(classroom: ClassroomModel) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.saveClassroom(classroom)
+            _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
+    fun deleteClassroom(classroom: ClassroomModel) {
+        repository.deleteClassroom(classroom)
+    }
+
+    fun loadClassroom(classId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val classroom = repository.getClassroomById(classId)
+            _currentClassroom.value = classroom
+            _isLoading.value = false
+        }
+    }
+
+    fun removeStudentFromClassroom(student: StudentModel, classroom: ClassroomModel) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.removeStudentFromClassroom(student, classroom)
+            _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
+    fun saveStudentToClassroom(student: StudentModel, classroom: ClassroomModel?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.saveStudentToClassroom(student, classroom)
+            _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
+    fun updateStudentInClassroom(
+        student: StudentModel,
+        initialClassroom: ClassroomModel?,
+        newClassroom: ClassroomModel?
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.updateStudentInClassroom(student, initialClassroom, newClassroom)
+            _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
+    fun deleteStudentFromClassroom(studentId: String, initialClassroom: ClassroomModel?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.deleteStudentFromClassroom(studentId, initialClassroom)
+            _saveResult.value = result
+            _isLoading.value = false
+        }
+    }
+
+    fun importStudentsToClassroom(importedStudents: List<StudentModel>, classroomId: String?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.importStudentsToClassroom(
+                importedStudents = importedStudents,
+                classroomId = classroomId,
+                classroomList = classroomList.value
+            )
+            _saveResult.value = result
+            _isLoading.value = false
+        }
     }
 }

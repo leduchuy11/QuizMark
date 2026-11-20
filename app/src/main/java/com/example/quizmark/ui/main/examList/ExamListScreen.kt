@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.data.model.RosterModel
+import com.example.quizmark.ui.main.examList.classroom.ClassroomTabContent
 import com.example.quizmark.ui.main.examList.student.StudentTabContent
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
@@ -42,6 +43,8 @@ import com.example.quizmark.util.unAccent
 
 @Composable
 fun ExamListScreen(
+    onNavigateToAddClassroom: () -> Unit,
+    onNavigateToClassroomDetail: (String) -> Unit,
     onNavigateToAddRoster: () -> Unit,
     onNavigateToAddStudent: () -> Unit,
     onNavigateToRosterDetail: (String) -> Unit,
@@ -51,6 +54,7 @@ fun ExamListScreen(
 ) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
     val allStudentsList by viewModel.allStudentsList.collectAsState()
+    val classroomList by viewModel.classroomList.collectAsState()
 
     // Lắng nghe dữ liệu thật từ Firebase
     val rosterList by viewModel.rosterList.collectAsState()
@@ -85,7 +89,11 @@ fun ExamListScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    if (selectedTabIndex == 0) onNavigateToAddRoster() else onNavigateToAddStudent()
+                    when (selectedTabIndex) {
+                        0 -> onNavigateToAddClassroom()
+                        1 -> onNavigateToAddRoster()
+                        else -> onNavigateToAddStudent()
+                    }
                 },
                 containerColor = DarkBlue,
                 contentColor = Color.White,
@@ -93,10 +101,11 @@ fun ExamListScreen(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_add_ver2),
-                    contentDescription = if (selectedTabIndex == 0)
-                        stringResource(id = R.string.cd_add_roster)
-                    else
-                        stringResource(id = R.string.cd_add_student),
+                    contentDescription = when (selectedTabIndex) {
+                        0 -> stringResource(id = R.string.cd_add_classroom)
+                        1 -> stringResource(id = R.string.cd_add_roster)
+                        else -> stringResource(id = R.string.cd_add_student)
+                    },
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -114,14 +123,17 @@ fun ExamListScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            if (selectedTabIndex == 0) {
-                RosterTabContent(
+            when (selectedTabIndex) {
+                0 -> ClassroomTabContent(
+                    classroomList = classroomList,
+                    onClassroomClick = onNavigateToClassroomDetail
+                )
+                1 -> RosterTabContent(
                     rosterList = rosterList,
                     onRosterClick = onNavigateToRosterDetail
                 )
-            } else {
-                StudentTabContent(
-                    rosterList = rosterList,
+                else -> StudentTabContent(
+                    classroomList = classroomList,
                     allStudentsList = allStudentsList,
                     onNavigateToImportFile = onNavigateToImportStudent,
                     onNavigateToEditStudent = onNavigateToEditStudent
@@ -133,7 +145,11 @@ fun ExamListScreen(
 
 @Composable
 private fun CustomPillTabRow(selectedTabIndex: Int, onTabSelected: (Int) -> Unit) {
-    val tabs = listOf(stringResource(R.string.tab_roster), stringResource(R.string.tab_students))
+    val tabs = listOf(
+        stringResource(R.string.tab_classroom),
+        stringResource(R.string.tab_roster),
+        stringResource(R.string.tab_students)
+    )
 
     BoxWithConstraints(
         modifier = Modifier
@@ -339,10 +355,15 @@ fun RosterItemCard(roster: RosterModel, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = stringResource(id = R.string.student_count_suffix, roster.students.size),
+                text = if (roster.sourceClassNames.isNotEmpty()) {
+                    "${stringResource(id = R.string.student_count_suffix, roster.students.size)}  •  ${roster.sourceClassNames.joinToString(", ")}"
+                } else {
+                    stringResource(id = R.string.student_count_suffix, roster.students.size)
+                },
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
-                color = Color.Gray
+                color = Color.Gray,
+                maxLines = 1
             )
         }
 

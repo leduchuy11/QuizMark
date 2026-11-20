@@ -21,6 +21,8 @@ interface HistoryRepository {
     suspend fun saveRecord(context: Context, result: FinalGradingResult, rosterId: String?, rosterName: String?): String
     fun getAllRecords(): Flow<List<HistoryRecord>>
     suspend fun deleteRecord(context: Context, recordId: String)
+    suspend fun updateRecordStudent(context: Context, record: HistoryRecord, newStudentCode: String, newStudentName: String)
+    suspend fun updateRecordDriveInfo(context: Context, record: HistoryRecord, driveFileId: String, driveFolderId: String, driveWebViewLink: String)
 }
 
 @Singleton
@@ -56,11 +58,10 @@ class HistoryRepositoryImpl @Inject constructor(
 
 
         // 2. Logic tạo Document ID
-        val documentId = if (rosterId != null) {
-            "${finalRosterId}_${result.sbd}_${result.examCode}" // ID duy nhất
-        } else {
-            collectionRef.document().id // Tạo ID ngẫu nhiên nếu quét lẻ
-        }
+        // Dùng ID độc lập cho mỗi lượt chấm để khi 2 học sinh tô trùng SBD (cùng hoặc khác mã đề)
+        // thì cả 2 bài đều được giữ nguyên trong danh sách để giáo viên gom cụm và xử lý,
+        // tuyệt đối không ghi đè làm mất bài của học sinh tô đúng.
+        val documentId = collectionRef.document().id
 
         val docRef = collectionRef.document(documentId)
 
@@ -91,6 +92,52 @@ class HistoryRepositoryImpl @Inject constructor(
         docRef.set(record)
 
         // 5. HẸN GIỜ ĐỒNG BỘ NGẦM (Dù tắt app vẫn chạy khi có mạng)
+        enqueueSyncRecord(context, userId, record)
+
+        return documentId
+    }
+
+    override suspend fun updateRecordStudent(
+        context: Context,
+        record: HistoryRecord,
+        newStudentCode: String,
+        newStudentName: String
+    ) {
+        val userId = auth.currentUser?.uid ?: return
+        val updated = record.copy(
+            studentCode = newStudentCode,
+            studentName = newStudentName
+        )
+        firestore.collection("users")
+            .document(userId)
+            .collection("history_records")
+            .document(updated.id)
+            .set(updated)
+        enqueueSyncRecord(context, userId, updated)
+    }
+
+    override suspend fun updateRecordDriveInfo(
+        context: Context,
+        record: HistoryRecord,
+        driveFileId: String,
+        driveFolderId: String,
+        driveWebViewLink: String
+    ) {
+        val userId = auth.currentUser?.uid ?: return
+        val updated = record.copy(
+            driveFileId = driveFileId,
+            driveFolderId = driveFolderId,
+            driveWebViewLink = driveWebViewLink
+        )
+        firestore.collection("users")
+            .document(userId)
+            .collection("history_records")
+            .document(updated.id)
+            .set(updated)
+        enqueueSyncRecord(context, userId, updated)
+    }
+
+    private fun enqueueSyncRecord(context: Context, userId: String, record: HistoryRecord) {
         val inputData = androidx.work.Data.Builder()
             .putString("USER_ID", userId)
             .putString("ID", record.id)
@@ -108,6 +155,9 @@ class HistoryRepositoryImpl @Inject constructor(
             .putString("IMAGE_PATH", record.localImagePath)
             .putString("ORIGINAL_IMAGE_PATH", record.localOriginalImagePath)
             .putLong("TIMESTAMP", record.timestamp)
+            .putString("DRIVE_FILE_ID", record.driveFileId)
+            .putString("DRIVE_FOLDER_ID", record.driveFolderId)
+            .putString("DRIVE_WEB_VIEW_LINK", record.driveWebViewLink)
             .build()
 
         val constraints = androidx.work.Constraints.Builder()
@@ -120,8 +170,6 @@ class HistoryRepositoryImpl @Inject constructor(
             .build()
 
         androidx.work.WorkManager.getInstance(context).enqueue(syncWork)
-
-        return documentId
     }
 
     override fun getAllRecords(): Flow<List<HistoryRecord>> = callbackFlow {

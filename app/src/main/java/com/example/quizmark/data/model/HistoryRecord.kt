@@ -15,5 +15,8 @@ data class HistoryRecord(
     val templateId: Int = 1,
     val localImagePath: String = "",
     val timestamp: Long = System.currentTimeMillis(),
-    val localOriginalImagePath: String = ""
+    val localOriginalImagePath: String = "",
+    val driveFileId: String = "",
+    val driveFolderId: String = "",
+    val driveWebViewLink: String = ""
 )
