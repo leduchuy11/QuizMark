@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,13 +37,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.quizmark.R
 import com.example.quizmark.ui.main.exam.addExam.CustomToastUI
+import com.example.quizmark.ui.main.exam.addExam.ToastType
 import com.example.quizmark.ui.theme.BackgroundScreen
 import com.example.quizmark.ui.theme.ColorText
 import com.example.quizmark.ui.theme.ColorText2
 import com.example.quizmark.ui.theme.ColorText3
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
-import com.example.quizmark.ui.main.exam.addExam.ToastType
+import com.example.quizmark.util.ClassroomScoreSummary
 import com.example.quizmark.util.ExportHelper
 import com.example.quizmark.util.NetworkUtils
 import kotlinx.coroutines.delay
@@ -51,7 +54,7 @@ import kotlinx.coroutines.delay
 fun StatisticsScreen(
     viewModel: StatisticsViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
-    onNavigateToScoreList: (String) -> Unit
+    onNavigateToScoreList: (rosterId: String, classId: String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
@@ -110,13 +113,24 @@ fun StatisticsScreen(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // 1. Dropdown Chọn Danh sách thi (Roster)
                 StatFilterDropdown(
                     availableRosters = uiState.availableRosters,
                     selectedRosterId = uiState.selectedRosterId,
                     onRosterSelected = { viewModel.updateFilter(it) }
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                // 2. Dropdown Chọn Lớp học để xem riêng thống kê & điểm TB từng lớp
+                if (uiState.availableClasses.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    ClassFilterDropdown(
+                        availableClasses = uiState.availableClasses,
+                        selectedClassId = uiState.selectedClassId,
+                        onClassSelected = { viewModel.updateClassFilter(it) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -142,7 +156,55 @@ fun StatisticsScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                if (uiState.totalExams > 0) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Điểm thấp nhất: ${String.format("%.1f", uiState.minScore)}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFDC2626)
+                        )
+                        Text(
+                            text = "Điểm cao nhất: ${String.format("%.1f", uiState.maxScore)}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF16A34A)
+                        )
+                    }
+                }
+
+                // 3. BẢNG ĐIỂM TRUNG BÌNH & THỐNG KÊ THEO TỪNG LỚP HỌC
+                if (uiState.classroomSummaries.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Thống kê theo từng lớp",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorText
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        uiState.classroomSummaries.forEach { summary ->
+                            ClassroomStatCard(
+                                summary = summary,
+                                isSelected = uiState.selectedClassId == summary.classId,
+                                onClick = {
+                                    onNavigateToScoreList(uiState.selectedRosterId, summary.classId)
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(28.dp))
 
                 Text(
                     text = stringResource(id = R.string.score_distribution),
@@ -153,7 +215,7 @@ fun StatisticsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 BarChartComponent(data = uiState.scoreDistribution)
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
                 Text(
                     text = stringResource(id = R.string.section_actions),
@@ -170,9 +232,15 @@ fun StatisticsScreen(
                     ActionRowItem(
                         iconRes = R.drawable.ic_document,
                         title = stringResource(id = R.string.action_view_score_list),
-                        onClick = { onNavigateToScoreList(uiState.selectedRosterId) }
+                        onClick = {
+                            onNavigateToScoreList(uiState.selectedRosterId, uiState.selectedClassId)
+                        }
                     )
-                    HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                    HorizontalDivider(
+                        color = Color(0xFFF1F5F9),
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
 
                     ActionRowItem(
                         iconRes = R.drawable.ic_sum_list_exam,
@@ -199,7 +267,12 @@ fun StatisticsScreen(
                             else -> uiState.availableRosters.find { it.first == uiState.selectedRosterId }?.second ?: "Tùy chọn"
                         }
 
-                        ExportHelper.exportToExcelAndShare(context, uiState.filteredRecords, email, currentRosterName)
+                        ExportHelper.exportToExcelAndShare(
+                            context,
+                            uiState.filteredRecords,
+                            email,
+                            currentRosterName
+                        )
                     } else {
                         toastMessage = context.getString(R.string.error_no_internet)
                         toastType = ToastType.ERROR
@@ -217,6 +290,154 @@ fun StatisticsScreen(
                 .padding(top = 80.dp)
         ) {
             toastMessage?.let { CustomToastUI(message = it, type = toastType) }
+        }
+    }
+}
+
+@Composable
+private fun ClassroomStatCard(
+    summary: ClassroomScoreSummary,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) Color(0xFFEFF6FF) else Color.White
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (isSelected) PrimaryDarkBlue else Color(0xFFE2E8F0)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(Color(0xFFDBEAFE), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "ĐTB",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryDarkBlue
+                    )
+                    Text(
+                        text = String.format("%.1f", summary.averageScore),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = PrimaryDarkBlue
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (summary.classId == "UNASSIGNED") summary.className else "Lớp ${summary.className}",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorText
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "${summary.totalExams} bài • Thấp nhất: ${String.format("%.1f", summary.minScore)} • Cao nhất: ${String.format("%.1f", summary.maxScore)}",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "Tỉ lệ đạt (>= 5đ): ${summary.passRate}%",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF16A34A)
+                )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Xem điểm",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryDarkBlue
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = PrimaryDarkBlue
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ClassFilterDropdown(
+    availableClasses: List<Pair<String, String>>,
+    selectedClassId: String,
+    onClassSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val selectedText = when (selectedClassId) {
+        "ALL" -> "Tất cả các lớp"
+        "UNASSIGNED" -> "Chưa phân lớp"
+        else -> availableClasses.find { it.first == selectedClassId }?.second?.let { "Lớp $it" } ?: "Tất cả các lớp"
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = selectedText,
+            onValueChange = {},
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+            leadingIcon = { Icon(Icons.Filled.School, contentDescription = null, tint = ColorText2) },
+            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = ColorText2) },
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                unfocusedBorderColor = Color(0xFFE2E8F0),
+                focusedBorderColor = Color(0xFFE2E8F0)
+            ),
+            textStyle = LocalTextStyle.current.copy(fontWeight = FontWeight.Medium, color = ColorText)
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color.White)
+        ) {
+            DropdownMenuItem(
+                text = { Text("Tất cả các lớp", color = ColorText) },
+                onClick = { onClassSelected("ALL"); expanded = false }
+            )
+            availableClasses.forEach { (id, name) ->
+                DropdownMenuItem(
+                    text = { Text("Lớp $name", color = ColorText) },
+                    onClick = { onClassSelected(id); expanded = false }
+                )
+            }
+            DropdownMenuItem(
+                text = { Text("Chưa phân lớp", color = ColorText) },
+                onClick = { onClassSelected("UNASSIGNED"); expanded = false }
+            )
         }
     }
 }

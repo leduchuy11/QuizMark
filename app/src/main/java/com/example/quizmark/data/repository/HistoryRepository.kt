@@ -21,7 +21,14 @@ interface HistoryRepository {
     suspend fun saveRecord(context: Context, result: FinalGradingResult, rosterId: String?, rosterName: String?): String
     fun getAllRecords(): Flow<List<HistoryRecord>>
     suspend fun deleteRecord(context: Context, recordId: String)
-    suspend fun updateRecordStudent(context: Context, record: HistoryRecord, newStudentCode: String, newStudentName: String)
+    suspend fun updateRecordStudent(
+        context: Context,
+        record: HistoryRecord,
+        newStudentCode: String,
+        newStudentName: String,
+        newClassId: String = record.classId,
+        newClassName: String = record.className
+    )
     suspend fun updateRecordDriveInfo(context: Context, record: HistoryRecord, driveFileId: String, driveFolderId: String, driveWebViewLink: String)
 }
 
@@ -81,7 +88,9 @@ class HistoryRepositoryImpl @Inject constructor(
             templateId = result.templateId,
             localImagePath = file.absolutePath,
             localOriginalImagePath = result.originalImagePath.orEmpty(),
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+            classId = result.classId,
+            className = result.className
         )
 
         // 4. Đồng bộ dữ liệu (KHÔNG DÙNG .await())
@@ -101,12 +110,16 @@ class HistoryRepositoryImpl @Inject constructor(
         context: Context,
         record: HistoryRecord,
         newStudentCode: String,
-        newStudentName: String
+        newStudentName: String,
+        newClassId: String,
+        newClassName: String
     ) {
         val userId = auth.currentUser?.uid ?: return
         val updated = record.copy(
             studentCode = newStudentCode,
-            studentName = newStudentName
+            studentName = newStudentName,
+            classId = newClassId,
+            className = newClassName
         )
         firestore.collection("users")
             .document(userId)
@@ -158,6 +171,8 @@ class HistoryRepositoryImpl @Inject constructor(
             .putString("DRIVE_FILE_ID", record.driveFileId)
             .putString("DRIVE_FOLDER_ID", record.driveFolderId)
             .putString("DRIVE_WEB_VIEW_LINK", record.driveWebViewLink)
+            .putString("CLASS_ID", record.classId)
+            .putString("CLASS_NAME", record.className)
             .build()
 
         val constraints = androidx.work.Constraints.Builder()

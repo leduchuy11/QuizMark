@@ -91,7 +91,7 @@ fun BatchResultScreen(
                             .height(50.dp)
                     ) {
                         Text(
-                            text = "Xử lý trùng SBD & Đẩy ảnh lên Google Drive",
+                            text = "Xem bảng điểm & Đẩy Drive",
                             color = Color.White,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold

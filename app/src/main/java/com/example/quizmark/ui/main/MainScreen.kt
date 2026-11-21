@@ -143,13 +143,20 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                 ) {
                     StatisticsScreen(
                         onBackClick = { bottomNavController.popBackStack() },
-                        onNavigateToScoreList = { rosterId ->
-                            bottomNavController.navigate("score_list_screen/$rosterId")}
+                        onNavigateToScoreList = { rosterId, classId ->
+                            bottomNavController.navigate("score_list_screen/$rosterId?classId=$classId")
+                        }
                     )
                 }
                 composable(
-                    route = "score_list_screen/{rosterId}",
-                    arguments = listOf(navArgument("rosterId") { type = NavType.StringType }),
+                    route = "score_list_screen/{rosterId}?classId={classId}",
+                    arguments = listOf(
+                        navArgument("rosterId") { type = NavType.StringType },
+                        navArgument("classId") {
+                            type = NavType.StringType
+                            defaultValue = "ALL"
+                        }
+                    ),
                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
                 ) {
@@ -612,6 +619,9 @@ fun MainScreen(onNavigateToLogin: () -> Unit,
                         },
                         onNavigateToEditClassroom = { id ->
                             bottomNavController.navigate("edit_classroom/$id")
+                        },
+                        onNavigateToHistoryDetail = { recordId ->
+                            bottomNavController.navigate("history_detail/$recordId")
                         }
                     )
                 }

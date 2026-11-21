@@ -16,5 +16,7 @@ data class FinalGradingResult(
     val detailedQuestions: List<QuestionDetailUI>,
     val templateId: Int,
     val errorMessage: String? = null,
-    val originalImagePath: String? = null
+    val originalImagePath: String? = null,
+    val classId: String = "",
+    val className: String = ""
 )

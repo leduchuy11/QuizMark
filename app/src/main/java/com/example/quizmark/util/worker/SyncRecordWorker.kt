@@ -36,7 +36,9 @@ class SyncRecordWorker(
                 timestamp = inputData.getLong("TIMESTAMP", System.currentTimeMillis()),
                 driveFileId = inputData.getString("DRIVE_FILE_ID") ?: "",
                 driveFolderId = inputData.getString("DRIVE_FOLDER_ID") ?: "",
-                driveWebViewLink = inputData.getString("DRIVE_WEB_VIEW_LINK") ?: ""
+                driveWebViewLink = inputData.getString("DRIVE_WEB_VIEW_LINK") ?: "",
+                classId = inputData.getString("CLASS_ID") ?: "",
+                className = inputData.getString("CLASS_NAME") ?: ""
             )
 
             // 2. Bắn thẳng lên Server

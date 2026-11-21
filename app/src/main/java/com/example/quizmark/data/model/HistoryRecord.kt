@@ -18,5 +18,7 @@ data class HistoryRecord(
     val localOriginalImagePath: String = "",
     val driveFileId: String = "",
     val driveFolderId: String = "",
-    val driveWebViewLink: String = ""
+    val driveWebViewLink: String = "",
+    val classId: String = "",
+    val className: String = ""
 )

@@ -27,6 +27,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.graphics.Canvas
@@ -67,6 +68,8 @@ class BatchGradingViewModel @Inject constructor(
             var finalRosterName = "Ẩn danh"
             val roster = if (rosterId != null) examListRepository.getRosterById(rosterId) else null
             if (roster != null) finalRosterName = roster.name
+            val classrooms = runCatching { examListRepository.getAllClassroomsFlow().firstOrNull().orEmpty() }
+                .getOrDefault(emptyList())
 
             val thptExam = if (isThpt) examRepository.getThptExamById(examId) else null
             val basicExam = if (!isThpt) examRepository.getBasicExamById(examId) else null
@@ -97,12 +100,31 @@ class BatchGradingViewModel @Inject constructor(
                     // 2. CHẠY OPENCV NHẬN DIỆN (Sử dụng ảnh đã được nắn thẳng)
                     val scanResult = processor.process(processedBitmap)
 
-                    // 3. TÌM THÔNG TIN HỌC SINH TỪ SBD
+                    // 3. TÌM THÔNG TIN HỌC SINH & LỚP HỌC GỐC TỪ SBD
                     val scannedSbd = scanResult.sbd ?: "Trống"
                     var finalStudentName = "Ẩn danh"
+                    var finalClassId = ""
+                    var finalClassName = ""
                     if (roster != null && scannedSbd != "Trống") {
-                        val matchedStudent = roster.students.find { it.studentCode == scannedSbd }
-                        if (matchedStudent != null) finalStudentName = matchedStudent.name
+                        val matchedStudent = roster.students.find { it.studentCode.trim() == scannedSbd.trim() }
+                        if (matchedStudent != null) {
+                            finalStudentName = matchedStudent.name
+                            finalClassId = matchedStudent.classId
+                            finalClassName = matchedStudent.className
+                        }
+                    }
+                    if (finalClassId.isBlank() && scannedSbd != "Trống") {
+                        for (cls in classrooms) {
+                            val studentInClass = cls.students.find { it.studentCode.trim() == scannedSbd.trim() }
+                            if (studentInClass != null) {
+                                finalClassId = cls.id
+                                finalClassName = cls.name
+                                if (finalStudentName == "Ẩn danh" && studentInClass.name.isNotBlank()) {
+                                    finalStudentName = studentInClass.name
+                                }
+                                break
+                            }
+                        }
                     }
 
                     // 4. TÍNH ĐIỂM
@@ -151,7 +173,9 @@ class BatchGradingViewModel @Inject constructor(
                         processedImage = finalPaintedBitmap,
                         detailedQuestions = uiList,
                         templateId = templateId,
-                        originalImagePath = OriginalScanStore.save(context, scanResult.originalBitmap)
+                        originalImagePath = OriginalScanStore.save(context, scanResult.originalBitmap),
+                        classId = finalClassId,
+                        className = finalClassName
                     )
 
                     historyRepository.saveRecord(context, finalResult, rosterId, finalRosterName)

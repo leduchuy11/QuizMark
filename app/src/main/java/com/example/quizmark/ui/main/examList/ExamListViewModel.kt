@@ -1,12 +1,19 @@
 package com.example.quizmark.ui.main.examList
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.quizmark.data.model.ClassroomModel
+import com.example.quizmark.data.model.HistoryRecord
 import com.example.quizmark.data.model.RosterModel
 import com.example.quizmark.data.model.StudentModel
 import com.example.quizmark.data.repository.ExamListRepository
+import com.example.quizmark.data.repository.HistoryRepository
+import com.example.quizmark.util.DuplicateSbdCluster
+import com.example.quizmark.util.GoogleDriveHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +24,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ExamListViewModel @Inject constructor(
-    private val repository: ExamListRepository
+    private val repository: ExamListRepository,
+    private val historyRepository: HistoryRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -30,6 +39,9 @@ class ExamListViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     val classroomList: StateFlow<List<ClassroomModel>> = repository.getAllClassroomsFlow()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    val allHistoryRecords: StateFlow<List<HistoryRecord>> = historyRepository.getAllRecords()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     private val _currentRoster = MutableStateFlow<RosterModel?>(null)
@@ -110,8 +122,7 @@ class ExamListViewModel @Inject constructor(
         _saveResult.value = null
     }
 
-    // update feature cho lớp học
-
+    // quản lí lớp học và lịch sử điểm
     fun saveClassroom(classroom: ClassroomModel) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -184,6 +195,82 @@ class ExamListViewModel @Inject constructor(
             )
             _saveResult.value = result
             _isLoading.value = false
+        }
+    }
+
+    fun deleteHistoryRecord(recordId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            historyRepository.deleteRecord(context, recordId)
+        }
+    }
+
+    fun keepOnlyThisRecordInCluster(cluster: DuplicateSbdCluster, recordToKeep: HistoryRecord) {
+        viewModelScope.launch(Dispatchers.IO) {
+            cluster.records
+                .filter { it.id != recordToKeep.id }
+                .forEach { duplicateToDelete ->
+                    historyRepository.deleteRecord(context, duplicateToDelete.id)
+                }
+        }
+    }
+
+    fun reassignRecordInClassroom(
+        classroom: ClassroomModel,
+        record: HistoryRecord,
+        newStudentCode: String,
+        newStudentName: String
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val cleanCode = newStudentCode.trim()
+            if (cleanCode.isEmpty()) return@launch
+            val matchedInClass = classroom.students.find { it.studentCode.trim() == cleanCode }
+            val resolvedName = newStudentName.trim().ifBlank {
+                matchedInClass?.name ?: record.studentName
+            }
+            historyRepository.updateRecordStudent(
+                context = context,
+                record = record,
+                newStudentCode = cleanCode,
+                newStudentName = resolvedName,
+                newClassId = classroom.id,
+                newClassName = classroom.name
+            )
+        }
+    }
+
+    fun pushClassroomZipToDrive(
+        groupTitle: String,
+        records: List<HistoryRecord>,
+        onFinished: (Result<String>) -> Unit
+    ) {
+        if (records.isEmpty()) return
+        viewModelScope.launch {
+            val res = GoogleDriveHelper.exportZipToGoogleDriveScreen(
+                context = context,
+                groupTitle = groupTitle,
+                records = records
+            )
+            onFinished(
+                res.map { zip -> "Đã đóng gói ${zip.name} và mở màn hình Google Drive!" }
+            )
+        }
+    }
+
+    fun pushClassroomImagesToDrive(
+        groupTitle: String,
+        records: List<HistoryRecord>,
+        onFinished: (Result<String>) -> Unit
+    ) {
+        if (records.isEmpty()) return
+        viewModelScope.launch {
+            val res = GoogleDriveHelper.exportImagesToGoogleDriveScreen(
+                context = context,
+                groupTitle = groupTitle,
+                records = records
+            )
+            onFinished(
+                res.map { count -> "Đã chuyển $count ảnh bài chấm sang màn hình Google Drive!" }
+            )
         }
     }
 }

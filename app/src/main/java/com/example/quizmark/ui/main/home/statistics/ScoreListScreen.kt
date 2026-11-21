@@ -1,25 +1,27 @@
 package com.example.quizmark.ui.main.home.statistics
 
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Warning
@@ -47,8 +49,8 @@ import com.example.quizmark.ui.theme.ColorText3
 import com.example.quizmark.ui.theme.DarkBlue
 import com.example.quizmark.ui.theme.PrimaryDarkBlue
 import com.example.quizmark.util.DuplicateSbdCluster
-import com.example.quizmark.util.GoogleDriveHelper
 import com.example.quizmark.util.MissingStudentSuggestion
+import com.example.quizmark.util.ScoreSortOrder
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -67,10 +69,17 @@ fun ScoreListScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val driveUploadState by viewModel.driveUploadState.collectAsState()
 
+    val availableClasses by viewModel.availableClasses.collectAsState()
+    val selectedClassId by viewModel.selectedClassId.collectAsState()
+    val sortOrder by viewModel.sortOrder.collectAsState()
+    val averageScore by viewModel.averageScore.collectAsState()
+    val minScore by viewModel.minScore.collectAsState()
+    val maxScore by viewModel.maxScore.collectAsState()
+
     var selectedClusterForSheet by remember { mutableStateOf<DuplicateSbdCluster?>(null) }
     var recordToReassign by remember { mutableStateOf<HistoryRecord?>(null) }
+    var showDriveOptionDialog by remember { mutableStateOf(false) }
 
-    // Khi danh sách cụm trùng thay đổi (ví dụ giáo viên vừa xử lý xong 1 bài), cập nhật lại BottomSheet
     LaunchedEffect(duplicateClusters) {
         val currentCluster = selectedClusterForSheet
         if (currentCluster != null) {
@@ -78,22 +87,20 @@ fun ScoreListScreen(
         }
     }
 
-    // Launcher xin quyền Google Drive (DriveScopes.DRIVE_FILE)
-    val driveSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK && GoogleDriveHelper.hasDrivePermission(context)) {
-            viewModel.uploadCurrentRecordsToDrive()
-        }
-    }
-
-    // Tỉ lệ chiều rộng của 3 cột (SBD : Tên : Điểm)
-    val sbdWeight = 1.2f
-    val nameWeight = 2f
+    val sbdWeight = 1.15f
+    val nameWeight = 2.05f
     val scoreWeight = 0.8f
 
     val duplicateSbdSet = remember(duplicateClusters) {
         duplicateClusters.map { it.sbd }.toSet()
+    }
+
+    val currentClassLabel = remember(selectedClassId, availableClasses) {
+        when (selectedClassId) {
+            "ALL" -> "Tất cả các lớp"
+            "UNASSIGNED" -> "Chưa phân lớp"
+            else -> availableClasses.find { it.first == selectedClassId }?.second?.let { "Lớp $it" } ?: "Lớp học"
+        }
     }
 
     Scaffold(
@@ -101,14 +108,25 @@ fun ScoreListScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(id = R.string.score_list_title),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = ColorText,
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.score_list_title),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 19.sp,
+                            color = ColorText
+                        )
+                        if (selectedClassId != "ALL") {
+                            Text(
+                                text = currentClassLabel,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = PrimaryDarkBlue
+                            )
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -121,16 +139,9 @@ fun ScoreListScreen(
                     }
                 },
                 actions = {
-                    // Nút đẩy ảnh lên Google Drive trên góc phải TopBar
                     IconButton(
                         enabled = records.isNotEmpty() && driveUploadState !is DriveUploadState.Uploading,
-                        onClick = {
-                            if (GoogleDriveHelper.hasDrivePermission(context)) {
-                                viewModel.uploadCurrentRecordsToDrive()
-                            } else {
-                                driveSignInLauncher.launch(GoogleDriveHelper.getDriveSignInIntent(context))
-                            }
-                        }
+                        onClick = { showDriveOptionDialog = true }
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CloudUpload,
@@ -148,28 +159,77 @@ fun ScoreListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            HorizontalDivider(color = Color(0xFFE5E7EB), thickness = 8.dp)
+            HorizontalDivider(color = Color(0xFFE5E7EB), thickness = 6.dp)
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 16.dp)
             ) {
-                // 1. THANH ĐẨY ẢNH LÊN GOOGLE DRIVE & TIẾN TRÌNH
+                // 1. THANH CHỌN LỚP HỌC (FILTER CHIPS THEO LỚP)
+                if (availableClasses.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        FilterChip(
+                            selected = selectedClassId == "ALL",
+                            onClick = { viewModel.selectClassFilter("ALL") },
+                            label = {
+                                Text(
+                                    text = "Tất cả lớp",
+                                    fontWeight = if (selectedClassId == "ALL") FontWeight.Bold else FontWeight.Medium
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = PrimaryDarkBlue,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                        availableClasses.forEach { (cid, cname) ->
+                            val selected = selectedClassId == cid
+                            FilterChip(
+                                selected = selected,
+                                onClick = { viewModel.selectClassFilter(cid) },
+                                label = {
+                                    Text(
+                                        text = "Lớp $cname",
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = PrimaryDarkBlue,
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // 2. THẺ ĐIỂM TRUNG BÌNH & THỐNG KÊ NHANH CỦA LỚP ĐANG XEM
                 if (records.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    ClassScoreOverviewBanner(
+                        classLabel = currentClassLabel,
+                        totalCount = records.size,
+                        averageScore = averageScore,
+                        minScore = minScore,
+                        maxScore = maxScore
+                    )
+                }
+
+                // 3. THANH ĐẨY ẢNH LÊN GOOGLE DRIVE
+                if (records.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
                     DriveSyncBannerCard(
                         totalRecords = records.size,
-                        syncedCount = records.count { it.driveFileId.isNotBlank() },
                         hasUnresolvedDuplicates = duplicateClusters.isNotEmpty(),
                         driveUploadState = driveUploadState,
-                        onUploadClick = {
-                            if (GoogleDriveHelper.hasDrivePermission(context)) {
-                                viewModel.uploadCurrentRecordsToDrive()
-                            } else {
-                                driveSignInLauncher.launch(GoogleDriveHelper.getDriveSignInIntent(context))
-                            }
-                        },
+                        onUploadClick = { showDriveOptionDialog = true },
                         onOpenDriveFolder = { folderUrl ->
                             runCatching {
                                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(folderUrl)))
@@ -179,9 +239,9 @@ fun ScoreListScreen(
                     )
                 }
 
-                // 2. KHU VỰC GOM CỤM BÀI TRÙNG SBD CẦN XỬ LÝ
+                // 4. KHU VỰC GOM CỤM BÀI TRÙNG SBD CẦN XỬ LÝ
                 if (duplicateClusters.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     DuplicateSbdClustersSection(
                         clusters = duplicateClusters,
                         onClusterClick = { cluster ->
@@ -190,34 +250,43 @@ fun ScoreListScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                // 5. THANH SẮP XẾP ĐIỂM (TỪ THẤP ĐẾN CAO / CAO XUỐNG THẤP / THEO SBD / THEO TÊN)
+                if (records.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    ScoreSortFilterRow(
+                        currentOrder = sortOrder,
+                        onOrderSelected = { viewModel.updateSortOrder(it) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
 
                 // HEADER BẢNG
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp, horizontal = 4.dp),
+                        .padding(vertical = 10.dp, horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = stringResource(id = R.string.column_sbd),
                         fontWeight = FontWeight.Bold,
                         color = ColorText,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         modifier = Modifier.weight(sbdWeight)
                     )
                     Text(
                         text = stringResource(id = R.string.column_name),
                         fontWeight = FontWeight.Bold,
                         color = ColorText,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         modifier = Modifier.weight(nameWeight)
                     )
                     Text(
                         text = stringResource(id = R.string.column_score),
                         fontWeight = FontWeight.Bold,
                         color = ColorText,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         textAlign = TextAlign.End,
                         modifier = Modifier.weight(scoreWeight)
                     )
@@ -269,6 +338,23 @@ fun ScoreListScreen(
         }
     }
 
+    // HỘP THOẠI CHỌN CÁCH ĐẨY LÊN GOOGLE DRIVE (CHUYỂN TIẾP SANG MÀN HÌNH GOOGLE DRIVE)
+    if (showDriveOptionDialog) {
+        PushToGoogleDriveDialog(
+            groupTitle = currentClassLabel,
+            recordCount = records.size,
+            onDismiss = { showDriveOptionDialog = false },
+            onPushZipFile = {
+                showDriveOptionDialog = false
+                viewModel.pushZipPackageToGoogleDriveScreen()
+            },
+            onPushIndividualImages = {
+                showDriveOptionDialog = false
+                viewModel.pushImagesToGoogleDriveScreen()
+            }
+        )
+    }
+
     // BOTTOM SHEET XỬ LÝ CỤM BÀI TRÙNG SBD
     selectedClusterForSheet?.let { cluster ->
         DuplicateClusterResolutionDialog(
@@ -309,9 +395,279 @@ fun ScoreListScreen(
 }
 
 @Composable
-private fun DriveSyncBannerCard(
+fun ClassScoreOverviewBanner(
+    classLabel: String,
+    totalCount: Int,
+    averageScore: Double,
+    minScore: Double,
+    maxScore: Double
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9FF)),
+        border = BorderStroke(1.dp, Color(0xFFBAE6FD))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = classLabel,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryDarkBlue
+                )
+                Text(
+                    text = "Tổng: $totalCount bài • Thấp nhất: ${String.format("%.1f", minScore)} • Cao nhất: ${String.format("%.1f", maxScore)}",
+                    fontSize = 11.sp,
+                    color = Color(0xFF0369A1)
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = PrimaryDarkBlue
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Điểm TB: ",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                    Text(
+                        text = String.format("%.2f", averageScore),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ScoreSortFilterRow(
+    currentOrder: ScoreSortOrder,
+    onOrderSelected: (ScoreSortOrder) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Sắp xếp:",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Gray
+        )
+
+        SortChipButton(
+            label = "Điểm: Thấp → Cao",
+            icon = Icons.Filled.ArrowUpward,
+            selected = currentOrder == ScoreSortOrder.SCORE_ASC,
+            onClick = { onOrderSelected(ScoreSortOrder.SCORE_ASC) }
+        )
+        SortChipButton(
+            label = "Điểm: Cao → Thấp",
+            icon = Icons.Filled.ArrowDownward,
+            selected = currentOrder == ScoreSortOrder.SCORE_DESC,
+            onClick = { onOrderSelected(ScoreSortOrder.SCORE_DESC) }
+        )
+        SortChipButton(
+            label = "Theo SBD",
+            icon = null,
+            selected = currentOrder == ScoreSortOrder.SBD_ASC,
+            onClick = { onOrderSelected(ScoreSortOrder.SBD_ASC) }
+        )
+        SortChipButton(
+            label = "Theo Tên",
+            icon = null,
+            selected = currentOrder == ScoreSortOrder.NAME_ASC,
+            onClick = { onOrderSelected(ScoreSortOrder.NAME_ASC) }
+        )
+    }
+}
+
+@Composable
+private fun SortChipButton(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector?,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.clickable { onClick() },
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) Color(0xFFDBEAFE) else Color.White,
+        border = BorderStroke(1.dp, if (selected) PrimaryDarkBlue else Color(0xFFE2E8F0))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (selected) PrimaryDarkBlue else Color.Gray,
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                color = if (selected) PrimaryDarkBlue else ColorText
+            )
+        }
+    }
+}
+
+@Composable
+fun PushToGoogleDriveDialog(
+    groupTitle: String,
+    recordCount: Int,
+    onDismiss: () -> Unit,
+    onPushZipFile: () -> Unit,
+    onPushIndividualImages: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(16.dp),
+        title = {
+            Column {
+                Text(
+                    text = "Đẩy bài chấm lên Google Drive",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = ColorText
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "$groupTitle • $recordCount bài đã chấm",
+                    fontSize = 13.sp,
+                    color = PrimaryDarkBlue,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Lựa chọn 1: Đẩy thành 1 tệp nén .zip duy nhất
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onPushZipFile() },
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFEFF6FF),
+                    border = BorderStroke(1.5.dp, PrimaryDarkBlue)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(PrimaryDarkBlue, RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.FolderZip,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Tệp nén (.zip)",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = PrimaryDarkBlue
+                            )
+                            Text(
+                                text = "$recordCount ảnh + Bảng điểm",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+
+                // Lựa chọn 2: Đẩy từng tệp ảnh .jpg rời
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onPushIndividualImages() },
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFF8FAFC),
+                    border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color(0xFFE2E8F0), RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Image,
+                                contentDescription = null,
+                                tint = DarkBlue
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Từng ảnh (.jpg)",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = ColorText
+                            )
+                            Text(
+                                text = "$recordCount ảnh rời",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Đóng", color = Color.Gray, fontWeight = FontWeight.Bold)
+            }
+        }
+    )
+}
+
+@Composable
+fun DriveSyncBannerCard(
     totalRecords: Int,
-    syncedCount: Int,
     hasUnresolvedDuplicates: Boolean,
     driveUploadState: DriveUploadState,
     onUploadClick: () -> Unit,
@@ -324,44 +680,41 @@ private fun DriveSyncBannerCard(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, Color(0xFFDBEAFE))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(38.dp)
                         .background(Color(0xFFEFF6FF), RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (syncedCount == totalRecords && totalRecords > 0)
-                            Icons.Filled.CloudDone
-                        else
-                            Icons.Filled.CloudUpload,
+                        imageVector = Icons.Filled.CloudUpload,
                         contentDescription = null,
                         tint = PrimaryDarkBlue
                     )
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Lưu trữ ảnh lên Google Drive",
+                        text = "Google Drive ($totalRecords bài)",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = ColorText
                     )
-                    Text(
-                        text = if (hasUnresolvedDuplicates)
-                            "Nên xử lý xong cụm trùng SBD trước khi đẩy lên Drive ($syncedCount/$totalRecords ảnh đã lưu)"
-                        else
-                            "Đã đồng bộ $syncedCount/$totalRecords ảnh bài chấm lên thư mục Drive",
-                        fontSize = 12.sp,
-                        color = if (hasUnresolvedDuplicates) Color(0xFFD97706) else Color.Gray
-                    )
+                    if (hasUnresolvedDuplicates) {
+                        Text(
+                            text = "Còn bài trùng SBD",
+                            fontSize = 11.sp,
+                            color = Color(0xFFD97706),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -374,7 +727,7 @@ private fun DriveSyncBannerCard(
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = if (driveUploadState is DriveUploadState.Uploading) "Đang tải..." else "Đẩy lên Drive",
+                        text = if (driveUploadState is DriveUploadState.Uploading) "Đang xử lý..." else "Đẩy lên Drive",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -384,29 +737,54 @@ private fun DriveSyncBannerCard(
 
             when (driveUploadState) {
                 is DriveUploadState.Uploading -> {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    val progress = if (driveUploadState.total > 0) {
-                        driveUploadState.current.toFloat() / driveUploadState.total.toFloat()
-                    } else 0f
+                    Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
-                        progress = { progress },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(6.dp)
+                            .height(5.dp)
                             .clip(RoundedCornerShape(3.dp)),
                         color = PrimaryDarkBlue,
                         trackColor = Color(0xFFDBEAFE)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Đang tải ảnh ${driveUploadState.current}/${driveUploadState.total} lên Google Drive...",
+                        text = "Đang đóng gói ảnh và chuyển sang màn hình Google Drive...",
                         fontSize = 12.sp,
                         color = PrimaryDarkBlue
                     )
                 }
 
+                is DriveUploadState.OpenedDriveApp -> {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFECFDF5), RoundedCornerShape(8.dp))
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF16A34A),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = driveUploadState.message,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF166534),
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(onClick = onDismissStatus) {
+                            Text("Đóng", fontSize = 12.sp, color = Color.Gray)
+                        }
+                    }
+                }
+
                 is DriveUploadState.Success -> {
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -445,7 +823,7 @@ private fun DriveSyncBannerCard(
                 }
 
                 is DriveUploadState.Error -> {
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -479,7 +857,7 @@ private fun DriveSyncBannerCard(
 }
 
 @Composable
-private fun DuplicateSbdClustersSection(
+fun DuplicateSbdClustersSection(
     clusters: List<DuplicateSbdCluster>,
     onClusterClick: (DuplicateSbdCluster) -> Unit
 ) {
@@ -489,7 +867,7 @@ private fun DuplicateSbdClustersSection(
         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB)),
         border = BorderStroke(1.dp, Color(0xFFF59E0B))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Warning,
@@ -499,21 +877,14 @@ private fun DuplicateSbdClustersSection(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Phát hiện ${clusters.size} cụm trùng SBD cần xử lý",
+                    text = "Trùng SBD (${clusters.size} cụm)",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = Color(0xFF92400E)
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Bấm vào từng cụm để đối chiếu ảnh bài làm, chọn giữ bài đúng hoặc gán bài bị tô nhầm sang học sinh chưa có điểm.",
-                fontSize = 12.sp,
-                color = Color(0xFFB45309)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             clusters.forEach { cluster ->
                 Surface(
@@ -579,7 +950,7 @@ private fun DuplicateSbdClustersSection(
 }
 
 @Composable
-private fun DuplicateClusterResolutionDialog(
+fun DuplicateClusterResolutionDialog(
     cluster: DuplicateSbdCluster,
     onDismiss: () -> Unit,
     onViewDetail: (HistoryRecord) -> Unit,
@@ -627,7 +998,6 @@ private fun DuplicateClusterResolutionDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Ảnh thu nhỏ của phiếu để giáo viên nhìn nhanh chữ viết tay
                                 val previewPath = rec.localOriginalImagePath.ifBlank { rec.localImagePath }
                                 Box(
                                     modifier = Modifier
@@ -708,7 +1078,6 @@ private fun DuplicateClusterResolutionDialog(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // 2 Nút hành động chính cho mỗi phiếu trong cụm
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -771,7 +1140,7 @@ private fun DuplicateClusterResolutionDialog(
 }
 
 @Composable
-private fun ReassignStudentDialog(
+fun ReassignStudentDialog(
     record: HistoryRecord,
     suggestions: List<MissingStudentSuggestion>,
     onDismiss: () -> Unit,
@@ -803,7 +1172,7 @@ private fun ReassignStudentDialog(
             Column(modifier = Modifier.fillMaxWidth()) {
                 if (suggestions.isNotEmpty()) {
                     Text(
-                        text = "Học sinh trong danh sách thi CHƯA CÓ ĐIỂM (Bấm để chọn):",
+                        text = "Học sinh chưa có điểm:",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryDarkBlue
@@ -842,8 +1211,9 @@ private fun ReassignStudentDialog(
                                             fontSize = 14.sp,
                                             color = ColorText
                                         )
+                                        val classInfo = if (item.student.className.isNotBlank()) " • Lớp ${item.student.className}" else ""
                                         Text(
-                                            text = "SBD: ${item.student.studentCode}",
+                                            text = "SBD: ${item.student.studentCode}$classInfo",
                                             fontSize = 12.sp,
                                             color = Color.Gray
                                         )
@@ -852,7 +1222,7 @@ private fun ReassignStudentDialog(
                                     if (isLikelyMisbubbled) {
                                         Box(
                                             modifier = Modifier
-                                                .background( Color(0xFFDBEAFE), RoundedCornerShape(6.dp))
+                                                .background(Color(0xFFDBEAFE), RoundedCornerShape(6.dp))
                                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                                         ) {
                                             Text(
@@ -874,7 +1244,7 @@ private fun ReassignStudentDialog(
                 }
 
                 Text(
-                    text = "Hoặc nhập SBD / Họ tên thủ công:",
+                    text = "Nhập thủ công:",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = ColorText
@@ -929,7 +1299,7 @@ fun ScoreRowItem(
             .fillMaxWidth()
             .background(if (isDuplicated) Color(0xFFFFFBEB) else Color.Transparent)
             .clickable { onClick() }
-            .padding(vertical = 14.dp, horizontal = 4.dp),
+            .padding(vertical = 12.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Cột SBD + icon cảnh báo nếu đang thuộc cụm trùng
@@ -950,35 +1320,49 @@ fun ScoreRowItem(
                 text = record.studentCode.ifBlank { "Trống" },
                 color = if (isDuplicated) Color(0xFFB45309) else Color.Gray,
                 fontWeight = if (isDuplicated) FontWeight.Bold else FontWeight.Normal,
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
 
-        // Cột Tên + dấu đã đồng bộ Drive
-        Row(
+        // Cột Tên + Lớp + Mã đề
+        Column(
             modifier = Modifier
                 .weight(nameWeight)
-                .padding(end = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(end = 8.dp)
         ) {
-            Text(
-                text = record.studentName.ifBlank { "Ẩn danh" },
-                color = ColorText,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false)
-            )
-            if (record.driveFileId.isNotBlank()) {
-                Spacer(modifier = Modifier.width(6.dp))
-                Icon(
-                    imageVector = Icons.Filled.CloudDone,
-                    contentDescription = "Đã lưu trên Google Drive",
-                    tint = Color(0xFF2563EB),
-                    modifier = Modifier.size(15.dp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = record.studentName.ifBlank { "Ẩn danh" },
+                    color = ColorText,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (record.driveFileId.isNotBlank()) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Filled.CloudDone,
+                        contentDescription = "Đã lưu trên Google Drive",
+                        tint = Color(0xFF2563EB),
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
+            }
+            val subInfo = buildList {
+                if (record.className.isNotBlank()) add("Lớp ${record.className}")
+                if (record.examCode.isNotBlank()) add("Mã đề ${record.examCode}")
+            }.joinToString(" • ")
+            if (subInfo.isNotBlank()) {
+                Text(
+                    text = subInfo,
+                    fontSize = 11.sp,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -986,7 +1370,7 @@ fun ScoreRowItem(
         // Cột Điểm
         Text(
             text = String.format("%.1f", record.score),
-            color = if (record.score > 0.0) Color(0xFF16A34A) else Color(0xFFDC2626),
+            color = if (record.score >= 5.0) Color(0xFF16A34A) else Color(0xFFDC2626),
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
             textAlign = TextAlign.End,

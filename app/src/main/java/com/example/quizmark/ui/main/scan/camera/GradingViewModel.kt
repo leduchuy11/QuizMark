@@ -12,6 +12,7 @@ import com.example.quizmark.data.repository.HistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.content.Context
@@ -60,10 +61,12 @@ class GradingViewModel @Inject constructor(
         viewModelScope.launch {
             _gradingState.value = GradingState.Loading
             try {
-                // BƯỚC 1: TÌM HỌC SINH
+                // BƯỚC 1: TÌM HỌC SINH & LỚP HỌC GỐC
                 val scannedSbd = scanResult.sbd ?: "Trống"
                 var finalStudentName = "Ẩn danh"
                 var finalRosterName = "Ẩn danh"
+                var finalClassId = ""
+                var finalClassName = ""
 
                 if (rosterId != null) {
                     try {
@@ -71,12 +74,36 @@ class GradingViewModel @Inject constructor(
                         if (roster != null) {
                             finalRosterName = roster.name
                             if (scannedSbd != "Trống") {
-                                val matchedStudent = roster.students.find { it.studentCode == scannedSbd }
-                                if (matchedStudent != null) finalStudentName = matchedStudent.name
+                                val matchedStudent = roster.students.find { it.studentCode.trim() == scannedSbd.trim() }
+                                if (matchedStudent != null) {
+                                    finalStudentName = matchedStudent.name
+                                    finalClassId = matchedStudent.classId
+                                    finalClassName = matchedStudent.className
+                                }
                             }
                         }
                     } catch (e: Exception) {
                         // Nếu lấy danh sách thất bại (do mất mạng + không có cache), vẫn tiếp tục chấm bài!
+                        e.printStackTrace()
+                    }
+                }
+
+                // Nếu trong Roster chưa gắn sẵn classId (hoặc quét không chọn Roster), dò thêm trong danh sách Lớp học
+                if (finalClassId.isBlank() && scannedSbd != "Trống") {
+                    try {
+                        val classrooms = examListRepository.getAllClassroomsFlow().firstOrNull().orEmpty()
+                        for (cls in classrooms) {
+                            val studentInClass = cls.students.find { it.studentCode.trim() == scannedSbd.trim() }
+                            if (studentInClass != null) {
+                                finalClassId = cls.id
+                                finalClassName = cls.name
+                                if (finalStudentName == "Ẩn danh" && studentInClass.name.isNotBlank()) {
+                                    finalStudentName = studentInClass.name
+                                }
+                                break
+                            }
+                        }
+                    } catch (e: Exception) {
                         e.printStackTrace()
                     }
                 }
@@ -145,7 +172,9 @@ class GradingViewModel @Inject constructor(
                     templateId = templateId,
                     originalImagePath = withContext(Dispatchers.IO) {
                         OriginalScanStore.save(context, scanResult.originalBitmap)
-                    }
+                    },
+                    classId = finalClassId,
+                    className = finalClassName
                 )
 
 

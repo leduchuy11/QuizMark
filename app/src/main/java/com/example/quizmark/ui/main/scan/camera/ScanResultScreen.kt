@@ -143,7 +143,7 @@ fun ScanResultScreen(
                     colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
                 ) {
                     Text(
-                        text = "Mở Danh sách điểm (Xử lý trùng SBD & Đẩy ảnh lên Drive)",
+                        text = "Xem bảng điểm & Đẩy Drive",
                         color = DarkBlue,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
