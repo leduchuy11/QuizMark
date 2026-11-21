@@ -31,6 +31,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -163,19 +164,24 @@ fun StatisticsScreen(
                             .fillMaxWidth()
                             .background(Color.White, RoundedCornerShape(12.dp))
                             .padding(horizontal = 16.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Điểm thấp nhất: ${String.format("%.1f", uiState.minScore)}",
+                            text = "Thấp nhất: ${String.format("%.1f", uiState.minScore)}",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFDC2626)
+                            color = Color(0xFFDC2626),
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Text(
-                            text = "Điểm cao nhất: ${String.format("%.1f", uiState.maxScore)}",
+                            text = "Cao nhất: ${String.format("%.1f", uiState.maxScore)}",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF16A34A)
+                            color = Color(0xFF16A34A),
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }
@@ -314,71 +320,106 @@ private fun ClassroomStatCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 14.dp, vertical = 12.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(Color(0xFFDBEAFE), RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
+            // Hàng 1: Tên lớp + Số bài + Mũi tên
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "ĐTB",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryDarkBlue
-                    )
-                    Text(
-                        text = String.format("%.1f", summary.averageScore),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = PrimaryDarkBlue
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = if (summary.classId == "UNASSIGNED") summary.className else "Lớp ${summary.className}",
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ColorText
+                    color = ColorText,
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "${summary.totalExams} bài • Thấp nhất: ${String.format("%.1f", summary.minScore)} • Cao nhất: ${String.format("%.1f", summary.maxScore)}",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "Tỉ lệ đạt (>= 5đ): ${summary.passRate}%",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF16A34A)
-                )
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Xem điểm",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryDarkBlue
-                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFF1F5F9)
+                ) {
+                    Text(
+                        text = "${summary.totalExams} bài",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ColorText,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        softWrap = false
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = PrimaryDarkBlue
                 )
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Hàng 2: 4 cột đều nhau — hiển thị đủ ĐTB, Thấp, Cao, Đạt (không bị cắt ...)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatMiniColumn(
+                    modifier = Modifier.weight(1f),
+                    label = "Điểm TB",
+                    value = String.format("%.2f", summary.averageScore),
+                    valueColor = PrimaryDarkBlue
+                )
+                StatMiniColumn(
+                    modifier = Modifier.weight(1f),
+                    label = "Thấp nhất",
+                    value = String.format("%.1f", summary.minScore),
+                    valueColor = Color(0xFFDC2626)
+                )
+                StatMiniColumn(
+                    modifier = Modifier.weight(1f),
+                    label = "Cao nhất",
+                    value = String.format("%.1f", summary.maxScore),
+                    valueColor = Color(0xFF16A34A)
+                )
+                StatMiniColumn(
+                    modifier = Modifier.weight(1f),
+                    label = "Tỉ lệ đạt",
+                    value = "${summary.passRate}%",
+                    valueColor = Color(0xFFD97706)
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun StatMiniColumn(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    valueColor: Color
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            color = Color.Gray
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = value,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = valueColor
+        )
     }
 }
 

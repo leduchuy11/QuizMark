@@ -266,7 +266,7 @@ fun ClassroomDetailScreen(
                     ClassroomTabPill(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Filled.History,
-                        title = "Điểm & Lịch sử (${allClassRecords.size})",
+                        title = "Điểm (${allClassRecords.size})",
                         selected = selectedTabIndex == 1,
                         onClick = { selectedTabIndex = 1 }
                     )
@@ -489,10 +489,11 @@ fun ClassroomDetailScreen(
                                 Button(
                                     onClick = { showDriveOptionDialog = true },
                                     modifier = Modifier
-                                        .weight(1.25f)
+                                        .weight(1f)
                                         .height(46.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryDarkBlue),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(12.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.CloudUpload,
@@ -502,10 +503,12 @@ fun ClassroomDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Đẩy lên Google Drive",
+                                        text = "Đẩy Drive",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color.White
+                                        color = Color.White,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
 
@@ -522,7 +525,8 @@ fun ClassroomDetailScreen(
                                         .weight(1f)
                                         .height(46.dp),
                                     shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, PrimaryDarkBlue)
+                                    border = BorderStroke(1.dp, PrimaryDarkBlue),
+                                    contentPadding = PaddingValues(horizontal = 12.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.Description,
@@ -535,7 +539,9 @@ fun ClassroomDetailScreen(
                                         text = "Xuất Excel",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = PrimaryDarkBlue
+                                        color = PrimaryDarkBlue,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                             }
@@ -789,7 +795,9 @@ private fun ClassroomHistorySortRow(
             text = "Sắp xếp:",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Gray
+            color = Color.Gray,
+            maxLines = 1,
+            softWrap = false
         )
 
         ClassroomSortChip(
@@ -849,7 +857,9 @@ private fun ClassroomSortChip(
                 text = label,
                 fontSize = 12.sp,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                color = if (selected) PrimaryDarkBlue else ColorText
+                color = if (selected) PrimaryDarkBlue else ColorText,
+                maxLines = 1,
+                softWrap = false
             )
         }
     }
@@ -916,9 +926,7 @@ private fun ClassroomHistoryRecordItem(
                         text = record.studentName.ifBlank { "Ẩn danh" },
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = ColorText,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        color = ColorText
                     )
                 }
 
@@ -938,9 +946,7 @@ private fun ClassroomHistoryRecordItem(
                 Text(
                     text = "$rosterLabel • ${dateFormat.format(Date(record.timestamp))}",
                     fontSize = 11.sp,
-                    color = Color.Gray,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = Color.Gray
                 )
             }
 

@@ -267,16 +267,24 @@ fun MainActionBanner(onScanClick: () -> Unit, onExamClick: () -> Unit) {
                     onClick = onScanClick,
                     modifier = Modifier.weight(1f).height(46.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = BackgroundScreen),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_scanner),
                         contentDescription = null,
                         tint = ColorText,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = stringResource(R.string.scan_now), color = ColorText, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.scan_now),
+                        color = ColorText,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 }
 
                 // Nút Đề thi
@@ -291,16 +299,24 @@ fun MainActionBanner(onScanClick: () -> Unit, onExamClick: () -> Unit) {
                             shape = RoundedCornerShape(12.dp)
                         ),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25416E)),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_document),
                         contentDescription = null,
                         tint = BackgroundScreen,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = stringResource(R.string.create_exam), color = BackgroundScreen, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.create_exam),
+                        color = BackgroundScreen,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 }
             }
         }

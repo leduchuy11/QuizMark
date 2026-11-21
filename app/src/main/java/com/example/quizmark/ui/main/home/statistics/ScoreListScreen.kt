@@ -116,14 +116,18 @@ fun ScoreListScreen(
                             text = stringResource(id = R.string.score_list_title),
                             fontWeight = FontWeight.Bold,
                             fontSize = 19.sp,
-                            color = ColorText
+                            color = ColorText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         if (selectedClassId != "ALL") {
                             Text(
                                 text = currentClassLabel,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = PrimaryDarkBlue
+                                color = PrimaryDarkBlue,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -405,53 +409,110 @@ fun ClassScoreOverviewBanner(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9FF)),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, Color(0xFFBAE6FD))
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = 14.dp, vertical = 12.dp)
         ) {
-            Column {
+            // Hàng 1: Tên lớp + Tổng số bài
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
                     text = classLabel,
-                    fontSize = 13.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryDarkBlue
+                    color = PrimaryDarkBlue,
+                    modifier = Modifier.weight(1f)
                 )
-                Text(
-                    text = "Tổng: $totalCount bài • Thấp nhất: ${String.format("%.1f", minScore)} • Cao nhất: ${String.format("%.1f", maxScore)}",
-                    fontSize = 11.sp,
-                    color = Color(0xFF0369A1)
-                )
-            }
-
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = PrimaryDarkBlue
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Spacer(modifier = Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFE0F2FE)
                 ) {
                     Text(
-                        text = "Điểm TB: ",
+                        text = "$totalCount bài",
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                    Text(
-                        text = String.format("%.2f", averageScore),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0369A1),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        softWrap = false
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = Color(0xFFE0F2FE), thickness = 1.dp)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Hàng 2: Chia đều 3 cột cho Điểm TB / Thấp nhất / Cao nhất (không bao giờ bị cắt ...)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OverviewMetricColumn(
+                    modifier = Modifier.weight(1f),
+                    label = "Điểm TB",
+                    value = String.format("%.2f", averageScore),
+                    valueColor = PrimaryDarkBlue
+                )
+                VerticalDivider(
+                    modifier = Modifier.height(30.dp),
+                    thickness = 1.dp,
+                    color = Color(0xFFE2E8F0)
+                )
+                OverviewMetricColumn(
+                    modifier = Modifier.weight(1f),
+                    label = "Thấp nhất",
+                    value = String.format("%.1f", minScore),
+                    valueColor = Color(0xFFDC2626)
+                )
+                VerticalDivider(
+                    modifier = Modifier.height(30.dp),
+                    thickness = 1.dp,
+                    color = Color(0xFFE2E8F0)
+                )
+                OverviewMetricColumn(
+                    modifier = Modifier.weight(1f),
+                    label = "Cao nhất",
+                    value = String.format("%.1f", maxScore),
+                    valueColor = Color(0xFF16A34A)
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun OverviewMetricColumn(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    valueColor: Color
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Gray
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = value,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = valueColor
+        )
     }
 }
 
@@ -471,7 +532,9 @@ fun ScoreSortFilterRow(
             text = "Sắp xếp:",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Gray
+            color = Color.Gray,
+            maxLines = 1,
+            softWrap = false
         )
 
         SortChipButton(
@@ -531,7 +594,9 @@ private fun SortChipButton(
                 text = label,
                 fontSize = 12.sp,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                color = if (selected) PrimaryDarkBlue else ColorText
+                color = if (selected) PrimaryDarkBlue else ColorText,
+                maxLines = 1,
+                softWrap = false
             )
         }
     }
@@ -727,10 +792,12 @@ fun DriveSyncBannerCard(
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = if (driveUploadState is DriveUploadState.Uploading) "Đang xử lý..." else "Đẩy lên Drive",
+                        text = if (driveUploadState is DriveUploadState.Uploading) "Đang xử lý..." else "Đẩy Drive",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }
@@ -920,9 +987,7 @@ fun DuplicateSbdClustersSection(
                                 text = "${cluster.studentName} (${cluster.records.size} bài trùng)",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
-                                color = ColorText,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                color = ColorText
                             )
                             val scoresPreview = cluster.records.joinToString(" • ") {
                                 "Mã ${it.examCode.ifBlank { "?" }}: ${String.format("%.1fđ", it.score)}"
@@ -930,17 +995,19 @@ fun DuplicateSbdClustersSection(
                             Text(
                                 text = scoresPreview,
                                 fontSize = 12.sp,
-                                color = Color.Gray,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                color = Color.Gray
                             )
                         }
+
+                        Spacer(modifier = Modifier.width(8.dp))
 
                         Text(
                             text = "Xử lý >",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryDarkBlue
+                            color = PrimaryDarkBlue,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }
@@ -1026,21 +1093,12 @@ fun DuplicateClusterResolutionDialog(
                                 Spacer(modifier = Modifier.width(12.dp))
 
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = "${String.format("%.1f", rec.score)} điểm",
-                                            fontWeight = FontWeight.ExtraBold,
-                                            fontSize = 16.sp,
-                                            color = if (rec.score >= 5.0) Color(0xFF16A34A) else Color(0xFFDC2626)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "• Mã đề ${rec.examCode.ifBlank { "?" }}",
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = DarkBlue
-                                        )
-                                    }
+                                    Text(
+                                        text = "${String.format("%.1f", rec.score)} điểm • Mã đề ${rec.examCode.ifBlank { "?" }}",
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 15.sp,
+                                        color = if (rec.score >= 5.0) Color(0xFF16A34A) else Color(0xFFDC2626)
+                                    )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "Đúng ${rec.correctCount} • Sai ${rec.wrongCount} • Trống ${rec.blankCount}",
@@ -1048,7 +1106,7 @@ fun DuplicateClusterResolutionDialog(
                                         color = ColorText
                                     )
                                     Text(
-                                        text = "Quét lúc: ${timeFormat.format(Date(rec.timestamp))}",
+                                        text = timeFormat.format(Date(rec.timestamp)),
                                         fontSize = 11.sp,
                                         color = Color.Gray
                                     )
@@ -1063,7 +1121,11 @@ fun DuplicateClusterResolutionDialog(
                                             tint = PrimaryDarkBlue
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Xem ảnh phiếu lớn", fontSize = 12.sp, color = PrimaryDarkBlue)
+                                        Text(
+                                            text = "Xem ảnh phiếu",
+                                            fontSize = 12.sp,
+                                            color = PrimaryDarkBlue
+                                        )
                                     }
                                 }
 
@@ -1097,10 +1159,12 @@ fun DuplicateClusterResolutionDialog(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Giữ bài này",
+                                        text = "Giữ bài",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF16A34A)
+                                        color = Color(0xFF16A34A),
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
 
@@ -1119,10 +1183,12 @@ fun DuplicateClusterResolutionDialog(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Đổi SBD / HS khác",
+                                        text = "Đổi SBD",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color.White
+                                        color = Color.White,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                             }
@@ -1220,16 +1286,19 @@ fun ReassignStudentDialog(
                                     }
 
                                     if (isLikelyMisbubbled) {
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Box(
                                             modifier = Modifier
                                                 .background(Color(0xFFDBEAFE), RoundedCornerShape(6.dp))
                                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                                         ) {
                                             Text(
-                                                text = "Gợi ý (lệch 1 số)",
+                                                text = "Lệch 1 số",
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = PrimaryDarkBlue
+                                                color = PrimaryDarkBlue,
+                                                maxLines = 1,
+                                                softWrap = false
                                             )
                                         }
                                     }
@@ -1338,8 +1407,6 @@ fun ScoreRowItem(
                     color = ColorText,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
                 )
                 if (record.driveFileId.isNotBlank()) {
@@ -1360,9 +1427,7 @@ fun ScoreRowItem(
                 Text(
                     text = subInfo,
                     fontSize = 11.sp,
-                    color = Color.Gray,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = Color.Gray
                 )
             }
         }

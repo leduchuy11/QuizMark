@@ -969,9 +969,9 @@ fun CustomBottomNavigationBar(navController: NavHostController) {
             val isPressed by interactionSource.collectIsPressedAsState()
 
             val targetScale = when {
-                isPressed -> 1.15f
-                isSelected && isScanButton -> 1.25f
-                isSelected && !isScanButton -> 1.35f
+                isPressed -> 1.1f
+                isSelected && isScanButton -> 1.12f
+                isSelected && !isScanButton -> 1.2f
                 else -> 1.0f
             }
             val scale by animateFloatAsState(targetValue = targetScale, label = "scale")
@@ -997,7 +997,7 @@ fun CustomBottomNavigationBar(navController: NavHostController) {
                             scaleX = scale
                             scaleY = scale
                         }
-                        .size(48.dp)
+                        .size(44.dp)
                         .shadow(
                             elevation = if (hasCircleAndBlueBg) 8.dp else 0.dp,
                             shape = CircleShape,
@@ -1014,15 +1014,19 @@ fun CustomBottomNavigationBar(navController: NavHostController) {
                         painter = painterResource(id = item.iconResId),
                         contentDescription = stringResource(id = item.titleResId),
                         tint = if (hasCircleAndBlueBg) Color.White else if (isSelected) DarkBlue else Color.Gray,
-                        modifier = Modifier.size(if (item == BottomNavItem.ExamList) 34.dp else 25.dp)
+                        modifier = Modifier.size(if (item == BottomNavItem.ExamList) 32.dp else 24.dp)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = stringResource(id = item.titleResId),
                     fontSize = 11.sp,
                     color = if (isSelected) DarkBlue else Color.Gray,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }
