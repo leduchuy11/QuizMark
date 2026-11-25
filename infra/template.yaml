@@ -2,6 +2,20 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: QuizMark - lưu ảnh bài chấm lên S3 (API Gateway + Lambda + S3)
 
+Parameters:
+  FirebaseProjectId:
+    Type: String
+    Default: quizmark-fa1de
+    Description: Firebase project ID used to verify JWT ID tokens
+  
+Globals:
+  Function:
+    Runtime: nodejs26.x
+    Architectures:
+      - arm64
+    MemorySize: 128
+    Timeout: 10
+
 Resources:
   ImagesBucket:
     Type: AWS::S3::Bucket
@@ -39,7 +53,76 @@ Resources:
               Bool:
                 aws:SecureTransport: "false"
   
+  ImagesHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Auth:
+        DefaultAuthorizer: FirebaseJwtAuthorizer
+        Authorizers:
+          FirebaseJwtAuthorizer:
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              issuer: !Sub "https://securetoken.google.com/${FirebaseProjectId}" # the iss claim in the JWT ID token must match this value
+              audience:
+                - !Ref FirebaseProjectId
+      DefaultRouteSettings:
+        ThrottlingRateLimit: 10 # the number of requests per second (token bucket refill 10 tokens per second)
+        ThrottlingBurstLimit: 20 # the maximum number of concurrent requests (token bucket)
+
+  ImagesApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.handler
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref ImagesBucket # get the real name of the S3 bucket
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            # Statement ID - label providing for readability and known this roles provides
+            - Sid: S3UserImagesReadWriteDelete
+              Effect: Allow
+              Action:
+                - s3:PubObject # Allow upload files to S3 bucket
+                - s3:GetObject # Allow read files from S3 bucket
+                - s3:DeleteObject # Allow delete files from S3 bucket
+              Resource: !Sub "${ImagesBucket.Arn}/users/*" # Allow access to all objects in the S3 bucket under the "users/" prefix
+      Events:
+        UploadUrl:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ImagesHttpApi
+            Path: /images/upload-url
+            Method: POST
+        DownloadUrl:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ImagesHttpApi
+            Path: /images/download-url
+            Method: POST
+        DeleteUrl:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ImagesHttpApi
+            Path: /images/delete-url
+            Method: DELETE
+  ImagesApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ImagesApiFunction}"
+      RetentionInDays: 14
+
+
+
+
 Outputs:
   BucketName:
     Description: "Name of the S3 bucket"
     Value: !Ref ImagesBucket
+  ApiUrl:
+    Description: "URL of the HTTP API"
+    Value: !Sub "https://${ImagesHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  FunctionName:
+    Description: "Name of the Lambda function"
+    Value: !Ref ImagesApiFunction
