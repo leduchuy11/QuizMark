@@ -84,7 +84,7 @@ Resources:
             - Sid: S3UserImagesReadWriteDelete
               Effect: Allow
               Action:
-                - s3:PubObject # Allow upload files to S3 bucket
+                - s3:PutObject # Allow upload files to S3 bucket
                 - s3:GetObject # Allow read files from S3 bucket
                 - s3:DeleteObject # Allow delete files from S3 bucket
               Resource: !Sub "${ImagesBucket.Arn}/users/*" # Allow access to all objects in the S3 bucket under the "users/" prefix
@@ -105,7 +105,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref ImagesHttpApi
-            Path: /images/delete-url
+            Path: /images/{recordId}
             Method: DELETE
   ImagesApiLogGroup:
     Type: AWS::Logs::LogGroup
